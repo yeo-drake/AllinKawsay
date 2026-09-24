@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import 'login_screen.dart';
+import '../services/auth_service.dart';
 
 class PerfilScreen extends StatelessWidget {
   final String nombreUsuario;
@@ -135,7 +136,10 @@ class PerfilScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(
               height: 50,
-              child: OutlinedButton.icon(
+              child: onPressed: () async {
+  await AuthService().logout();
+  // main.dart detecta el cambio y vuelve al login solo
+},(
                 icon: const Icon(Icons.logout),
                 label: const Text('CERRAR SESIÓN'),
                 onPressed: () {

@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import '../theme/colors.dart';
 
 class NumerofoniaWidget extends StatelessWidget {
   final String numerofonia;
   const NumerofoniaWidget({super.key, required this.numerofonia});
 
+  // 6 colores derivados de la paleta oficial
   static const _colores = {
-    '1': Color(0xFFE53935),
-    '2': Color(0xFFFB8C00),
-    '3': Color(0xFFFDD835),
-    '4': Color(0xFF43A047),
-    '5': Color(0xFF1E88E5),
-    '6': Color(0xFF8E24AA),
-    '7': Color(0xFF6D4C41),
+    '1': AppColors.granate,
+    '2': AppColors.granateOscuro,
+    '3': AppColors.dorado,
+    '4': AppColors.doradoClaro,
+    '5': AppColors.negro,
+    '6': Color(0xFF8B0000),
+    '7': Color(0xFFA67C00),
   };
 
   @override
@@ -23,17 +25,26 @@ class NumerofoniaWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Numerofonía',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate)),
           const SizedBox(height: 4),
-          Text('Cada número = una nota.',
-              style: TextStyle(color: Colors.grey[600])),
+          Text('Cada número = una nota. Este es un método para leer '
+              'sin necesidad de partitura.',
+              style: TextStyle(color: AppColors.negro.withOpacity(0.6))),
           const SizedBox(height: 24),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: tokens.map((t) {
               if (t == '|') {
-                return Container(width: 2, height: 60, color: Colors.grey[400]);
+                return Container(
+                  width: 2,
+                  height: 60,
+                  color: AppColors.dorado,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                );
               }
               if (t == '-' || t.isEmpty) {
                 return Container(
@@ -41,10 +52,13 @@ class NumerofoniaWidget extends StatelessWidget {
                   height: 60,
                   alignment: Alignment.center,
                   child: const Text('—',
-                      style: TextStyle(fontSize: 24, color: Colors.grey)),
+                      style:
+                          TextStyle(fontSize: 24, color: AppColors.negro)),
                 );
               }
-              final color = _colores[t.substring(0, 1)] ?? Colors.grey;
+              final color = _colores[t.substring(0, 1)] ?? AppColors.negro;
+              final textoBlanco = color != AppColors.dorado &&
+                  color != AppColors.doradoClaro;
               return Container(
                 width: 48,
                 height: 60,
@@ -52,11 +66,13 @@ class NumerofoniaWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppColors.dorado.withOpacity(0.5), width: 1),
                 ),
                 child: Text(
                   t,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: textoBlanco ? AppColors.dorado : AppColors.negro,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
                   ),

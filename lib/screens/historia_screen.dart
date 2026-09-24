@@ -8,8 +8,6 @@ class HistoriaScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nuestra historia'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
       ),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(16),

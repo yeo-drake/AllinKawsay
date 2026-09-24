@@ -10,8 +10,6 @@ class CancioneroScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cancionero'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
       ),
       body: ListView.builder(
         itemCount: cancionesEjemplo.length,

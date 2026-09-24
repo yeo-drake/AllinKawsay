@@ -8,8 +8,6 @@ class RecuerdosScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Recuerdos'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
       ),
       body: GridView.count(
         crossAxisCount: 2,

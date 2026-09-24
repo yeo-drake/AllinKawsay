@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/auth_service.dart';
 import '../theme/colors.dart';
 import '../widgets/logo.dart';
-import 'home_screen.dart';
+import 'registro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,27 +12,46 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _user = TextEditingController();
+  final _email = TextEditingController();
   final _pass = TextEditingController();
   bool _loading = false;
 
-  void _login() {
-    if (_user.text.trim().isEmpty || _pass.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ingresa usuario y contraseña')),
-      );
+  Future<void> _login() async {
+    if (_email.text.trim().isEmpty || _pass.text.trim().isEmpty) {
+      _snack('Ingresa email y contraseña');
       return;
     }
     setState(() => _loading = true);
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => HomeScreen(nombreUsuario: _user.text.trim()),
-        ),
-      );
-    });
+    try {
+      await AuthService().login(_email.text.trim(), _pass.text.trim());
+      // main.dart detecta el cambio y navega solo
+    } on FirebaseAuthException catch (e) {
+      String msg = 'Error al iniciar sesión';
+      switch (e.code) {
+        case 'user-not-found':
+          msg = 'No existe una cuenta con ese email';
+          break;
+        case 'wrong-password':
+          msg = 'Contraseña incorrecta';
+          break;
+        case 'invalid-email':
+          msg = 'Email inválido';
+          break;
+        case 'invalid-credential':
+          msg = 'Email o contraseña incorrectos';
+          break;
+      }
+      _snack(msg);
+    } catch (e) {
+      _snack('Error: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _snack(String msg) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -41,7 +62,11 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [AppColors.negro, AppColors.granateOscuro, AppColors.granate],
+            colors: [
+              AppColors.negro,
+              AppColors.granateOscuro,
+              AppColors.granate,
+            ],
           ),
         ),
         child: SafeArea(
@@ -79,42 +104,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           TextField(
-                            controller: _user,
-                            decoration: const InputDecoration(
-                              labelText: 'Usuario',
-                              labelStyle: TextStyle(color: AppColors.granate),
-                              prefixIcon: Icon(Icons.person,
-                                  color: AppColors.granate),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: AppColors.dorado, width: 2),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: AppColors.dorado),
-                              ),
-                              border: OutlineInputBorder(),
-                            ),
+                            controller: _email,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: _inputDeco(
+                                'Email', Icons.email),
                           ),
                           const SizedBox(height: 16),
                           TextField(
                             controller: _pass,
                             obscureText: true,
-                            decoration: const InputDecoration(
-                              labelText: 'Contraseña',
-                              labelStyle: TextStyle(color: AppColors.granate),
-                              prefixIcon: Icon(Icons.lock,
-                                  color: AppColors.granate),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                    color: AppColors.dorado, width: 2),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: AppColors.dorado),
-                              ),
-                              border: OutlineInputBorder(),
-                            ),
+                            decoration:
+                                _inputDeco('Contraseña', Icons.lock),
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
@@ -126,7 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? const SizedBox(
                                       width: 22,
                                       height: 22,
-                                      child: CircularProgressIndicator(
+                                      child:
+                                          CircularProgressIndicator(
                                         color: AppColors.dorado,
                                         strokeWidth: 2.5,
                                       ),
@@ -142,11 +143,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            'Demo: escribe cualquier usuario',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.negro.withOpacity(0.5),
+                          TextButton(
+                            onPressed: _loading
+                                ? null
+                                : () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const RegistroScreen(),
+                                      ),
+                                    ),
+                            child: const Text(
+                              '¿No tienes cuenta? Regístrate',
+                              style: TextStyle(color: AppColors.granate),
                             ),
                           ),
                         ],
@@ -159,6 +168,21 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  InputDecoration _inputDeco(String label, IconData icono) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: AppColors.granate),
+      prefixIcon: Icon(icono, color: AppColors.granate),
+      focusedBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: AppColors.dorado, width: 2),
+      ),
+      enabledBorder: const OutlineInputBorder(
+        borderSide: BorderSide(color: AppColors.dorado),
+      ),
+      border: const OutlineInputBorder(),
     );
   }
 }

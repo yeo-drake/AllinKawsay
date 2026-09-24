@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../models/cancion.dart';
+import '../theme/colors.dart';
 import '../widgets/numerofonia_widget.dart';
 
 class CancionDetalleScreen extends StatefulWidget {
@@ -41,25 +42,28 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   Widget build(BuildContext context) {
     final c = widget.cancion;
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(c.titulo),
-          backgroundColor: const Color(0xFF8B4513),
-          foregroundColor: Colors.white,
           bottom: const TabBar(
-            labelColor: Colors.white,
-            indicatorColor: Colors.white,
+            labelColor: AppColors.dorado,
+            unselectedLabelColor: AppColors.blanco,
+            indicatorColor: AppColors.dorado,
+            indicatorWeight: 3,
+            isScrollable: true,
             tabs: [
-              Tab(text: 'Info'),
-              Tab(text: 'Numerofonía'),
-              Tab(text: 'Audio'),
+              Tab(text: 'INFO'),
+              Tab(text: 'PARTITURA'),
+              Tab(text: 'NUMEROFONÍA'),
+              Tab(text: 'AUDIO'),
             ],
           ),
         ),
         body: TabBarView(
           children: [
             _infoTab(c),
+            _partituraTab(c),
             NumerofoniaWidget(numerofonia: c.numerofonia),
             _audioTab(),
           ],
@@ -73,35 +77,88 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       padding: const EdgeInsets.all(16),
       children: [
         Text(c.titulo,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
+            style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppColors.granate)),
+        const SizedBox(height: 16),
         _fila(Icons.person, 'Compositor', c.compositor),
         _fila(Icons.music_note, 'Ritmo', c.ritmo),
         _fila(Icons.place, 'Región', c.region),
         const SizedBox(height: 16),
         if (c.descripcion.isNotEmpty) ...[
           const Text('Descripción',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: AppColors.granate)),
           const SizedBox(height: 8),
-          Text(c.descripcion),
+          Text(c.descripcion, style: const TextStyle(height: 1.5)),
         ],
       ],
+    );
+  }
+
+  Widget _partituraTab(Cancion c) {
+    if (c.pdfUrl.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.picture_as_pdf,
+                  size: 80, color: AppColors.granate.withOpacity(0.3)),
+              const SizedBox(height: 16),
+              const Text(
+                'Partitura PDF',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Aún no hay partitura subida para esta canción.\n\n'
+                'En la próxima versión, los miembros del grupo podrán '
+                'subir el PDF de la partitura y verse aquí mismo.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: AppColors.negro.withOpacity(0.6), height: 1.5),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    return Center(
+      child: Text('Partitura: ${c.pdfUrl}'),
     );
   }
 
   Widget _audioTab() {
     if (_error != null) {
       return Center(
-          child: Text(_error!, style: const TextStyle(color: Colors.red)));
+          child: Text(_error!,
+              style: const TextStyle(color: AppColors.granate)));
     }
     if (!_listo) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+          child: CircularProgressIndicator(color: AppColors.granate));
     }
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.music_note, size: 80, color: Color(0xFF8B4513)),
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.granate.withOpacity(0.08),
+            ),
+            child: const Icon(Icons.music_note,
+                size: 72, color: AppColors.granate),
+          ),
           const SizedBox(height: 24),
           StreamBuilder<PlayerState>(
             stream: _player.playerStateStream,
@@ -111,14 +168,14 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
                   snap.data?.processingState == ProcessingState.loading ||
                       snap.data?.processingState == ProcessingState.buffering;
               return IconButton(
-                iconSize: 72,
+                iconSize: 84,
                 icon: Icon(
                   processing
                       ? Icons.hourglass_top
                       : playing
                           ? Icons.pause_circle_filled
                           : Icons.play_circle_filled,
-                  color: const Color(0xFF8B4513),
+                  color: AppColors.granate,
                 ),
                 onPressed: () {
                   if (playing) {
@@ -139,14 +196,25 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Column(
                   children: [
-                    Slider(
-                      value: pos.inSeconds.toDouble().clamp(
-                          0, dur.inSeconds.toDouble().clamp(1, double.infinity)),
-                      max: dur.inSeconds.toDouble().clamp(1, double.infinity),
-                      onChanged: (v) =>
-                          _player.seek(Duration(seconds: v.toInt())),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: AppColors.granate,
+                        thumbColor: AppColors.dorado,
+                        inactiveTrackColor:
+                            AppColors.granate.withOpacity(0.2),
+                      ),
+                      child: Slider(
+                        value: pos.inSeconds
+                            .toDouble()
+                            .clamp(0, dur.inSeconds.toDouble().clamp(1, double.infinity)),
+                        max: dur.inSeconds.toDouble().clamp(1, double.infinity),
+                        onChanged: (v) =>
+                            _player.seek(Duration(seconds: v.toInt())),
+                      ),
                     ),
-                    Text('${_fmt(pos)} / ${_fmt(dur)}'),
+                    Text('${_fmt(pos)} / ${_fmt(dur)}',
+                        style:
+                            const TextStyle(color: AppColors.negro)),
                   ],
                 ),
               );
@@ -168,10 +236,13 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icono, size: 20, color: Colors.grey[700]),
+          Icon(icono, size: 20, color: AppColors.granate),
           const SizedBox(width: 12),
-          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.w600)),
-          Expanded(child: Text(valor)),
+          Text('$label: ',
+              style: const TextStyle(fontWeight: FontWeight.w600)),
+          Expanded(
+              child: Text(valor,
+                  style: const TextStyle(color: AppColors.negro))),
         ],
       ),
     );

@@ -31,6 +31,28 @@ jobs:
             git checkout -- lib/main.dart 2>/dev/null || true
           fi
 
+      - name: Setup Firebase config
+        run: |
+          if [ -f "firebase/google-services.json" ]; then
+            cp firebase/google-services.json android/app/google-services.json
+
+            if [ -f "android/build.gradle.kts" ]; then
+              if ! grep -q "com.google.gms.google-services" android/build.gradle.kts; then
+                sed -i '0, /plugins {/s//plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false/' android/build.gradle.kts
+              fi
+              if ! grep -q "com.google.gms.google-services" android/app/build.gradle.kts; then
+                sed -i '0, /plugins {/s//plugins {\n    id("com.google.gms.google-services")/' android/app/build.gradle.kts
+              fi
+            else
+              if ! grep -q "com.google.gms:google-services" android/build.gradle; then
+                awk '/dependencies \{/ && !done {print; print "        classpath \"com.google.gms:google-services:4.4.2\""; done=1; next} 1' android/build.gradle > tmp.gradle && mv tmp.gradle android/build.gradle
+              fi
+              if ! grep -q "com.google.gms.google-services" android/app/build.gradle; then
+                echo "apply plugin: 'com.google.gms.google-services'" >> android/app/build.gradle
+              fi
+            fi
+          fi
+
       - name: Get dependencies
         run: flutter pub get
 

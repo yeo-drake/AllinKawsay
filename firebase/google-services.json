@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "603260146479",
+    "project_id": "allinkawsay-326c9",
+    "storage_bucket": "allinkawsay-326c9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:603260146479:android:2c872d7cf4ec2c6dacc7da",
+        "android_client_info": {
+          "package_name": "com.sikuris.sikuris_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZpSNJUwgWW4zsqXwpzn2QSDOAthn5Jac"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,8 +8,6 @@ class EventosScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Próximos eventos'),
-        backgroundColor: const Color(0xFF8B4513),
-        foregroundColor: Colors.white,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),

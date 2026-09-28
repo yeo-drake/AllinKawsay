@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/cancion.dart';
 import '../models/comentario.dart';
@@ -39,14 +40,29 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   }
 
   Future<void> _cargarAudio() async {
-    if (widget.cancion.audioUrl.isEmpty) return;
-    try {
-      await _player.setUrl(widget.cancion.audioUrl);
-      if (mounted) setState(() => _listo = true);
-    } catch (e) {
-      if (mounted) setState(() => _error = 'No se pudo cargar el audio');
-    }
+  if (widget.cancion.audioUrl.isEmpty) return;
+  try {
+    await _player.setAudioSource(
+      AudioSource.uri(
+        Uri.parse(widget.cancion.audioUrl),
+        tag: MediaItem(
+          id: 'cancion_${widget.cancion.id}',
+          album: 'Sikuris',
+          title: widget.cancion.titulo,
+          artist: widget.cancion.autor.isNotEmpty
+              ? widget.cancion.autor
+              : 'Anónimo',
+          artUri: widget.cancion.imagenUrl.isNotEmpty
+              ? Uri.parse(widget.cancion.imagenUrl)
+              : null,
+        ),
+      ),
+    );
+    if (mounted) setState(() => _listo = true);
+  } catch (e) {
+    if (mounted) setState(() => _error = 'No se pudo cargar el audio');
   }
+}
 
   @override
   void dispose() {

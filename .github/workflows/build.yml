@@ -24,6 +24,11 @@ jobs:
           flutter-version: '3.24.3'
           channel: 'stable'
 
+      - name: Instalar ImageMagick
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
       - name: Bootstrap Android project
         run: |
           rm -rf android/
@@ -42,17 +47,24 @@ jobs:
           if [ -f "android_config/icono.png" ]; then
             echo "🎨 Generando íconos desde android_config/icono.png"
 
-            # Tamaños para cada densidad Android
-            # mdpi=48, hdpi=72, xhdpi=96, xxhdpi=144, xxxhdpi=192
-            convert android_config/icono.png -resize 48x48 \
+            # Detectar si es ImageMagick 7 (usa 'magick') o 6 (usa 'convert')
+            if command -v magick &> /dev/null; then
+              CONVERT="magick"
+              echo "Usando ImageMagick 7 (magick)"
+            else
+              CONVERT="convert"
+              echo "Usando ImageMagick 6 (convert)"
+            fi
+
+            $CONVERT android_config/icono.png -resize 48x48 \
               android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-            convert android_config/icono.png -resize 72x72 \
+            $CONVERT android_config/icono.png -resize 72x72 \
               android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-            convert android_config/icono.png -resize 96x96 \
+            $CONVERT android_config/icono.png -resize 96x96 \
               android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-            convert android_config/icono.png -resize 144x144 \
+            $CONVERT android_config/icono.png -resize 144x144 \
               android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-            convert android_config/icono.png -resize 192x192 \
+            $CONVERT android_config/icono.png -resize 192x192 \
               android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
             echo "✅ Íconos generados:"

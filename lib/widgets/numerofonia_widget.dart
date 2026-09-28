@@ -17,6 +17,32 @@ class NumerofoniaWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (numerofonia.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.numbers,
+                  size: 80, color: AppColors.granate.withOpacity(0.3)),
+              const SizedBox(height: 16),
+              const Text('Sin numerofonía',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate)),
+              const SizedBox(height: 8),
+              Text('Aún no hay numerofonía registrada.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: AppColors.negro.withOpacity(0.6))),
+            ],
+          ),
+        ),
+      );
+    }
+
     final tokens = numerofonia.split(RegExp(r'\s+'));
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),

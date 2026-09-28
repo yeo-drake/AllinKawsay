@@ -7,9 +7,8 @@ class StorageService {
   static const String cloudName = 'eveyybgz';
   static const String uploadPreset = 'sikuris_preset';
 
-  // Método general para subir archivos, ahora recibe el tipo de recurso
-  Future<String> _subirConTipo(File archivo, String carpeta, String resourceType) async {
-    // La URL ahora incluye el resource_type (image, video, raw)
+  Future<String> _subirConTipo(
+      File archivo, String carpeta, String resourceType) async {
     final url = Uri.parse(
       'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload',
     );
@@ -30,15 +29,15 @@ class StorageService {
     return json['secure_url'] as String;
   }
 
-  // Sube PDFs usando el tipo 'raw'
-  Future<String> subirPDF(File archivo, String cancionId) =>
-      _subirConTipo(archivo, 'sikuris/canciones/$cancionId', 'raw');
+  // Imagen de partitura
+  Future<String> subirPartitura(File archivo, String cancionId) =>
+      _subirConTipo(archivo, 'sikuris/canciones/$cancionId', 'image');
 
-  // Sube audios usando el tipo 'video'
+  // Audio (Cloudinary lo trata como 'video')
   Future<String> subirAudio(File archivo, String cancionId) =>
       _subirConTipo(archivo, 'sikuris/canciones/$cancionId', 'video');
 
-  // Sube fotos usando el tipo 'image'
+  // Fotos de recuerdos
   Future<String> subirFoto(File archivo, String carpeta) =>
       _subirConTipo(archivo, 'sikuris/$carpeta', 'image');
 }

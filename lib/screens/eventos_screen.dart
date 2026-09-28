@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/colors.dart';
 
 class EventosScreen extends StatelessWidget {
   const EventosScreen({super.key});
@@ -6,9 +7,7 @@ class EventosScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Próximos eventos'),
-      ),
+      appBar: AppBar(title: const Text('PRÓXIMOS EVENTOS')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -29,11 +28,12 @@ class EventosScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: const Color(0xFFD2691E),
-          child: Icon(icono, color: Colors.white),
+          backgroundColor: AppColors.granate,
+          child: Icon(icono, color: AppColors.dorado),
         ),
-        title:
-            Text(titulo, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(titulo,
+            style: const TextStyle(
+                fontWeight: FontWeight.bold, color: AppColors.negro)),
         subtitle: Text('$fecha · $lugar'),
       ),
     );

@@ -1,8 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 class StorageService {
   // ⚠️ Reemplaza con tu Cloud name
@@ -38,19 +36,4 @@ class StorageService {
 
   Future<String> subirFoto(File archivo, String carpeta) =>
       _subirConAuto(archivo, 'sikuris/$carpeta');
-
-  /// Descarga un archivo desde URL y lo comparte/guarda
-  Future<void> descargar(String url, String nombreArchivo) async {
-    final dir = await getTemporaryDirectory();
-    final archivo = File('${dir.path}/$nombreArchivo');
-    final res = await http.get(Uri.parse(url));
-    if (res.statusCode != 200) {
-      throw Exception('No se pudo descargar (${res.statusCode})');
-    }
-    await archivo.writeAsBytes(res.bodyBytes);
-    await Share.shareXFiles(
-      [XFile(archivo.path)],
-      text: 'Sikuris - $nombreArchivo',
-    );
-  }
 }

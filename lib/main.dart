@@ -110,6 +110,16 @@ class SikurisApp extends StatelessWidget {
         textColor: AppColors.negro,
       ),
       dividerColor: AppColors.dorado,
+      inputDecorationTheme: const InputDecorationTheme(
+        labelStyle: TextStyle(color: AppColors.granate),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.dorado, width: 2),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.dorado),
+        ),
+        border: OutlineInputBorder(),
+      ),
     );
   }
 }

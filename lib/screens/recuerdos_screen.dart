@@ -26,18 +26,8 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
   }
 
   Future<void> _cargarUsuario() async {
-    final uid = _getUid();
-    if (uid == null) return;
-    final u = await UsuarioService().obtener(uid);
+    final u = await UsuarioService().miUsuarioActual();
     if (mounted) setState(() => _usuario = u);
-  }
-
-  String? _getUid() {
-    try {
-      return UsuarioService().miUsuario().first.hashCode.toString();
-    } catch (_) {
-      return null;
-    }
   }
 
   void _eliminar(Recuerdo r) async {

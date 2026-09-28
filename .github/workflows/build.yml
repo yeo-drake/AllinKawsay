@@ -26,24 +26,25 @@ jobs:
 
       - name: Bootstrap Android project
         run: |
-          if [ ! -d "android" ]; then
-            flutter create . --org com.sikuris --platforms android --project-name sikuris_app
-            git checkout -- lib/main.dart 2>/dev/null || true
-          fi
+          rm -rf android/
+          flutter create . --org com.sikuris --platforms android --project-name sikuris_app
+          git checkout -- lib/ pubspec.yaml 2>/dev/null || true
 
-      - name: Aplicar config Android personalizada
+      - name: Aplicar config Android con Firebase
         run: |
-          # Copiar nuestros build.gradle encima de los que generó flutter create
+          cp android_config/settings.gradle android/settings.gradle
           cp android_config/build.gradle android/build.gradle
           cp android_config/app/build.gradle android/app/build.gradle
-
-          # Copiar google-services.json de Firebase
           cp firebase/google-services.json android/app/google-services.json
 
-          echo "=== android/build.gradle (primeras 10 líneas) ==="
-          head -10 android/build.gradle
-          echo "=== android/app/build.gradle (primeras 10 líneas) ==="
-          head -10 android/app/build.gradle
+          echo "===== android/settings.gradle ====="
+          cat android/settings.gradle
+          echo ""
+          echo "===== android/build.gradle ====="
+          cat android/build.gradle
+          echo ""
+          echo "===== android/app/build.gradle (primeras 30) ====="
+          head -30 android/app/build.gradle
 
       - name: Get dependencies
         run: flutter pub get

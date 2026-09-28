@@ -26,4 +26,18 @@ class UsuarioService {
     final u = await obtener(uid);
     return u?.esAdmin ?? false;
   }
+
+  /// Lista todos los usuarios (solo para admin)
+  Stream<List<Usuario>> listar() {
+    return _db
+        .collection('usuarios')
+        .orderBy('fechaRegistro', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map(Usuario.fromDoc).toList());
+  }
+
+  /// Cambia el rol de un usuario
+  Future<void> cambiarRol(String uid, String nuevoRol) {
+    return _db.collection('usuarios').doc(uid).update({'rol': nuevoRol});
+  }
 }

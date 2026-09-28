@@ -40,7 +40,6 @@ class _RegistroScreenState extends State<RegistroScreen> {
       await AuthService().registrar(email, pass, nombre);
       if (mounted) {
         _snack('¡Cuenta creada! Bienvenido/a $nombre');
-        // main.dart detecta el registro y navega solo
         Navigator.pop(context);
       }
     } on FirebaseAuthException catch (e) {

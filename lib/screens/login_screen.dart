@@ -78,12 +78,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SikuriLogo(size: 140),
                   const SizedBox(height: 20),
                   const Text(
-                    'SIKURIS',
+                    'ALLIN KAWSAY',
                     style: TextStyle(
-                      fontSize: 36,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                       color: AppColors.dorado,
-                      letterSpacing: 6,
+                      letterSpacing: 4,
                     ),
                   ),
                   const SizedBox(height: 4),

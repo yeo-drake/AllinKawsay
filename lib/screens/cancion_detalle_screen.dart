@@ -131,9 +131,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
         ),
       );
     }
-    return Center(
-      child: Text('Partitura: ${c.pdfUrl}'),
-    );
+    return Center(child: Text('Partitura: ${c.pdfUrl}'));
   }
 
   Widget _audioTab() {
@@ -204,17 +202,20 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
                             AppColors.granate.withOpacity(0.2),
                       ),
                       child: Slider(
-                        value: pos.inSeconds
+                        value: pos.inSeconds.toDouble().clamp(
+                            0,
+                            dur.inSeconds
+                                .toDouble()
+                                .clamp(1, double.infinity)),
+                        max: dur.inSeconds
                             .toDouble()
-                            .clamp(0, dur.inSeconds.toDouble().clamp(1, double.infinity)),
-                        max: dur.inSeconds.toDouble().clamp(1, double.infinity),
+                            .clamp(1, double.infinity),
                         onChanged: (v) =>
                             _player.seek(Duration(seconds: v.toInt())),
                       ),
                     ),
                     Text('${_fmt(pos)} / ${_fmt(dur)}',
-                        style:
-                            const TextStyle(color: AppColors.negro)),
+                        style: const TextStyle(color: AppColors.negro)),
                   ],
                 ),
               );

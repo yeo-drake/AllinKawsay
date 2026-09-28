@@ -61,7 +61,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       final service = CancionService();
       final storage = StorageService();
 
-      // 1. Crear la canción primero para tener su ID
       final id = await service.agregar(Cancion(
         id: '',
         titulo: _titulo.text.trim(),
@@ -76,7 +75,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         creadorNombre: user.displayName ?? user.email ?? 'Anónimo',
       ));
 
-      // 2. Subir archivos si hay
       String pdfUrl = '';
       String audioUrl = '';
 
@@ -89,7 +87,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         audioUrl = await storage.subirAudio(_audio!, id);
       }
 
-      // 3. Actualizar la canción con las URLs
       if (pdfUrl.isNotEmpty || audioUrl.isNotEmpty) {
         await service.actualizar(id, {
           'pdfUrl': pdfUrl,

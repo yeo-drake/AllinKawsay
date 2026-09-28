@@ -7,10 +7,11 @@ class StorageService {
   static const String cloudName = 'eveyybgz';
   static const String uploadPreset = 'sikuris_preset';
 
-  Future<String> _subirConTipo(
-      File archivo, String carpeta, String resourceType) async {
+  // Método general para subir archivos usando el tipo de recurso 'auto'
+  Future<String> _subirConAuto(File archivo, String carpeta) async {
+    // La URL usa 'auto', dejando que Cloudinary decida el tipo correcto
     final url = Uri.parse(
-      'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload',
+      'https://api.cloudinary.com/v1_1/$cloudName/auto/upload',
     );
 
     final request = http.MultipartRequest('POST', url)
@@ -29,15 +30,15 @@ class StorageService {
     return json['secure_url'] as String;
   }
 
-  // Imagen de partitura
+  // Sube la imagen de la partitura (Cloudinary lo tratará como 'image')
   Future<String> subirPartitura(File archivo, String cancionId) =>
-      _subirConTipo(archivo, 'sikuris/canciones/$cancionId', 'image');
+      _subirConAuto(archivo, 'sikuris/canciones/$cancionId');
 
-  // Audio (Cloudinary lo trata como 'video')
+  // Sube el audio (Cloudinary lo tratará como 'video')
   Future<String> subirAudio(File archivo, String cancionId) =>
-      _subirConTipo(archivo, 'sikuris/canciones/$cancionId', 'video');
+      _subirConAuto(archivo, 'sikuris/canciones/$cancionId');
 
-  // Fotos de recuerdos
+  // Sube fotos para los recuerdos (Cloudinary lo tratará como 'image')
   Future<String> subirFoto(File archivo, String carpeta) =>
-      _subirConTipo(archivo, 'sikuris/$carpeta', 'image');
+      _subirConAuto(archivo, 'sikuris/$carpeta');
 }

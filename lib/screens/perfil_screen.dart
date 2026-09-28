@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
-import 'login_screen.dart';
 import '../services/auth_service.dart';
+import '../theme/colors.dart';
 
 class PerfilScreen extends StatelessWidget {
   final String nombreUsuario;
@@ -61,7 +60,8 @@ class PerfilScreen extends StatelessWidget {
               child: const CircleAvatar(
                 radius: 48,
                 backgroundColor: AppColors.granate,
-                child: Icon(Icons.person, size: 56, color: AppColors.dorado),
+                child:
+                    Icon(Icons.person, size: 56, color: AppColors.dorado),
               ),
             ),
           ),
@@ -85,11 +85,13 @@ class PerfilScreen extends StatelessWidget {
           const SizedBox(height: 32),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.upload_file, color: AppColors.granate),
+            leading:
+                const Icon(Icons.upload_file, color: AppColors.granate),
             title: const Text('Mis subidas'),
-            subtitle: const Text('Canciones, fotos y partituras que subiste'),
-            trailing: const Icon(Icons.chevron_right,
-                color: AppColors.dorado),
+            subtitle:
+                const Text('Canciones, fotos y partituras que subiste'),
+            trailing:
+                const Icon(Icons.chevron_right, color: AppColors.dorado),
             onTap: () => _abrir(
               context,
               'Mis subidas',
@@ -104,8 +106,8 @@ class PerfilScreen extends StatelessWidget {
             leading: const Icon(Icons.settings, color: AppColors.granate),
             title: const Text('Ajustes'),
             subtitle: const Text('Notificaciones, tema y preferencias'),
-            trailing: const Icon(Icons.chevron_right,
-                color: AppColors.dorado),
+            trailing:
+                const Icon(Icons.chevron_right, color: AppColors.dorado),
             onTap: () => _abrir(
               context,
               'Ajustes',
@@ -116,12 +118,12 @@ class PerfilScreen extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading:
-                const Icon(Icons.info_outline, color: AppColors.granate),
+            leading: const Icon(Icons.info_outline,
+                color: AppColors.granate),
             title: const Text('Acerca de'),
             subtitle: const Text('Versión e información del grupo'),
-            trailing: const Icon(Icons.chevron_right,
-                color: AppColors.dorado),
+            trailing:
+                const Icon(Icons.chevron_right, color: AppColors.dorado),
             onTap: () => _abrir(
               context,
               'Acerca de',
@@ -136,19 +138,11 @@ class PerfilScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(
               height: 50,
-              child: onPressed: () async {
-  await AuthService().logout();
-  // main.dart detecta el cambio y vuelve al login solo
-},(
+              child: OutlinedButton.icon(
                 icon: const Icon(Icons.logout),
                 label: const Text('CERRAR SESIÓN'),
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => const LoginScreen()),
-                    (route) => false,
-                  );
+                onPressed: () async {
+                  await AuthService().logout();
                 },
               ),
             ),

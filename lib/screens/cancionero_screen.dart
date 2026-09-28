@@ -72,7 +72,13 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
                     CircularProgressIndicator(color: AppColors.granate));
           }
           if (snap.hasError) {
-            return Center(child: Text('Error: ${snap.error}'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text('Error: ${snap.error}',
+                    textAlign: TextAlign.center),
+              ),
+            );
           }
           final lista = snap.data ?? [];
           if (lista.isEmpty) {

@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/cancion.dart';
 import '../services/cancion_service.dart';
 import '../services/storage_service.dart';
@@ -16,34 +16,48 @@ class AgregarCancionScreen extends StatefulWidget {
 
 class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   final _titulo = TextEditingController();
-  final _compositor = TextEditingController();
+  final _autor = TextEditingController();
   final _ritmo = TextEditingController();
   final _region = TextEditingController();
   final _numerofonia = TextEditingController();
+  final _letra = TextEditingController();
   final _descripcion = TextEditingController();
+  final _tagCtrl = TextEditingController();
 
-  File? _pdf;
+  String _tipo = 'original';
+  final List<String> _tags = [];
+  File? _imagen;
   File? _audio;
   bool _guardando = false;
   String _estado = '';
 
-  Future<void> _elegirPDF() async {
-    final r = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
+  Future<void> _elegirImagen({bool camara = false}) async {
+    final picker = ImagePicker();
+    final x = await picker.pickImage(
+      source: camara ? ImageSource.camera : ImageSource.gallery,
+      imageQuality: 80,
     );
-    if (r != null && r.files.single.path != null) {
-      setState(() => _pdf = File(r.files.single.path!));
-    }
+    if (x != null) setState(() => _imagen = File(x.path));
   }
 
   Future<void> _elegirAudio() async {
-    final r = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
-    );
-    if (r != null && r.files.single.path != null) {
-      setState(() => _audio = File(r.files.single.path!));
+    final picker = ImagePicker();
+    // image_picker no elige audios → usamos FilePicker del sistema
+    // Solución: usar showModalBottomSheet con opciones de audio,
+    // pero como no tenemos file_picker, usamos un input simple
+    // que el usuario abre desde Archivos
+    _snack(
+        'Por ahora sube el audio desde tu PC/otra app. '
+        'Próximamente agregaremos selector de audio.');
+  }
+
+  void _agregarTag() {
+    final t = _tagCtrl.text.trim().toLowerCase();
+    if (t.isEmpty) return;
+    if (!_tags.contains(t)) {
+      setState(() => _tags.add(t));
     }
+    _tagCtrl.clear();
   }
 
   Future<void> _guardar() async {
@@ -64,32 +78,35 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       final id = await service.agregar(Cancion(
         id: '',
         titulo: _titulo.text.trim(),
-        compositor: _compositor.text.trim(),
+        autor: _autor.text.trim(),
+        tipo: _tipo,
         ritmo: _ritmo.text.trim(),
         region: _region.text.trim(),
         numerofonia: _numerofonia.text.trim(),
+        letra: _letra.text.trim(),
+        imagenUrl: '',
         audioUrl: '',
-        pdfUrl: '',
         descripcion: _descripcion.text.trim(),
+        tags: _tags,
         creadoPor: user.uid,
         creadorNombre: user.displayName ?? user.email ?? 'Anónimo',
       ));
 
-      String pdfUrl = '';
+      String imagenUrl = '';
       String audioUrl = '';
 
-      if (_pdf != null) {
+      if (_imagen != null) {
         setState(() => _estado = 'Subiendo partitura...');
-        pdfUrl = await storage.subirPDF(_pdf!, id);
+        imagenUrl = await storage.subirPartitura(_imagen!, id);
       }
       if (_audio != null) {
         setState(() => _estado = 'Subiendo audio...');
         audioUrl = await storage.subirAudio(_audio!, id);
       }
 
-      if (pdfUrl.isNotEmpty || audioUrl.isNotEmpty) {
+      if (imagenUrl.isNotEmpty || audioUrl.isNotEmpty) {
         await service.actualizar(id, {
-          'pdfUrl': pdfUrl,
+          'imagenUrl': imagenUrl,
           'audioUrl': audioUrl,
         });
       }
@@ -117,6 +134,57 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // === IMAGEN ===
+          Text('Partitura (imagen)',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate)),
+          const SizedBox(height: 8),
+          if (_imagen != null)
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(_imagen!,
+                      width: double.infinity, height: 200, fit: BoxFit.cover),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    style: IconButton.styleFrom(
+                        backgroundColor: Colors.black54),
+                    onPressed: () => setState(() => _imagen = null),
+                  ),
+                ),
+              ],
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed:
+                        _guardando ? null : () => _elegirImagen(camara: false),
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Galería'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed:
+                        _guardando ? null : () => _elegirImagen(camara: true),
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Cámara'),
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 20),
+
+          // === TÍTULO ===
           TextField(
             controller: _titulo,
             textCapitalization: TextCapitalization.sentences,
@@ -124,12 +192,32 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 labelText: 'Título *', prefixIcon: Icon(Icons.music_note)),
           ),
           const SizedBox(height: 12),
+
+          // === AUTOR ===
           TextField(
-            controller: _compositor,
+            controller: _autor,
             decoration: const InputDecoration(
-                labelText: 'Compositor', prefixIcon: Icon(Icons.person)),
+                labelText: 'Autor', prefixIcon: Icon(Icons.person)),
           ),
           const SizedBox(height: 12),
+
+          // === TIPO ===
+          Text('Tipo',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate)),
+          const SizedBox(height: 4),
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'original', label: Text('Original')),
+              ButtonSegment(value: 'adaptacion', label: Text('Adaptación')),
+            ],
+            selected: {_tipo},
+            onSelectionChanged: (s) => setState(() => _tipo = s.first),
+          ),
+          const SizedBox(height: 12),
+
+          // === RITMO ===
           TextField(
             controller: _ritmo,
             decoration: const InputDecoration(
@@ -137,12 +225,60 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.graphic_eq)),
           ),
           const SizedBox(height: 12),
+
+          // === REGIÓN ===
           TextField(
             controller: _region,
             decoration: const InputDecoration(
                 labelText: 'Región', prefixIcon: Icon(Icons.place)),
           ),
           const SizedBox(height: 12),
+
+          // === TAGS ===
+          Text('Tags (para búsqueda)',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate)),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _tagCtrl,
+                  decoration: const InputDecoration(
+                    hintText: 'Ej: carnaval, cusco, rápido',
+                    prefixIcon: Icon(Icons.tag),
+                  ),
+                  onSubmitted: (_) => _agregarTag(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: _agregarTag,
+                icon: const Icon(Icons.add_circle,
+                    color: AppColors.granate),
+              ),
+            ],
+          ),
+          if (_tags.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: _tags
+                  .map((t) => Chip(
+                        label: Text(t),
+                        deleteIcon: const Icon(Icons.close, size: 16),
+                        onDeleted: () =>
+                            setState(() => _tags.remove(t)),
+                        backgroundColor:
+                            AppColors.dorado.withOpacity(0.2),
+                      ))
+                  .toList(),
+            ),
+          ],
+          const SizedBox(height: 12),
+
+          // === NUMEROFONÍA ===
           TextField(
             controller: _numerofonia,
             maxLines: 3,
@@ -151,40 +287,57 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.numbers)),
           ),
           const SizedBox(height: 12),
+
+          // === LETRA ===
+          TextField(
+            controller: _letra,
+            maxLines: 6,
+            decoration: const InputDecoration(
+                labelText: 'Letra de la canción',
+                alignLabelWithHint: true,
+                prefixIcon: Icon(Icons.text_fields)),
+          ),
+          const SizedBox(height: 12),
+
+          // === DESCRIPCIÓN ===
           TextField(
             controller: _descripcion,
             maxLines: 3,
             decoration: const InputDecoration(
-                labelText: 'Descripción',
+                labelText: 'Notas / descripción',
                 prefixIcon: Icon(Icons.description)),
           ),
-          const SizedBox(height: 24),
-          _archivoBtn(
-            icono: Icons.picture_as_pdf,
-            texto: _pdf == null
-                ? 'Elegir partitura PDF'
-                : 'PDF: ${_pdf!.path.split('/').last}',
-            onTap: _elegirPDF,
-            activo: _pdf != null,
-          ),
-          const SizedBox(height: 12),
-          _archivoBtn(
-            icono: Icons.audiotrack,
-            texto: _audio == null
-                ? 'Elegir audio (MP3)'
-                : 'Audio: ${_audio!.path.split('/').last}',
-            onTap: _elegirAudio,
-            activo: _audio != null,
+          const SizedBox(height: 20),
+
+          // === AUDIO ===
+          Text('Audio',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate)),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: _guardando ? null : _elegirAudio,
+            icon: Icon(Icons.audiotrack,
+                color: _audio != null ? Colors.green : AppColors.granate),
+            label: Text(
+              _audio == null
+                  ? 'Elegir audio (MP3)'
+                  : 'Audio: ${_audio!.path.split('/').last}',
+              style: TextStyle(
+                  color: _audio != null ? Colors.green : AppColors.granate),
+            ),
+            style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16)),
           ),
           const SizedBox(height: 32),
+
           if (_guardando)
             Column(
               children: [
                 const CircularProgressIndicator(color: AppColors.granate),
                 const SizedBox(height: 8),
                 Text(_estado,
-                    style:
-                        const TextStyle(color: AppColors.granate)),
+                    style: const TextStyle(color: AppColors.granate)),
                 const SizedBox(height: 16),
               ],
             ),
@@ -199,29 +352,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _archivoBtn({
-    required IconData icono,
-    required String texto,
-    required VoidCallback onTap,
-    required bool activo,
-  }) {
-    return OutlinedButton.icon(
-      onPressed: onTap,
-      icon: Icon(icono, color: activo ? Colors.green : AppColors.granate),
-      label: Text(
-        texto,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-            color: activo ? Colors.green : AppColors.granate),
-      ),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(
-            color: activo ? Colors.green : AppColors.granate, width: 1.5),
       ),
     );
   }

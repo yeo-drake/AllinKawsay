@@ -145,6 +145,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       ),
       body: ListView(
         children: [
+          // === 1. IMAGEN ===
           if (c.imagenUrl.isNotEmpty)
             GestureDetector(
               onTap: _verImagen,
@@ -193,6 +194,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
 
           const SizedBox(height: 12),
 
+          // === 2. AUDIO COMPACTO ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _audioPlayerCompacto(puedeDescargar),
@@ -200,6 +202,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
 
           const SizedBox(height: 16),
 
+          // === 3. LETRA ===
           if (c.letra.isNotEmpty) ...[
             const Divider(),
             const Padding(
@@ -225,6 +228,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
             const SizedBox(height: 24),
           ],
 
+          // === 4. NUMEROFONÍA ===
           if (c.numerofonia.isNotEmpty) ...[
             const Divider(),
             NumerofoniaWidget(numerofonia: c.numerofonia),
@@ -233,6 +237,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
 
           const Divider(),
 
+          // === 5. INFO DESPLEGABLE ===
           ExpansionTile(
             leading:
                 const Icon(Icons.info_outline, color: AppColors.granate),
@@ -303,6 +308,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
             ],
           ),
 
+          // === 6. COMENTARIOS ===
           ExpansionTile(
             leading: const Icon(Icons.comment, color: AppColors.granate),
             title: const Text('Comentarios',
@@ -331,6 +337,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     );
   }
 
+  // === REPRODUCTOR COMPACTO ===
   Widget _audioPlayerCompacto(bool puedeDescargar) {
     if (widget.cancion.audioUrl.isEmpty) {
       return Container(
@@ -464,6 +471,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     );
   }
 
+  // === COMENTARIOS ===
   Widget _comentariosBody() {
     return StreamBuilder<List<Comentario>>(
       stream: ComentarioService().listar(widget.cancion.id),
@@ -565,6 +573,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     );
   }
 
+  // === HELPERS ===
   String _fmtFecha(DateTime? d) {
     if (d == null) return '...';
     return '${d.day}/${d.month}/${d.year} ${d.hour}:${d.minute.toString().padLeft(2, '0')}';
@@ -576,12 +585,4 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     return '$m:$s';
   }
 
-  Widget _fila(IconData icono, String label, String valor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icono, size: 20, color: AppColors.granate),
-          const SizedBox(width: 12),
-          Text('$label: ',
-  
+  Widge

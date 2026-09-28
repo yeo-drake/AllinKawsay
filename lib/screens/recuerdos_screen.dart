@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/recuerdo.dart';
 import '../models/usuario.dart';
 import '../services/recuerdo_service.dart';
-import '../services/storage_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
 import 'agregar_recuerdo_screen.dart';
@@ -18,7 +18,6 @@ class RecuerdosScreen extends StatefulWidget {
 class _RecuerdosScreenState extends State<RecuerdosScreen> {
   final _service = RecuerdoService();
   Usuario? _usuario;
-  bool _descargando = false;
 
   @override
   void initState() {
@@ -27,8 +26,18 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
   }
 
   Future<void> _cargarUsuario() async {
-    final u = await UsuarioService().miUsuario().first;
+    final uid = _getUid();
+    if (uid == null) return;
+    final u = await UsuarioService().obtener(uid);
     if (mounted) setState(() => _usuario = u);
+  }
+
+  String? _getUid() {
+    try {
+      return UsuarioService().miUsuario().first.hashCode.toString();
+    } catch (_) {
+      return null;
+    }
   }
 
   void _eliminar(Recuerdo r) async {
@@ -82,18 +91,23 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
     );
   }
 
-  Future<void> _descargarFoto(String url, String nombre) async {
-    setState(() => _descargando = true);
+  Future<void> _descargarFoto(String url) async {
+    final uri = Uri.parse(url);
     try {
-      await StorageService().descargar(url, nombre);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('No se pudo abrir la imagen')),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _descargando = false);
     }
   }
 
@@ -273,9 +287,7 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                       right: 4,
                                       child: GestureDetector(
                                         onTap: () => _descargarFoto(
-                                          r.fotos[j],
-                                          'recuerdo_${r.titulo}_$j.jpg',
-                                        ),
+                                            r.fotos[j]),
                                         child: Container(
                                           padding:
                                               const EdgeInsets.all(6),

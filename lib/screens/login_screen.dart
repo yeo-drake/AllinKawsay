@@ -24,7 +24,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _loading = true);
     try {
       await AuthService().login(_email.text.trim(), _pass.text.trim());
-      // main.dart detecta el cambio y navega solo
     } on FirebaseAuthException catch (e) {
       String msg = 'Error al iniciar sesión';
       switch (e.code) {
@@ -106,8 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextField(
                             controller: _email,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: _inputDeco(
-                                'Email', Icons.email),
+                            decoration: _inputDeco('Email', Icons.email),
                           ),
                           const SizedBox(height: 16),
                           TextField(
@@ -126,8 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ? const SizedBox(
                                       width: 22,
                                       height: 22,
-                                      child:
-                                          CircularProgressIndicator(
+                                      child: CircularProgressIndicator(
                                         color: AppColors.dorado,
                                         strokeWidth: 2.5,
                                       ),

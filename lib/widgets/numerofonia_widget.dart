@@ -5,7 +5,6 @@ class NumerofoniaWidget extends StatelessWidget {
   final String numerofonia;
   const NumerofoniaWidget({super.key, required this.numerofonia});
 
-  // 6 colores derivados de la paleta oficial
   static const _colores = {
     '1': AppColors.granate,
     '2': AppColors.granateOscuro,
@@ -30,7 +29,8 @@ class NumerofoniaWidget extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: AppColors.granate)),
           const SizedBox(height: 4),
-          Text('Cada número = una nota. Este es un método para leer '
+          Text(
+              'Cada número = una nota. Este es un método para leer '
               'sin necesidad de partitura.',
               style: TextStyle(color: AppColors.negro.withOpacity(0.6))),
           const SizedBox(height: 24),
@@ -52,8 +52,8 @@ class NumerofoniaWidget extends StatelessWidget {
                   height: 60,
                   alignment: Alignment.center,
                   child: const Text('—',
-                      style:
-                          TextStyle(fontSize: 24, color: AppColors.negro)),
+                      style: TextStyle(
+                          fontSize: 24, color: AppColors.negro)),
                 );
               }
               final color = _colores[t.substring(0, 1)] ?? AppColors.negro;

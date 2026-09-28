@@ -42,18 +42,25 @@ jobs:
           cp android_config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           cp firebase/google-services.json android/app/google-services.json
 
+      - name: Preparar assets
+        run: |
+          mkdir -p assets
+          if [ -f "android_config/icono.png" ]; then
+            cp android_config/icono.png assets/logo.png
+            echo "✅ Logo copiado a assets/logo.png"
+          else
+            echo "⚠️ No hay icono.png, se usará logo por defecto"
+          fi
+
       - name: Generar íconos del lanzador
         run: |
           if [ -f "android_config/icono.png" ]; then
             echo "🎨 Generando íconos desde android_config/icono.png"
 
-            # Detectar si es ImageMagick 7 (usa 'magick') o 6 (usa 'convert')
             if command -v magick &> /dev/null; then
               CONVERT="magick"
-              echo "Usando ImageMagick 7 (magick)"
             else
               CONVERT="convert"
-              echo "Usando ImageMagick 6 (convert)"
             fi
 
             $CONVERT android_config/icono.png -resize 48x48 \
@@ -67,10 +74,9 @@ jobs:
             $CONVERT android_config/icono.png -resize 192x192 \
               android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
-            echo "✅ Íconos generados:"
-            ls -la android/app/src/main/res/mipmap-*/
+            echo "✅ Íconos generados"
           else
-            echo "⚠️ No se encontró android_config/icono.png, usando el ícono por defecto de Flutter"
+            echo "⚠️ No se encontró android_config/icono.png"
           fi
 
       - name: Get dependencies

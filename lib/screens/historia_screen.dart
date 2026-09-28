@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/colors.dart';
 
 class HistoriaScreen extends StatelessWidget {
   const HistoriaScreen({super.key});
@@ -6,16 +7,17 @@ class HistoriaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Nuestra historia'),
-      ),
+      appBar: AppBar(title: const Text('NUESTRA HISTORIA')),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Historia del grupo',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate)),
             SizedBox(height: 12),
             Text(
               'Aquí va la historia del grupo de sikuris: cómo se formó, '

@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class StorageService {
-  // ⚠️ Reemplaza con tu Cloud name de Cloudinary
-  static const String cloudName = 'eveyybgz';
+  // ⚠️ Reemplaza con tu Cloud name
+  static const String cloudName = 'TU_CLOUD_NAME';
   static const String uploadPreset = 'sikuris_preset';
 
-  // Método general: sube CUALQUIER archivo (imagen, audio, video)
-  // usando el endpoint 'auto' que detecta el tipo automáticamente
   Future<String> _subirConAuto(File archivo, String carpeta) async {
     final url = Uri.parse(
       'https://api.cloudinary.com/v1_1/$cloudName/auto/upload',
@@ -30,15 +30,27 @@ class StorageService {
     return json['secure_url'] as String;
   }
 
-  // Sube la imagen de la partitura
   Future<String> subirPartitura(File archivo, String cancionId) =>
       _subirConAuto(archivo, 'sikuris/canciones/$cancionId');
 
-  // Sube el audio
   Future<String> subirAudio(File archivo, String cancionId) =>
       _subirConAuto(archivo, 'sikuris/canciones/$cancionId');
 
-  // Sube fotos de recuerdos
   Future<String> subirFoto(File archivo, String carpeta) =>
       _subirConAuto(archivo, 'sikuris/$carpeta');
+
+  /// Descarga un archivo desde URL y lo comparte/guarda
+  Future<void> descargar(String url, String nombreArchivo) async {
+    final dir = await getTemporaryDirectory();
+    final archivo = File('${dir.path}/$nombreArchivo');
+    final res = await http.get(Uri.parse(url));
+    if (res.statusCode != 200) {
+      throw Exception('No se pudo descargar (${res.statusCode})');
+    }
+    await archivo.writeAsBytes(res.bodyBytes);
+    await Share.shareXFiles(
+      [XFile(archivo.path)],
+      text: 'Sikuris - $nombreArchivo',
+    );
+  }
 }

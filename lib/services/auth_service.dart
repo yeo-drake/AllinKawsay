@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   User? get usuarioActual => _auth.currentUser;
   Stream<User?> get cambiosUsuario => _auth.authStateChanges();
@@ -14,6 +16,15 @@ class AuthService {
     );
     await cred.user?.updateDisplayName(nombre);
     await cred.user?.reload();
+
+    // Crear documento de usuario en Firestore
+    await _db.collection('usuarios').doc(cred.user!.uid).set({
+      'nombre': nombre,
+      'email': email,
+      'rol': 'miembro',
+      'fechaRegistro': FieldValue.serverTimestamp(),
+    });
+
     return _auth.currentUser;
   }
 

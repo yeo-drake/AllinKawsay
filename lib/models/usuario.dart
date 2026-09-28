@@ -4,7 +4,7 @@ class Usuario {
   final String uid;
   final String nombre;
   final String email;
-  final String rol; // 'admin' | 'miembro'
+  final String rol;
   final DateTime? fechaRegistro;
 
   Usuario({

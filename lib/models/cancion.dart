@@ -3,13 +3,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Cancion {
   final String id;
   final String titulo;
-  final String compositor;
+  final String autor;
+  final String tipo; // 'original' | 'adaptacion'
   final String ritmo;
   final String region;
   final String numerofonia;
+  final String letra;
+  final String imagenUrl; // imagen de la partitura
   final String audioUrl;
-  final String pdfUrl;
   final String descripcion;
+  final List<String> tags;
   final String creadoPor;
   final String creadorNombre;
   final DateTime? fechaCreacion;
@@ -17,13 +20,16 @@ class Cancion {
   Cancion({
     required this.id,
     required this.titulo,
-    required this.compositor,
+    required this.autor,
+    required this.tipo,
     required this.ritmo,
     required this.region,
     required this.numerofonia,
+    required this.letra,
+    required this.imagenUrl,
     required this.audioUrl,
-    required this.pdfUrl,
     required this.descripcion,
+    required this.tags,
     required this.creadoPor,
     required this.creadorNombre,
     this.fechaCreacion,
@@ -34,13 +40,16 @@ class Cancion {
     return Cancion(
       id: doc.id,
       titulo: d['titulo'] ?? '',
-      compositor: d['compositor'] ?? '',
+      autor: d['autor'] ?? '',
+      tipo: d['tipo'] ?? 'original',
       ritmo: d['ritmo'] ?? '',
       region: d['region'] ?? '',
       numerofonia: d['numerofonia'] ?? '',
+      letra: d['letra'] ?? '',
+      imagenUrl: d['imagenUrl'] ?? '',
       audioUrl: d['audioUrl'] ?? '',
-      pdfUrl: d['pdfUrl'] ?? '',
       descripcion: d['descripcion'] ?? '',
+      tags: List<String>.from(d['tags'] ?? []),
       creadoPor: d['creadoPor'] ?? '',
       creadorNombre: d['creadorNombre'] ?? '',
       fechaCreacion: (d['fechaCreacion'] as Timestamp?)?.toDate(),
@@ -49,13 +58,16 @@ class Cancion {
 
   Map<String, dynamic> toMap() => {
         'titulo': titulo,
-        'compositor': compositor,
+        'autor': autor,
+        'tipo': tipo,
         'ritmo': ritmo,
         'region': region,
         'numerofonia': numerofonia,
+        'letra': letra,
+        'imagenUrl': imagenUrl,
         'audioUrl': audioUrl,
-        'pdfUrl': pdfUrl,
         'descripcion': descripcion,
+        'tags': tags,
         'creadoPor': creadoPor,
         'creadorNombre': creadorNombre,
         'fechaCreacion': FieldValue.serverTimestamp(),

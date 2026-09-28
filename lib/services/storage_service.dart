@@ -6,7 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 class StorageService {
   // ⚠️ Reemplaza con tu Cloud name
-  static const String cloudName = 'TU_CLOUD_NAME';
+  static const String cloudName = 'eveyybgz';
   static const String uploadPreset = 'sikuris_preset';
 
   Future<String> _subirConAuto(File archivo, String carpeta) async {

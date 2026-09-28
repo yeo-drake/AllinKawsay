@@ -28,29 +28,39 @@ jobs:
         run: |
           rm -rf android/
           flutter create . --org com.sikuris --platforms android --project-name sikuris_app
-          git checkout -- lib/ pubspec.yaml 2>/dev/null || true
 
       - name: Aplicar config Android con Firebase
         run: |
           cp android_config/settings.gradle android/settings.gradle
           cp android_config/build.gradle android/build.gradle
           cp android_config/app/build.gradle android/app/build.gradle
+          cp android_config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           cp firebase/google-services.json android/app/google-services.json
 
-          echo "===== android/settings.gradle ====="
-          cat android/settings.gradle
-          echo ""
-          echo "===== android/build.gradle ====="
-          cat android/build.gradle
-          echo ""
-          echo "===== android/app/build.gradle (primeras 30) ====="
-          head -30 android/app/build.gradle
+          echo "===== AndroidManifest.xml (primeras 20) ====="
+          head -20 android/app/src/main/AndroidManifest.xml
+          echo "===== Verificando iconos ====="
+          ls -la android/app/src/main/res/ || true
+          ls -la android/app/src/main/res/mipmap-hdpi/ 2>/dev/null || echo "No hay mipmap-hdpi"
 
       - name: Get dependencies
         run: flutter pub get
 
       - name: Build APK
         run: flutter build apk --release
+
+      - name: Verificar APK generado
+        run: |
+          ls -la build/app/outputs/flutter-apk/
+          APK_SIZE=$(stat -c%s build/app/outputs/flutter-apk/app-release.apk)
+          echo "Tamaño del APK: $APK_SIZE bytes"
+          if [ "$APK_SIZE" -lt 5000000 ]; then
+            echo "⚠️ ADVERTENCIA: APK muy pequeño, posiblemente corrupto"
+            exit 1
+          fi
+          echo "✅ APK con tamaño razonable"
+          # Verificar que el APK tenga el manifest correcto
+          unzip -l build/app/outputs/flutter-apk/app-release.apk | head -30
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

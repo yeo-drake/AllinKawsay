@@ -4,7 +4,7 @@ class Usuario {
   final String uid;
   final String nombre;
   final String email;
-  final String rol; // 'admin' | 'miembro' | 'publico'
+  final String rol;
   final DateTime? fechaRegistro;
 
   Usuario({
@@ -19,16 +19,10 @@ class Usuario {
   bool get esMiembro => rol == 'miembro' || rol == 'admin';
   bool get esPublico => rol == 'publico';
 
-  /// Puede descargar archivos (imágenes, audios)
   bool get puedeDescargar => esAdmin || rol == 'miembro';
-
-  /// Puede comentar
   bool get puedeComentar => esAdmin || rol == 'miembro';
-
-  /// Puede subir contenido (canciones, eventos, recuerdos, historia)
   bool get puedeSubir => esAdmin;
 
-  /// Nombre del rol para mostrar
   String get rolNombre {
     switch (rol) {
       case 'admin':

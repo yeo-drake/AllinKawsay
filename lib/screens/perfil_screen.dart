@@ -128,7 +128,7 @@ class PerfilScreen extends StatelessWidget {
               const Divider(),
               if (esAdmin)
                 ListTile(
-                  leading: const Icon(Icons.info_outline,
+                  leading: const Icon(Icons.admin_panel_settings,
                       color: AppColors.granate),
                   title: const Text('Panel de administrador'),
                   subtitle: const Text(

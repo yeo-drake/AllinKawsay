@@ -37,6 +37,30 @@ jobs:
           cp android_config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           cp firebase/google-services.json android/app/google-services.json
 
+      - name: Generar íconos del lanzador
+        run: |
+          if [ -f "android_config/icono.png" ]; then
+            echo "🎨 Generando íconos desde android_config/icono.png"
+
+            # Tamaños para cada densidad Android
+            # mdpi=48, hdpi=72, xhdpi=96, xxhdpi=144, xxxhdpi=192
+            convert android_config/icono.png -resize 48x48 \
+              android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+            convert android_config/icono.png -resize 72x72 \
+              android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+            convert android_config/icono.png -resize 96x96 \
+              android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+            convert android_config/icono.png -resize 144x144 \
+              android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+            convert android_config/icono.png -resize 192x192 \
+              android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+
+            echo "✅ Íconos generados:"
+            ls -la android/app/src/main/res/mipmap-*/
+          else
+            echo "⚠️ No se encontró android_config/icono.png, usando el ícono por defecto de Flutter"
+          fi
+
       - name: Get dependencies
         run: flutter pub get
 

@@ -56,6 +56,15 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
     if (ok == true) await _service.eliminar(c.id);
   }
 
+  void _editar(Cancion c) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AgregarCancionScreen(cancion: c),
+      ),
+    );
+  }
+
   List<Cancion> _filtrar(List<Cancion> lista) {
     var r = lista;
     if (_query.isNotEmpty) {
@@ -100,7 +109,6 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
           : null,
       body: Column(
         children: [
-          // === BARRA DE BÚSQUEDA ===
           Padding(
             padding: const EdgeInsets.all(12),
             child: TextField(
@@ -179,7 +187,6 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
 
                 return Column(
                   children: [
-                    // === CHIPS DE TAGS ===
                     if (tags.isNotEmpty)
                       SizedBox(
                         height: 40,
@@ -190,7 +197,8 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
                           children: [
                             if (_tagFiltro != null) ...[
                               ActionChip(
-                                avatar: const Icon(Icons.close, size: 16),
+                                avatar:
+                                    const Icon(Icons.close, size: 16),
                                 label: const Text('Limpiar'),
                                 onPressed: () =>
                                     setState(() => _tagFiltro = null),
@@ -218,8 +226,6 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
                           ],
                         ),
                       ),
-
-                    // === LISTA ===
                     Expanded(
                       child: filtradas.isEmpty
                           ? Center(
@@ -247,11 +253,42 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
                                     '${c.ritmo}${c.autor.isNotEmpty ? ' · ${c.autor}' : ''}',
                                   ),
                                   trailing: _esAdmin
-                                      ? IconButton(
+                                      ? PopupMenuButton<String>(
                                           icon: const Icon(
-                                              Icons.delete_outline,
+                                              Icons.more_vert,
                                               color: AppColors.granate),
-                                          onPressed: () => _eliminar(c),
+                                          onSelected: (v) {
+                                            if (v == 'editar') {
+                                              _editar(c);
+                                            } else if (v == 'eliminar') {
+                                              _eliminar(c);
+                                            }
+                                          },
+                                          itemBuilder: (_) => const [
+                                            PopupMenuItem(
+                                              value: 'editar',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.edit,
+                                                      size: 20),
+                                                  SizedBox(width: 8),
+                                                  Text('Editar'),
+                                                ],
+                                              ),
+                                            ),
+                                            PopupMenuItem(
+                                              value: 'eliminar',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                      Icons.delete_outline,
+                                                      size: 20),
+                                                  SizedBox(width: 8),
+                                                  Text('Eliminar'),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         )
                                       : const Icon(Icons.chevron_right,
                                           color: AppColors.dorado),

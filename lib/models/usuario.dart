@@ -4,7 +4,7 @@ class Usuario {
   final String uid;
   final String nombre;
   final String email;
-  final String rol;
+  final String rol; // 'admin' | 'miembro' | 'publico'
   final DateTime? fechaRegistro;
 
   Usuario({
@@ -16,6 +16,29 @@ class Usuario {
   });
 
   bool get esAdmin => rol == 'admin';
+  bool get esMiembro => rol == 'miembro' || rol == 'admin';
+  bool get esPublico => rol == 'publico';
+
+  /// Puede descargar archivos (imágenes, audios)
+  bool get puedeDescargar => esAdmin || rol == 'miembro';
+
+  /// Puede comentar
+  bool get puedeComentar => esAdmin || rol == 'miembro';
+
+  /// Puede subir contenido (canciones, eventos, recuerdos, historia)
+  bool get puedeSubir => esAdmin;
+
+  /// Nombre del rol para mostrar
+  String get rolNombre {
+    switch (rol) {
+      case 'admin':
+        return 'ADMINISTRADOR';
+      case 'miembro':
+        return 'MIEMBRO OFICIAL';
+      default:
+        return 'PÚBLICO';
+    }
+  }
 
   factory Usuario.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
@@ -23,7 +46,7 @@ class Usuario {
       uid: doc.id,
       nombre: d['nombre'] ?? '',
       email: d['email'] ?? '',
-      rol: d['rol'] ?? 'miembro',
+      rol: d['rol'] ?? 'publico',
       fechaRegistro: (d['fechaRegistro'] as Timestamp?)?.toDate(),
     );
   }

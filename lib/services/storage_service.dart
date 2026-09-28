@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class StorageService {
-  // ⚠️ Reemplaza con tu Cloud name
+  // ⚠️ Reemplaza con tu Cloud name de Cloudinary
   static const String cloudName = 'eveyybgz';
   static const String uploadPreset = 'sikuris_preset';
 
-  // Método general para subir archivos usando el tipo de recurso 'auto'
+  // Método general: sube CUALQUIER archivo (imagen, audio, video)
+  // usando el endpoint 'auto' que detecta el tipo automáticamente
   Future<String> _subirConAuto(File archivo, String carpeta) async {
-    // La URL usa 'auto', dejando que Cloudinary decida el tipo correcto
     final url = Uri.parse(
       'https://api.cloudinary.com/v1_1/$cloudName/auto/upload',
     );
@@ -30,15 +30,15 @@ class StorageService {
     return json['secure_url'] as String;
   }
 
-  // Sube la imagen de la partitura (Cloudinary lo tratará como 'image')
+  // Sube la imagen de la partitura
   Future<String> subirPartitura(File archivo, String cancionId) =>
       _subirConAuto(archivo, 'sikuris/canciones/$cancionId');
 
-  // Sube el audio (Cloudinary lo tratará como 'video')
+  // Sube el audio
   Future<String> subirAudio(File archivo, String cancionId) =>
       _subirConAuto(archivo, 'sikuris/canciones/$cancionId');
 
-  // Sube fotos para los recuerdos (Cloudinary lo tratará como 'image')
+  // Sube fotos de recuerdos
   Future<String> subirFoto(File archivo, String carpeta) =>
       _subirConAuto(archivo, 'sikuris/$carpeta');
 }

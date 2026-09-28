@@ -2,12 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/cancion.dart';
 import '../models/comentario.dart';
 import '../models/usuario.dart';
 import '../services/comentario_service.dart';
-import '../services/storage_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
 import '../widgets/numerofonia_widget.dart';
@@ -24,7 +23,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   final _player = AudioPlayer();
   bool _listo = false;
   String? _error;
-  bool _descargando = false;
   final _comentarioCtrl = TextEditingController();
   Usuario? _usuario;
 
@@ -45,20 +43,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   Future<void> _cargarAudio() async {
     if (widget.cancion.audioUrl.isEmpty) return;
     try {
-      await _player.setAudioSource(AudioSource.uri(
-        Uri.parse(widget.cancion.audioUrl),
-        tag: MediaItem(
-          id: 'cancion_${widget.cancion.id}',
-          album: 'Sikuris',
-          title: widget.cancion.titulo,
-          artist: widget.cancion.autor.isNotEmpty
-              ? widget.cancion.autor
-              : 'Anónimo',
-          artUri: widget.cancion.imagenUrl.isNotEmpty
-              ? Uri.parse(widget.cancion.imagenUrl)
-              : null,
-        ),
-      ));
+      await _player.setUrl(widget.cancion.audioUrl);
       if (mounted) setState(() => _listo = true);
     } catch (e) {
       if (mounted) setState(() => _error = 'No se pudo cargar el audio');
@@ -72,19 +57,24 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     super.dispose();
   }
 
-  Future<void> _descargar(String url, String nombre) async {
+  /// Abre la URL en el navegador — el usuario puede descargar desde ahí
+  Future<void> _descargar(String url) async {
     if (url.isEmpty) return;
-    setState(() => _descargando = true);
+    final uri = Uri.parse(url);
     try {
-      await StorageService().descargar(url, nombre);
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo abrir el enlace')),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al descargar: $e')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
-    } finally {
-      if (mounted) setState(() => _descargando = false);
     }
   }
 
@@ -152,18 +142,13 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
             IconButton(
               icon: const Icon(Icons.download),
               tooltip: 'Descargar partitura',
-              onPressed: _descargando
-                  ? null
-                  : () => _descargar(
-                        c.imagenUrl,
-                        'partitura_${c.titulo}.jpg',
-                      ),
+              onPressed: () => _descargar(c.imagenUrl),
             ),
         ],
       ),
       body: ListView(
         children: [
-          // === 1. IMAGEN DE PARTITURA ===
+          // === 1. IMAGEN ===
           if (c.imagenUrl.isNotEmpty)
             GestureDetector(
               onTap: _verImagen,
@@ -212,7 +197,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
 
           const SizedBox(height: 12),
 
-          // === 2. AUDIO (COMPACTO) ===
+          // === 2. AUDIO COMPACTO ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _audioPlayerCompacto(puedeDescargar),
@@ -238,7 +223,9 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
                 c.letra,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    fontSize: 16, height: 1.8, fontStyle: FontStyle.italic),
+                    fontSize: 16,
+                    height: 1.8,
+                    fontStyle: FontStyle.italic),
               ),
             ),
             const SizedBox(height: 24),
@@ -383,7 +370,8 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       return Container(
         height: 60,
         alignment: Alignment.center,
-        child: const CircularProgressIndicator(color: AppColors.granate),
+        child:
+            const CircularProgressIndicator(color: AppColors.granate),
       );
     }
 
@@ -395,7 +383,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       ),
       child: Row(
         children: [
-          // Botón play/pause
           StreamBuilder<PlayerState>(
             stream: _player.playerStateStream,
             builder: (context, snap) {
@@ -427,8 +414,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
             },
           ),
           const SizedBox(width: 4),
-
-          // Barra de progreso + tiempo
           Expanded(
             child: StreamBuilder<Duration>(
               stream: _player.positionStream,
@@ -474,29 +459,14 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
               },
             ),
           ),
-
-          // Botón descarga (si aplica)
           if (puedeDescargar)
             IconButton(
               iconSize: 22,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
-              icon: _descargando
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        color: AppColors.dorado,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Icon(Icons.download, color: AppColors.dorado),
-              onPressed: _descargando
-                  ? null
-                  : () => _descargar(
-                        widget.cancion.audioUrl,
-                        '${widget.cancion.titulo}.mp3',
-                      ),
+              icon: const Icon(Icons.download, color: AppColors.dorado),
+              tooltip: 'Descargar audio',
+              onPressed: () => _descargar(widget.cancion.audioUrl),
             ),
           const SizedBox(width: 4),
         ],
@@ -510,8 +480,8 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(
-              child:
-                  CircularProgressIndicator(color: AppColors.granate));
+              child: CircularProgressIndicator(
+                  color: AppColors.granate));
         }
         final lista = snap.data ?? [];
         if (lista.isEmpty) {
@@ -575,4 +545,40 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
 
   Widget _comentarioInput() {
     return Container(
-      pa
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border(
+            top: BorderSide(color: AppColors.dorado.withOpacity(0.5))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _comentarioCtrl,
+                decoration: const InputDecoration(
+                  hintText: 'Escribe un comentario...',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              icon: const Icon(Icons.send, color: AppColors.granate),
+              onPressed: _enviarComentario,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _fmtFecha(DateTime? d) {
+    if (d == null) return '...';
+    return '${d.day}/${d.month}/${d.year} ${d.hour}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.toSt

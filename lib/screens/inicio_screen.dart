@@ -25,40 +25,61 @@ class InicioScreen extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             // === HEADER ===
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.negro, AppColors.granate],
-                ),
-              ),
-              child: Column(
-                children: [
-                  const SikuriLogo(size: 90),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'SIKURIS',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.dorado,
-                      letterSpacing: 5,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Hola, $nombreUsuario',
-                    style: TextStyle(
-                      color: AppColors.dorado.withOpacity(0.8),
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
+Container(
+  width: double.infinity,
+  padding: const EdgeInsets.symmetric(vertical: 24),
+  decoration: const BoxDecoration(
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [AppColors.negro, AppColors.granate],
+    ),
+  ),
+  child: Column(
+    children: [
+      Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.negro.withOpacity(0.4),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
+          ],
+        ),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/logo.png',
+            width: 100,
+            height: 100,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+      const SizedBox(height: 12),
+      const Text(
+        'ALLIN KAWSAY',
+        style: TextStyle(
+          fontSize: 26,
+          fontWeight: FontWeight.bold,
+          color: AppColors.dorado,
+          letterSpacing: 4,
+        ),
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'Hola, $nombreUsuario',
+        style: TextStyle(
+          color: AppColors.dorado.withOpacity(0.8),
+          fontSize: 14,
+        ),
+      ),
+    ],
+  ),
+),
 
             const SizedBox(height: 20),
 

@@ -8,7 +8,8 @@ import '../services/storage_service.dart';
 import '../theme/colors.dart';
 
 class AgregarRecuerdoScreen extends StatefulWidget {
-  const AgregarRecuerdoScreen({super.key});
+  final Recuerdo? recuerdo;
+  const AgregarRecuerdoScreen({super.key, this.recuerdo});
 
   @override
   State<AgregarRecuerdoScreen> createState() =>
@@ -18,16 +19,37 @@ class AgregarRecuerdoScreen extends StatefulWidget {
 class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
   final _titulo = TextEditingController();
   final _descripcion = TextEditingController();
-  final List<File> _fotos = [];
+  final List<File> _fotosNuevas = [];
+  final List<String> _fotosExistentes = [];
   bool _guardando = false;
   String _estado = '';
+
+  bool get _esEdicion => widget.recuerdo != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_esEdicion) {
+      final r = widget.recuerdo!;
+      _titulo.text = r.titulo;
+      _descripcion.text = r.descripcion;
+      _fotosExistentes.addAll(r.fotos);
+    }
+  }
+
+  @override
+  void dispose() {
+    _titulo.dispose();
+    _descripcion.dispose();
+    super.dispose();
+  }
 
   Future<void> _elegirFotos() async {
     final picker = ImagePicker();
     final lista = await picker.pickMultiImage(imageQuality: 70);
     if (lista.isNotEmpty) {
       setState(() {
-        _fotos.addAll(lista.map((x) => File(x.path)));
+        _fotosNuevas.addAll(lista.map((x) => File(x.path)));
       });
     }
   }
@@ -39,7 +61,7 @@ class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
       imageQuality: 70,
     );
     if (foto != null) {
-      setState(() => _fotos.add(File(foto.path)));
+      setState(() => _fotosNuevas.add(File(foto.path)));
     }
   }
 
@@ -48,7 +70,7 @@ class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
       _snack('El título es obligatorio');
       return;
     }
-    if (_fotos.isEmpty) {
+    if (_fotosExistentes.isEmpty && _fotosNuevas.isEmpty) {
       _snack('Agrega al menos una foto');
       return;
     }
@@ -60,28 +82,41 @@ class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser!;
       final storage = StorageService();
-      final urls = <String>[];
+      final service = RecuerdoService();
 
-      for (int i = 0; i < _fotos.length; i++) {
-        setState(() =>
-            _estado = 'Subiendo foto ${i + 1} de ${_fotos.length}...');
-        final carpeta = 'recuerdos/${DateTime.now().millisecondsSinceEpoch}';
-        final url = await storage.subirFoto(_fotos[i], carpeta);
+      final urls = <String>[..._fotosExistentes];
+      final carpeta = 'recuerdos/${DateTime.now().millisecondsSinceEpoch}';
+
+      for (int i = 0; i < _fotosNuevas.length; i++) {
+        setState(() => _estado =
+            'Subiendo foto ${i + 1} de ${_fotosNuevas.length}...');
+        final url = await storage.subirFoto(_fotosNuevas[i], carpeta);
         urls.add(url);
       }
 
-      setState(() => _estado = 'Guardando recuerdo...');
-      await RecuerdoService().agregar(Recuerdo(
-        id: '',
-        titulo: _titulo.text.trim(),
-        descripcion: _descripcion.text.trim(),
-        fotos: urls,
-        creadoPor: user.uid,
-        creadorNombre: user.displayName ?? user.email ?? 'Anónimo',
-      ));
+      setState(() => _estado = 'Guardando...');
+
+      if (_esEdicion) {
+        await service.actualizar(widget.recuerdo!.id, {
+          'titulo': _titulo.text.trim(),
+          'descripcion': _descripcion.text.trim(),
+          'fotos': urls,
+        });
+      } else {
+        await service.agregar(Recuerdo(
+          id: '',
+          titulo: _titulo.text.trim(),
+          descripcion: _descripcion.text.trim(),
+          fotos: urls,
+          creadoPor: user.uid,
+          creadorNombre: user.displayName ?? user.email ?? 'Anónimo',
+        ));
+      }
 
       if (mounted) {
-        _snack('¡Recuerdo guardado!');
+        _snack(_esEdicion
+            ? '¡Recuerdo actualizado!'
+            : '¡Recuerdo guardado!');
         Navigator.pop(context);
       }
     } catch (e) {
@@ -96,10 +131,15 @@ class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
         .showSnackBar(SnackBar(content: Text(m)));
   }
 
+
   @override
   Widget build(BuildContext context) {
+    final totalFotos = _fotosExistentes.length + _fotosNuevas.length;
     return Scaffold(
-      appBar: AppBar(title: const Text('AGREGAR RECUERDO')),
+      appBar: AppBar(
+        title:
+            Text(_esEdicion ? 'EDITAR RECUERDO' : 'AGREGAR RECUERDO'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -139,46 +179,93 @@ class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          if (_fotos.isNotEmpty) ...[
-            Text('${_fotos.length} foto(s) seleccionada(s)',
+          if (totalFotos > 0) ...[
+            Text('$totalFotos foto(s)',
                 style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.granate)),
             const SizedBox(height: 8),
             SizedBox(
-              height: 100,
-              child: ListView.separated(
+              height: 120,
+              child: ListView(
                 scrollDirection: Axis.horizontal,
-                itemCount: _fotos.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, i) {
-                  return Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(_fotos[i],
-                            width: 100, height: 100, fit: BoxFit.cover),
-                      ),
-                      Positioned(
-                        top: 4,
-                        right: 4,
-                        child: GestureDetector(
-                          onTap: () =>
-                              setState(() => _fotos.removeAt(i)),
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: const BoxDecoration(
-                              color: Colors.black54,
-                              shape: BoxShape.circle,
+                children: [
+                  for (int i = 0; i < _fotosExistentes.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.network(
+                              _fotosExistentes[i],
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 120,
+                                height: 120,
+                                color: AppColors.grisClaro,
+                                child: const Icon(Icons.broken_image,
+                                    color: AppColors.granate),
+                              ),
                             ),
-                            child: const Icon(Icons.close,
-                                size: 16, color: Colors.white),
                           ),
-                        ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => setState(() =>
+                                  _fotosExistentes.removeAt(i)),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close,
+                                    size: 16, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  );
-                },
+                    ),
+                  for (int i = 0; i < _fotosNuevas.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: Image.file(
+                              _fotosNuevas[i],
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: GestureDetector(
+                              onTap: () => setState(
+                                  () => _fotosNuevas.removeAt(i)),
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close,
+                                    size: 16, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
           ],
@@ -190,8 +277,7 @@ class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
                     color: AppColors.granate),
                 const SizedBox(height: 8),
                 Text(_estado,
-                    style:
-                        const TextStyle(color: AppColors.granate)),
+                    style: const TextStyle(color: AppColors.granate)),
                 const SizedBox(height: 16),
               ],
             ),
@@ -200,9 +286,11 @@ class _AgregarRecuerdoScreenState extends State<AgregarRecuerdoScreen> {
             child: FilledButton.icon(
               onPressed: _guardando ? null : _guardar,
               icon: const Icon(Icons.save),
-              label: const Text('GUARDAR RECUERDO',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+              label: Text(
+                _esEdicion ? 'GUARDAR CAMBIOS' : 'GUARDAR RECUERDO',
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],

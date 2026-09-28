@@ -20,7 +20,7 @@ class AuthService {
     await _db.collection('usuarios').doc(cred.user!.uid).set({
       'nombre': nombre,
       'email': email,
-      'rol': 'miembro',
+      'rol': 'publico',
       'fechaRegistro': FieldValue.serverTimestamp(),
     });
 

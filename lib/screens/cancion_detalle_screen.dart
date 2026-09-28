@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/cancion.dart';
 import '../models/comentario.dart';
@@ -29,10 +29,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   }
 
   Future<void> _cargarAudio() async {
-    if (widget.cancion.audioUrl.isEmpty) {
-      if (mounted) setState(() => _listo = false);
-      return;
-    }
+    if (widget.cancion.audioUrl.isEmpty) return;
     try {
       await _player.setUrl(widget.cancion.audioUrl);
       if (mounted) setState(() => _listo = true);
@@ -163,7 +160,54 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
         ),
       );
     }
-    return SfPdfViewer.network(c.pdfUrl);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.picture_as_pdf,
+                size: 100, color: AppColors.granate),
+            const SizedBox(height: 20),
+            const Text(
+              'Partitura PDF',
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Toca el botón para abrir la partitura en el visor de PDF de tu celular.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  color: AppColors.negro.withOpacity(0.6), height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              height: 52,
+              child: FilledButton.icon(
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('ABRIR PARTITURA'),
+                onPressed: () async {
+                  final uri = Uri.parse(c.pdfUrl);
+                  if (!await launchUrl(uri,
+                      mode: LaunchMode.externalApplication)) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content:
+                                Text('No se pudo abrir el PDF')),
+                      );
+                    }
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _audioTab() {

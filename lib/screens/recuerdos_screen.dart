@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/colors.dart';
 
 class RecuerdosScreen extends StatelessWidget {
   const RecuerdosScreen({super.key});
@@ -6,9 +7,7 @@ class RecuerdosScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Recuerdos'),
-      ),
+      appBar: AppBar(title: const Text('RECUERDOS')),
       body: GridView.count(
         crossAxisCount: 2,
         padding: const EdgeInsets.all(8),
@@ -17,18 +16,19 @@ class RecuerdosScreen extends StatelessWidget {
         children: List.generate(6, (i) {
           return Container(
             decoration: BoxDecoration(
-              color: Color.lerp(const Color(0xFFD2691E),
-                  const Color(0xFF8B4513), i / 6),
+              color: Color.lerp(
+                  AppColors.granate, AppColors.dorado, i / 6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.photo, color: Colors.white, size: 40),
+                  const Icon(Icons.photo,
+                      color: AppColors.blanco, size: 40),
                   const SizedBox(height: 8),
                   Text('Viaje ${i + 1}',
-                      style: const TextStyle(color: Colors.white)),
+                      style: const TextStyle(color: AppColors.blanco)),
                 ],
               ),
             ),

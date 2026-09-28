@@ -171,15 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
   InputDecoration _inputDeco(String label, IconData icono) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: AppColors.granate),
       prefixIcon: Icon(icono, color: AppColors.granate),
-      focusedBorder: const OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.dorado, width: 2),
-      ),
-      enabledBorder: const OutlineInputBorder(
-        borderSide: BorderSide(color: AppColors.dorado),
-      ),
-      border: const OutlineInputBorder(),
     );
   }
 }

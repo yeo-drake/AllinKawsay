@@ -34,9 +34,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   }
 
   Future<void> _cargarUsuario() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    final u = await UsuarioService().obtener(uid);
+    final u = await UsuarioService().miUsuarioActual();
     if (mounted) setState(() => _usuario = u);
   }
 
@@ -57,7 +55,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     super.dispose();
   }
 
-  /// Abre la URL en el navegador — el usuario puede descargar desde ahí
   Future<void> _descargar(String url) async {
     if (url.isEmpty) return;
     final uri = Uri.parse(url);
@@ -340,7 +337,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     );
   }
 
-  /// Reproductor COMPACTO en una sola fila
+  // === REPRODUCTOR COMPACTO ===
   Widget _audioPlayerCompacto(bool puedeDescargar) {
     if (widget.cancion.audioUrl.isEmpty) {
       return Container(
@@ -474,6 +471,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     );
   }
 
+  // === COMENTARIOS ===
   Widget _comentariosBody() {
     return StreamBuilder<List<Comentario>>(
       stream: ComentarioService().listar(widget.cancion.id),
@@ -575,10 +573,16 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     );
   }
 
+  // === HELPERS ===
   String _fmtFecha(DateTime? d) {
     if (d == null) return '...';
     return '${d.day}/${d.month}/${d.year} ${d.hour}:${d.minute.toString().padLeft(2, '0')}';
   }
 
   String _fmt(Duration d) {
-    final m = d.inMinutes.toSt
+    final m = d.inMinutes.toString().padLeft(2, '0');
+    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Widge

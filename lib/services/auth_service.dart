@@ -17,7 +17,6 @@ class AuthService {
     await cred.user?.updateDisplayName(nombre);
     await cred.user?.reload();
 
-    // Crear documento de usuario en Firestore
     await _db.collection('usuarios').doc(cred.user!.uid).set({
       'nombre': nombre,
       'email': email,

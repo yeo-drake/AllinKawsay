@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../models/evento.dart';
 import '../services/evento_service.dart';
 import '../services/usuario_service.dart';
@@ -45,6 +44,15 @@ class _EventosScreenState extends State<EventosScreen> {
       ),
     );
     if (ok == true) await _service.eliminar(e.id);
+  }
+
+  void _editar(Evento e) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AgregarEventoScreen(evento: e),
+      ),
+    );
   }
 
   @override
@@ -116,61 +124,95 @@ class _EventosScreenState extends State<EventosScreen> {
             itemCount: lista.length,
             itemBuilder: (context, i) {
               final e = lista[i];
+              final pasado = e.fecha.isBefore(DateTime.now());
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: AppColors.granate,
-                      borderRadius: BorderRadius.circular(12),
+                child: Opacity(
+                  opacity: pasado ? 0.55 : 1,
+                  child: ListTile(
+                    leading: Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: pasado
+                            ? AppColors.negro
+                            : AppColors.granate,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${e.fecha.day}',
+                            style: const TextStyle(
+                                color: AppColors.dorado,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            _mes(e.fecha.month),
+                            style: const TextStyle(
+                                color: AppColors.dorado, fontSize: 11),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    title: Text(e.titulo,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.negro)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${e.fecha.day}',
-                          style: const TextStyle(
-                              color: AppColors.dorado,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          _mes(e.fecha.month),
-                          style: const TextStyle(
-                              color: AppColors.dorado, fontSize: 11),
-                        ),
+                        const SizedBox(height: 4),
+                        Text('${_hora(e.fecha)} · ${e.lugar}'),
+                        if (e.descripcion.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(e.descripcion,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color:
+                                      AppColors.negro.withOpacity(0.7))),
+                        ],
                       ],
                     ),
+                    trailing: _esAdmin
+                        ? PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert,
+                                color: AppColors.granate),
+                            onSelected: (v) {
+                              if (v == 'editar') {
+                                _editar(e);
+                              } else if (v == 'eliminar') {
+                                _eliminar(e);
+                              }
+                            },
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 'editar',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.edit, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Editar'),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'eliminar',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.delete_outline, size: 20),
+                                    SizedBox(width: 8),
+                                    Text('Eliminar'),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          )
+                        : null,
                   ),
-                  title: Text(e.titulo,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.negro)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text('${_hora(e.fecha)} · ${e.lugar}'),
-                      if (e.descripcion.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(e.descripcion,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                color:
-                                    AppColors.negro.withOpacity(0.7))),
-                      ],
-                    ],
-                  ),
-                  trailing: _esAdmin
-                      ? IconButton(
-                          icon: const Icon(Icons.delete_outline,
-                              color: AppColors.granate),
-                          onPressed: () => _eliminar(e),
-                        )
-                      : null,
                 ),
               );
             },

@@ -27,9 +27,7 @@ class SikurisApp extends StatelessWidget {
             return const Scaffold(
               backgroundColor: AppColors.negro,
               body: Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.dorado,
-                ),
+                child: CircularProgressIndicator(color: AppColors.dorado),
               ),
             );
           }
@@ -96,8 +94,7 @@ class SikurisApp extends StatelessWidget {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.negro,
         indicatorColor: AppColors.granate,
-        labelTextStyle:
-            WidgetStateProperty.all(
+        labelTextStyle: WidgetStateProperty.all(
           const TextStyle(color: AppColors.dorado, fontSize: 12),
         ),
         iconTheme: WidgetStateProperty.resolveWith((states) {

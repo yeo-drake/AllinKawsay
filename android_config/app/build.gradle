@@ -39,7 +39,7 @@ android {
 
     defaultConfig {
         applicationId = "com.sikuris.sikuris_app"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 34
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
@@ -49,6 +49,8 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.debug
+            minifyEnabled = false
+            shrinkResources = false
         }
     }
 }

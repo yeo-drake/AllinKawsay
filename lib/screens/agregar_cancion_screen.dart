@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,14 +42,12 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   }
 
   Future<void> _elegirAudio() async {
-    final picker = ImagePicker();
-    // image_picker no elige audios → usamos FilePicker del sistema
-    // Solución: usar showModalBottomSheet con opciones de audio,
-    // pero como no tenemos file_picker, usamos un input simple
-    // que el usuario abre desde Archivos
-    _snack(
-        'Por ahora sube el audio desde tu PC/otra app. '
-        'Próximamente agregaremos selector de audio.');
+    final r = await FilePicker.platform.pickFiles(
+      type: FileType.audio,
+    );
+    if (r != null && r.files.single.path != null) {
+      setState(() => _audio = File(r.files.single.path!));
+    }
   }
 
   void _agregarTag() {
@@ -135,8 +134,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // === IMAGEN ===
-          Text('Partitura (imagen)',
-              style: const TextStyle(
+          const Text('Partitura (imagen)',
+              style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: AppColors.granate)),
           const SizedBox(height: 8),
@@ -146,7 +145,9 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Image.file(_imagen!,
-                      width: double.infinity, height: 200, fit: BoxFit.cover),
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover),
                 ),
                 Positioned(
                   top: 8,
@@ -165,8 +166,9 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed:
-                        _guardando ? null : () => _elegirImagen(camara: false),
+                    onPressed: _guardando
+                        ? null
+                        : () => _elegirImagen(camara: false),
                     icon: const Icon(Icons.photo_library),
                     label: const Text('Galería'),
                   ),
@@ -174,8 +176,9 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed:
-                        _guardando ? null : () => _elegirImagen(camara: true),
+                    onPressed: _guardando
+                        ? null
+                        : () => _elegirImagen(camara: true),
                     icon: const Icon(Icons.camera_alt),
                     label: const Text('Cámara'),
                   ),
@@ -189,7 +192,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             controller: _titulo,
             textCapitalization: TextCapitalization.sentences,
             decoration: const InputDecoration(
-                labelText: 'Título *', prefixIcon: Icon(Icons.music_note)),
+                labelText: 'Título *',
+                prefixIcon: Icon(Icons.music_note)),
           ),
           const SizedBox(height: 12),
 
@@ -202,8 +206,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           const SizedBox(height: 12),
 
           // === TIPO ===
-          Text('Tipo',
-              style: const TextStyle(
+          const Text('Tipo',
+              style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: AppColors.granate)),
           const SizedBox(height: 4),
@@ -235,8 +239,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           const SizedBox(height: 12),
 
           // === TAGS ===
-          Text('Tags (para búsqueda)',
-              style: const TextStyle(
+          const Text('Tags (para búsqueda)',
+              style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: AppColors.granate)),
           const SizedBox(height: 8),
@@ -310,31 +314,42 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           const SizedBox(height: 20),
 
           // === AUDIO ===
-          Text('Audio',
-              style: const TextStyle(
+          const Text('Audio',
+              style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: AppColors.granate)),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: _guardando ? null : _elegirAudio,
             icon: Icon(Icons.audiotrack,
-                color: _audio != null ? Colors.green : AppColors.granate),
+                color:
+                    _audio != null ? Colors.green : AppColors.granate),
             label: Text(
               _audio == null
                   ? 'Elegir audio (MP3)'
                   : 'Audio: ${_audio!.path.split('/').last}',
               style: TextStyle(
-                  color: _audio != null ? Colors.green : AppColors.granate),
+                  color: _audio != null
+                      ? Colors.green
+                      : AppColors.granate),
+              overflow: TextOverflow.ellipsis,
             ),
             style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16)),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(
+                  color: _audio != null
+                      ? Colors.green
+                      : AppColors.granate,
+                  width: 1.5),
+            ),
           ),
           const SizedBox(height: 32),
 
           if (_guardando)
             Column(
               children: [
-                const CircularProgressIndicator(color: AppColors.granate),
+                const CircularProgressIndicator(
+                    color: AppColors.granate),
                 const SizedBox(height: 8),
                 Text(_estado,
                     style: const TextStyle(color: AppColors.granate)),

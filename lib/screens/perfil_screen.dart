@@ -3,6 +3,8 @@ import '../models/usuario.dart';
 import '../services/auth_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
+import '../widgets/social_buttons.dart';
+import 'gestion_usuarios_screen.dart';
 
 class PerfilScreen extends StatelessWidget {
   final String nombreUsuario;
@@ -45,6 +47,28 @@ class PerfilScreen extends StatelessWidget {
     );
   }
 
+  Color _colorRol(String rol) {
+    switch (rol) {
+      case 'admin':
+        return AppColors.granate;
+      case 'miembro':
+        return const Color(0xFF8B0000);
+      default:
+        return AppColors.negro;
+    }
+  }
+
+  IconData _iconoRol(String rol) {
+    switch (rol) {
+      case 'admin':
+        return Icons.admin_panel_settings;
+      case 'miembro':
+        return Icons.verified_user;
+      default:
+        return Icons.person_outline;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,6 +78,7 @@ class PerfilScreen extends StatelessWidget {
         builder: (context, snap) {
           final u = snap.data;
           final esAdmin = u?.esAdmin ?? false;
+          final rol = u?.rol ?? 'publico';
           return ListView(
             children: [
               const SizedBox(height: 24),
@@ -97,22 +122,17 @@ class PerfilScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
-                    color: esAdmin ? AppColors.granate : AppColors.negro,
+                    color: _colorRol(rol),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        esAdmin
-                            ? Icons.admin_panel_settings
-                            : Icons.person_outline,
-                        color: AppColors.dorado,
-                        size: 18,
-                      ),
+                      Icon(_iconoRol(rol),
+                          color: AppColors.dorado, size: 18),
                       const SizedBox(width: 6),
                       Text(
-                        esAdmin ? 'ADMINISTRADOR' : 'MIEMBRO',
+                        u?.rolNombre ?? 'PÚBLICO',
                         style: const TextStyle(
                           color: AppColors.dorado,
                           fontWeight: FontWeight.bold,
@@ -124,27 +144,32 @@ class PerfilScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
+
+              // === REDES SOCIALES ===
               const Divider(),
+              const SocialButtons(),
+
+              const Divider(),
+
+              // === GESTIÓN DE USUARIOS (solo admin) ===
               if (esAdmin)
                 ListTile(
-                  leading: const Icon(Icons.admin_panel_settings,
+                  leading: const Icon(Icons.people,
                       color: AppColors.granate),
-                  title: const Text('Panel de administrador'),
+                  title: const Text('Gestión de usuarios'),
                   subtitle: const Text(
-                      'Como admin puedes agregar y borrar canciones'),
+                      'Asciende a miembro o admin a los integrantes'),
                   trailing: const Icon(Icons.chevron_right,
                       color: AppColors.dorado),
-                  onTap: () => _abrir(
+                  onTap: () => Navigator.push(
                     context,
-                    'Panel de administrador',
-                    'Como administrador puedes:\n\n'
-                        '• Agregar canciones con el botón + en el Cancionero\n'
-                        '• Subir partituras PDF y audios\n'
-                        '• Borrar canciones (con confirmación)\n\n'
-                        'Próximamente: editar eventos y la historia del grupo.',
+                    MaterialPageRoute(
+                        builder: (_) => const GestionUsuariosScreen()),
                   ),
                 ),
+
+              // === MIS SUBIDAS ===
               ListTile(
                 leading: const Icon(Icons.upload_file,
                     color: AppColors.granate),
@@ -157,10 +182,11 @@ class PerfilScreen extends StatelessWidget {
                   'Mis subidas',
                   esAdmin
                       ? 'Ve al Cancionero y toca el botón + para agregar contenido.'
-                      : 'Por ahora solo el admin del grupo puede subir canciones. '
-                          'En el futuro todos podrán aportar partituras.',
+                      : 'Por ahora solo el admin del grupo puede subir contenido.',
                 ),
               ),
+
+              // === AJUSTES ===
               ListTile(
                 leading:
                     const Icon(Icons.settings, color: AppColors.granate),
@@ -174,10 +200,11 @@ class PerfilScreen extends StatelessWidget {
                   'Ajustes',
                   'Próximamente:\n\n'
                       '• Notificaciones de eventos\n'
-                      '• Modo offline\n'
-                      '• Tamaño de letra para partituras',
+                      '• Modo offline',
                 ),
               ),
+
+              // === ACERCA DE ===
               ListTile(
                 leading: const Icon(Icons.info_outline,
                     color: AppColors.granate),
@@ -193,6 +220,7 @@ class PerfilScreen extends StatelessWidget {
                       'Hecha con ❤️ para el grupo.',
                 ),
               ),
+
               const Divider(),
               const SizedBox(height: 16),
               Padding(

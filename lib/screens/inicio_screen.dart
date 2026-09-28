@@ -7,7 +7,6 @@ import '../services/cancion_service.dart';
 import '../services/evento_service.dart';
 import '../services/recuerdo_service.dart';
 import '../theme/colors.dart';
-import '../widgets/logo.dart';
 import '../widgets/social_buttons.dart';
 import 'cancion_detalle_screen.dart';
 import 'historia_screen.dart';

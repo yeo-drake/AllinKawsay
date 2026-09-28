@@ -49,6 +49,15 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
     if (ok == true) await _service.eliminar(r.id);
   }
 
+  void _editar(Recuerdo r) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AgregarRecuerdoScreen(recuerdo: r),
+      ),
+    );
+  }
+
   void _verFoto(String url) {
     showDialog(
       context: context,
@@ -190,10 +199,39 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                     color: AppColors.granate)),
                           ),
                           if (esAdmin)
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline,
+                            PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert,
                                   color: AppColors.granate),
-                              onPressed: () => _eliminar(r),
+                              onSelected: (v) {
+                                if (v == 'editar') {
+                                  _editar(r);
+                                } else if (v == 'eliminar') {
+                                  _eliminar(r);
+                                }
+                              },
+                              itemBuilder: (_) => const [
+                                PopupMenuItem(
+                                  value: 'editar',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit, size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Editar'),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'eliminar',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete_outline,
+                                          size: 20),
+                                      SizedBox(width: 8),
+                                      Text('Eliminar'),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                         ],
                       ),
@@ -276,8 +314,8 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                       bottom: 4,
                                       right: 4,
                                       child: GestureDetector(
-                                        onTap: () => _descargarFoto(
-                                            r.fotos[j]),
+                                        onTap: () =>
+                                            _descargarFoto(r.fotos[j]),
                                         child: Container(
                                           padding:
                                               const EdgeInsets.all(6),

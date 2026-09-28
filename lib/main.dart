@@ -8,13 +8,22 @@ import 'theme/colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase
   await Firebase.initializeApp();
 
-  await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.sikuris.sikuris_app.channel.audio',
-    androidNotificationChannelName: 'Reproducción de audio',
-    androidNotificationOngoing: true,
-  );
+  // Audio en notificaciones (con try/catch para que no bloquee la app)
+  try {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.sikuris.sikuris_app.channel.audio',
+      androidNotificationChannelName: 'Reproducción de audio',
+      androidNotificationOngoing: true,
+    );
+    debugPrint('✅ JustAudioBackground inicializado');
+  } catch (e) {
+    debugPrint('⚠️ Error al inicializar audio background: $e');
+    debugPrint('La app cargará sin audio en notificaciones');
+  }
 
   runApp(const SikurisApp());
 }

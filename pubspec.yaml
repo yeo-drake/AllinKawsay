@@ -25,3 +25,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+http: ^1.2.2
+path_provider: ^2.1.4

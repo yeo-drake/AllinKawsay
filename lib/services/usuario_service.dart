@@ -5,8 +5,10 @@ import '../models/usuario.dart';
 class UsuarioService {
   final _db = FirebaseFirestore.instance;
 
+  String? miUid() => FirebaseAuth.instance.currentUser?.uid;
+
   Stream<Usuario?> miUsuario() {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    final uid = miUid();
     if (uid == null) return Stream.value(null);
     return _db
         .collection('usuarios')
@@ -20,14 +22,17 @@ class UsuarioService {
     return doc.exists ? Usuario.fromDoc(doc) : null;
   }
 
+  Future<Usuario?> miUsuarioActual() async {
+    final uid = miUid();
+    if (uid == null) return null;
+    return obtener(uid);
+  }
+
   Future<bool> soyAdmin() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return false;
-    final u = await obtener(uid);
+    final u = await miUsuarioActual();
     return u?.esAdmin ?? false;
   }
 
-  /// Lista todos los usuarios (solo para admin)
   Stream<List<Usuario>> listar() {
     return _db
         .collection('usuarios')
@@ -36,7 +41,6 @@ class UsuarioService {
         .map((snap) => snap.docs.map(Usuario.fromDoc).toList());
   }
 
-  /// Cambia el rol de un usuario
   Future<void> cambiarRol(String uid, String nuevoRol) {
     return _db.collection('usuarios').doc(uid).update({'rol': nuevoRol});
   }

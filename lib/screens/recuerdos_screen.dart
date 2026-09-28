@@ -1,7 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../models/recuerdo.dart';
+import '../models/usuario.dart';
 import '../services/recuerdo_service.dart';
+import '../services/storage_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
 import 'agregar_recuerdo_screen.dart';
@@ -15,17 +17,18 @@ class RecuerdosScreen extends StatefulWidget {
 
 class _RecuerdosScreenState extends State<RecuerdosScreen> {
   final _service = RecuerdoService();
-  bool _esAdmin = false;
+  Usuario? _usuario;
+  bool _descargando = false;
 
   @override
   void initState() {
     super.initState();
-    _chequearAdmin();
+    _cargarUsuario();
   }
 
-  Future<void> _chequearAdmin() async {
-    final a = await UsuarioService().soyAdmin();
-    if (mounted) setState(() => _esAdmin = a);
+  Future<void> _cargarUsuario() async {
+    final u = await UsuarioService().miUsuario().first;
+    if (mounted) setState(() => _usuario = u);
   }
 
   void _eliminar(Recuerdo r) async {
@@ -79,11 +82,29 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
     );
   }
 
+  Future<void> _descargarFoto(String url, String nombre) async {
+    setState(() => _descargando = true);
+    try {
+      await StorageService().descargar(url, nombre);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _descargando = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final esAdmin = _usuario?.esAdmin ?? false;
+    final puedeDescargar = _usuario?.puedeDescargar ?? false;
+
     return Scaffold(
       appBar: AppBar(title: const Text('RECUERDOS')),
-      floatingActionButton: _esAdmin
+      floatingActionButton: esAdmin
           ? FloatingActionButton(
               backgroundColor: AppColors.granate,
               foregroundColor: AppColors.dorado,
@@ -131,7 +152,7 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                             color: AppColors.granate)),
                     const SizedBox(height: 8),
                     Text(
-                      _esAdmin
+                      esAdmin
                           ? 'Toca el botón + para subir el primer recuerdo'
                           : 'El admin aún no ha subido fotos',
                       textAlign: TextAlign.center,
@@ -164,7 +185,7 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                     fontSize: 18,
                                     color: AppColors.granate)),
                           ),
-                          if (_esAdmin)
+                          if (esAdmin)
                             IconButton(
                               icon: const Icon(Icons.delete_outline,
                                   color: AppColors.granate),
@@ -180,51 +201,97 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                     AppColors.negro.withOpacity(0.7))),
                       ],
                       const SizedBox(height: 4),
-                      Text(
-                        'Por ${r.creadorNombre}',
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: AppColors.negro.withOpacity(0.5)),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Por ${r.creadorNombre}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      AppColors.negro.withOpacity(0.5)),
+                            ),
+                          ),
+                          if (r.fecha != null)
+                            Text(
+                              '${r.fecha!.day}/${r.fecha!.month}/${r.fecha!.year}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color:
+                                      AppColors.negro.withOpacity(0.5)),
+                            ),
+                        ],
                       ),
                       if (r.fotos.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         SizedBox(
-                          height: 120,
+                          height: 130,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: r.fotos.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(width: 8),
                             itemBuilder: (context, j) {
-                              return GestureDetector(
-                                onTap: () => _verFoto(r.fotos[j]),
-                                child: ClipRRect(
-                                  borderRadius:
-                                      BorderRadius.circular(12),
-                                  child: CachedNetworkImage(
-                                    imageUrl: r.fotos[j],
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
-                                    placeholder: (_, __) => Container(
-                                      width: 120,
-                                      height: 120,
-                                      color: AppColors.grisClaro,
-                                      child: const Center(
-                                        child: CircularProgressIndicator(
-                                            color: AppColors.granate),
+                              return Stack(
+                                children: [
+                                  GestureDetector(
+                                    onTap: () => _verFoto(r.fotos[j]),
+                                    child: ClipRRect(
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                      child: CachedNetworkImage(
+                                        imageUrl: r.fotos[j],
+                                        width: 130,
+                                        height: 130,
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, __) => Container(
+                                          width: 130,
+                                          height: 130,
+                                          color: AppColors.grisClaro,
+                                          child: const Center(
+                                            child:
+                                                CircularProgressIndicator(
+                                                    color:
+                                                        AppColors.granate),
+                                          ),
+                                        ),
+                                        errorWidget: (_, __, ___) =>
+                                            Container(
+                                          width: 130,
+                                          height: 130,
+                                          color: AppColors.grisClaro,
+                                          child: const Icon(
+                                              Icons.broken_image,
+                                              color: AppColors.granate),
+                                        ),
                                       ),
                                     ),
-                                    errorWidget: (_, __, ___) => Container(
-                                      width: 120,
-                                      height: 120,
-                                      color: AppColors.grisClaro,
-                                      child: const Icon(
-                                          Icons.broken_image,
-                                          color: AppColors.granate),
-                                    ),
                                   ),
-                                ),
+                                  if (puedeDescargar)
+                                    Positioned(
+                                      bottom: 4,
+                                      right: 4,
+                                      child: GestureDetector(
+                                        onTap: () => _descargarFoto(
+                                          r.fotos[j],
+                                          'recuerdo_${r.titulo}_$j.jpg',
+                                        ),
+                                        child: Container(
+                                          padding:
+                                              const EdgeInsets.all(6),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.black54,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.download,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               );
                             },
                           ),

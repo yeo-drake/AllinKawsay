@@ -9,7 +9,8 @@ import '../services/storage_service.dart';
 import '../theme/colors.dart';
 
 class AgregarCancionScreen extends StatefulWidget {
-  const AgregarCancionScreen({super.key});
+  final Cancion? cancion;
+  const AgregarCancionScreen({super.key, this.cancion});
 
   @override
   State<AgregarCancionScreen> createState() => _AgregarCancionScreenState();
@@ -27,10 +28,46 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
 
   String _tipo = 'original';
   final List<String> _tags = [];
-  File? _imagen;
-  File? _audio;
+  File? _imagenNueva;
+  File? _audioNuevo;
+  String _imagenUrlActual = '';
+  String _audioUrlActual = '';
   bool _guardando = false;
   String _estado = '';
+
+  bool get _esEdicion => widget.cancion != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_esEdicion) {
+      final c = widget.cancion!;
+      _titulo.text = c.titulo;
+      _autor.text = c.autor;
+      _ritmo.text = c.ritmo;
+      _region.text = c.region;
+      _numerofonia.text = c.numerofonia;
+      _letra.text = c.letra;
+      _descripcion.text = c.descripcion;
+      _tipo = c.tipo;
+      _tags.addAll(c.tags);
+      _imagenUrlActual = c.imagenUrl;
+      _audioUrlActual = c.audioUrl;
+    }
+  }
+
+  @override
+  void dispose() {
+    _titulo.dispose();
+    _autor.dispose();
+    _ritmo.dispose();
+    _region.dispose();
+    _numerofonia.dispose();
+    _letra.dispose();
+    _descripcion.dispose();
+    _tagCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _elegirImagen({bool camara = false}) async {
     final picker = ImagePicker();
@@ -38,15 +75,13 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       source: camara ? ImageSource.camera : ImageSource.gallery,
       imageQuality: 80,
     );
-    if (x != null) setState(() => _imagen = File(x.path));
+    if (x != null) setState(() => _imagenNueva = File(x.path));
   }
 
   Future<void> _elegirAudio() async {
-    final r = await FilePicker.platform.pickFiles(
-      type: FileType.audio,
-    );
+    final r = await FilePicker.platform.pickFiles(type: FileType.audio);
     if (r != null && r.files.single.path != null) {
-      setState(() => _audio = File(r.files.single.path!));
+      setState(() => _audioNuevo = File(r.files.single.path!));
     }
   }
 
@@ -66,7 +101,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
     }
     setState(() {
       _guardando = true;
-      _estado = 'Guardando...';
+      _estado = _esEdicion ? 'Actualizando...' : 'Guardando...';
     });
 
     try {
@@ -74,44 +109,59 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       final service = CancionService();
       final storage = StorageService();
 
-      final id = await service.agregar(Cancion(
-        id: '',
-        titulo: _titulo.text.trim(),
-        autor: _autor.text.trim(),
-        tipo: _tipo,
-        ritmo: _ritmo.text.trim(),
-        region: _region.text.trim(),
-        numerofonia: _numerofonia.text.trim(),
-        letra: _letra.text.trim(),
-        imagenUrl: '',
-        audioUrl: '',
-        descripcion: _descripcion.text.trim(),
-        tags: _tags,
-        creadoPor: user.uid,
-        creadorNombre: user.displayName ?? user.email ?? 'Anónimo',
-      ));
+      String id = widget.cancion?.id ?? '';
+      String imagenUrl = _imagenUrlActual;
+      String audioUrl = _audioUrlActual;
 
-      String imagenUrl = '';
-      String audioUrl = '';
+      if (!_esEdicion) {
+        // Crear canción nueva
+        id = await service.agregar(Cancion(
+          id: '',
+          titulo: _titulo.text.trim(),
+          autor: _autor.text.trim(),
+          tipo: _tipo,
+          ritmo: _ritmo.text.trim(),
+          region: _region.text.trim(),
+          numerofonia: _numerofonia.text.trim(),
+          letra: _letra.text.trim(),
+          imagenUrl: '',
+          audioUrl: '',
+          descripcion: _descripcion.text.trim(),
+          tags: _tags,
+          creadoPor: user.uid,
+          creadorNombre: user.displayName ?? user.email ?? 'Anónimo',
+        ));
+      }
 
-      if (_imagen != null) {
+      // Subir imagen si hay nueva
+      if (_imagenNueva != null) {
         setState(() => _estado = 'Subiendo partitura...');
-        imagenUrl = await storage.subirPartitura(_imagen!, id);
-      }
-      if (_audio != null) {
-        setState(() => _estado = 'Subiendo audio...');
-        audioUrl = await storage.subirAudio(_audio!, id);
+        imagenUrl = await storage.subirPartitura(_imagenNueva!, id);
       }
 
-      if (imagenUrl.isNotEmpty || audioUrl.isNotEmpty) {
-        await service.actualizar(id, {
-          'imagenUrl': imagenUrl,
-          'audioUrl': audioUrl,
-        });
+      // Subir audio si hay nuevo
+      if (_audioNuevo != null) {
+        setState(() => _estado = 'Subiendo audio...');
+        audioUrl = await storage.subirAudio(_audioNuevo!, id);
       }
+
+      // Actualizar el documento (tanto en crear como en editar)
+      await service.actualizar(id, {
+        'titulo': _titulo.text.trim(),
+        'autor': _autor.text.trim(),
+        'tipo': _tipo,
+        'ritmo': _ritmo.text.trim(),
+        'region': _region.text.trim(),
+        'numerofonia': _numerofonia.text.trim(),
+        'letra': _letra.text.trim(),
+        'descripcion': _descripcion.text.trim(),
+        'tags': _tags,
+        'imagenUrl': imagenUrl,
+        'audioUrl': audioUrl,
+      });
 
       if (mounted) {
-        _snack('¡Canción guardada!');
+        _snack(_esEdicion ? '¡Canción actualizada!' : '¡Canción guardada!');
         Navigator.pop(context);
       }
     } catch (e) {
@@ -122,29 +172,31 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   }
 
   void _snack(String m) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(m)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('AGREGAR CANCIÓN')),
+      appBar: AppBar(
+        title: Text(_esEdicion ? 'EDITAR CANCIÓN' : 'AGREGAR CANCIÓN'),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           // === IMAGEN ===
           const Text('Partitura (imagen)',
               style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.granate)),
+                  fontWeight: FontWeight.bold, color: AppColors.granate)),
           const SizedBox(height: 8),
-          if (_imagen != null)
+
+          // Mostrar imagen nueva, o la actual, o botones para elegir
+          if (_imagenNueva != null)
             Stack(
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(_imagen!,
+                  child: Image.file(_imagenNueva!,
                       width: double.infinity,
                       height: 200,
                       fit: BoxFit.cover),
@@ -156,7 +208,39 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                     icon: const Icon(Icons.close, color: Colors.white),
                     style: IconButton.styleFrom(
                         backgroundColor: Colors.black54),
-                    onPressed: () => setState(() => _imagen = null),
+                    onPressed: () =>
+                        setState(() => _imagenNueva = null),
+                  ),
+                ),
+              ],
+            )
+          else if (_esEdicion && _imagenUrlActual.isNotEmpty)
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(_imagenUrlActual,
+                      width: double.infinity,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                            height: 200,
+                            color: AppColors.grisClaro,
+                            child: const Icon(Icons.broken_image,
+                                size: 60, color: AppColors.granate),
+                          )),
+                ),
+                Positioned(
+                  bottom: 8,
+                  right: 8,
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Cambiar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.granate,
+                      foregroundColor: AppColors.dorado,
+                    ),
+                    onPressed: () => _mostrarOpcionesImagen(),
                   ),
                 ),
               ],
@@ -208,8 +292,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           // === TIPO ===
           const Text('Tipo',
               style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.granate)),
+                  fontWeight: FontWeight.bold, color: AppColors.granate)),
           const SizedBox(height: 4),
           SegmentedButton<String>(
             segments: const [
@@ -241,8 +324,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           // === TAGS ===
           const Text('Tags (para búsqueda)',
               style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.granate)),
+                  fontWeight: FontWeight.bold, color: AppColors.granate)),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -316,33 +398,46 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           // === AUDIO ===
           const Text('Audio',
               style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.granate)),
+                  fontWeight: FontWeight.bold, color: AppColors.granate)),
           const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: _guardando ? null : _elegirAudio,
-            icon: Icon(Icons.audiotrack,
-                color:
-                    _audio != null ? Colors.green : AppColors.granate),
-            label: Text(
-              _audio == null
-                  ? 'Elegir audio (MP3)'
-                  : 'Audio: ${_audio!.path.split('/').last}',
-              style: TextStyle(
-                  color: _audio != null
-                      ? Colors.green
-                      : AppColors.granate),
-              overflow: TextOverflow.ellipsis,
+          if (_audioNuevo != null)
+            OutlinedButton.icon(
+              onPressed: () => setState(() => _audioNuevo = null),
+              icon: const Icon(Icons.audiotrack, color: Colors.green),
+              label: Text(
+                'Nuevo audio: ${_audioNuevo!.path.split('/').last}',
+                style: const TextStyle(color: Colors.green),
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Colors.green, width: 1.5),
+              ),
+            )
+          else if (_esEdicion && _audioUrlActual.isNotEmpty)
+            OutlinedButton.icon(
+              onPressed: _elegirAudio,
+              icon: const Icon(Icons.audiotrack,
+                  color: AppColors.granate),
+              label: const Text('Reemplazar audio actual'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(
+                    color: AppColors.granate, width: 1.5),
+              ),
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: _elegirAudio,
+              icon: const Icon(Icons.audiotrack,
+                  color: AppColors.granate),
+              label: const Text('Elegir audio (MP3)'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(
+                    color: AppColors.granate, width: 1.5),
+              ),
             ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: BorderSide(
-                  color: _audio != null
-                      ? Colors.green
-                      : AppColors.granate,
-                  width: 1.5),
-            ),
-          ),
           const SizedBox(height: 32),
 
           if (_guardando)
@@ -361,12 +456,60 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             child: FilledButton.icon(
               onPressed: _guardando ? null : _guardar,
               icon: const Icon(Icons.save),
-              label: const Text('GUARDAR CANCIÓN',
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+              label: Text(
+                _esEdicion ? 'GUARDAR CAMBIOS' : 'GUARDAR CANCIÓN',
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _mostrarOpcionesImagen() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.blanco,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            ListTile(
+              leading: const Icon(Icons.photo_library,
+                  color: AppColors.granate),
+              title: const Text('Elegir de galería'),
+              onTap: () {
+                Navigator.pop(context);
+                _elegirImagen(camara: false);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt,
+                  color: AppColors.granate),
+              title: const Text('Tomar foto'),
+              onTap: () {
+                Navigator.pop(context);
+                _elegirImagen(camara: true);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline,
+                  color: AppColors.granate),
+              title: const Text('Quitar imagen'),
+              onTap: () {
+                Navigator.pop(context);
+                setState(() => _imagenUrlActual = '');
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

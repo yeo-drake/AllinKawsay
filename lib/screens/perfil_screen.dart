@@ -146,11 +146,13 @@ class PerfilScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
+              // === REDES SOCIALES ===
               const Divider(),
               const SocialButtons(),
 
               const Divider(),
 
+              // === GESTIÓN DE USUARIOS (solo admin) ===
               if (esAdmin)
                 ListTile(
                   leading: const Icon(Icons.people,
@@ -167,6 +169,7 @@ class PerfilScreen extends StatelessWidget {
                   ),
                 ),
 
+              // === MIS SUBIDAS ===
               ListTile(
                 leading: const Icon(Icons.upload_file,
                     color: AppColors.granate),
@@ -183,6 +186,7 @@ class PerfilScreen extends StatelessWidget {
                 ),
               ),
 
+              // === AJUSTES ===
               ListTile(
                 leading:
                     const Icon(Icons.settings, color: AppColors.granate),
@@ -200,6 +204,7 @@ class PerfilScreen extends StatelessWidget {
                 ),
               ),
 
+              // === ACERCA DE ===
               ListTile(
                 leading: const Icon(Icons.info_outline,
                     color: AppColors.granate),

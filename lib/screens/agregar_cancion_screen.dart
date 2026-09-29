@@ -29,6 +29,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
 
   String _tipo = 'original';
   final List<String> _tags = [];
+  List<SeccionNumerofonia> _numerofoniaEstructurada = [];
   File? _imagenNueva;
   File? _audioNuevo;
   String _imagenUrlActual = '';

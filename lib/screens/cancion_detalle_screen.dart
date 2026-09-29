@@ -93,6 +93,42 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     }
   }
 
+Future<void> _compartir() async {
+  final c = widget.cancion;
+  final sb = StringBuffer();
+  sb.writeln('🎵 *${c.titulo}*');
+  if (c.autor.isNotEmpty) sb.writeln('✍️ Autor: ${c.autor}');
+  if (c.ritmo.isNotEmpty) sb.writeln('🎶 Ritmo: ${c.ritmo}');
+  if (c.region.isNotEmpty) sb.writeln('📍 Región: ${c.region}');
+  if (c.letra.isNotEmpty) {
+    sb.writeln('');
+    sb.writeln('📝 Letra:');
+    sb.writeln(c.letra);
+  }
+  sb.writeln('');
+  sb.writeln('— Enviado desde Allin Kawsay');
+
+  final texto = Uri.encodeComponent(sb.toString());
+  final url = Uri.parse('https://wa.me/?text=$texto');
+
+  try {
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('No se pudo abrir WhatsApp')),
+        );
+      }
+    }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+}
+
   void _enviarComentario() async {
     final texto = _comentarioCtrl.text.trim();
     if (texto.isEmpty) return;

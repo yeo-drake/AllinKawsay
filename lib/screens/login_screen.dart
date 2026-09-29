@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/auth_service.dart';
 import '../theme/colors.dart';
-import '../widgets/logo.dart';
 import 'registro_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -75,7 +74,28 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SikuriLogo(size: 140),
+                  Container(
+  width: 140,
+  height: 140,
+  decoration: BoxDecoration(
+    shape: BoxShape.circle,
+    boxShadow: [
+      BoxShadow(
+        color: AppColors.negro.withOpacity(0.5),
+        blurRadius: 16,
+        offset: const Offset(0, 6),
+      ),
+    ],
+  ),
+  child: ClipOval(
+    child: Image.asset(
+      'assets/logo.png',
+      width: 140,
+      height: 140,
+      fit: BoxFit.cover,
+    ),
+  ),
+),
                   const SizedBox(height: 20),
                   const Text(
                     'ALLIN KAWSAY',

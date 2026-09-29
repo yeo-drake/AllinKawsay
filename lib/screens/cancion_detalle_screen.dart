@@ -151,13 +151,28 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       appBar: AppBar(
         title: Text(c.titulo),
         actions: [
-          if (puedeDescargar && c.imagenUrl.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.download),
-              tooltip: 'Descargar partitura',
-              onPressed: () => _descargar(c.imagenUrl),
-            ),
-        ],
+  IconButton(
+    icon: const Icon(Icons.slideshow),
+    tooltip: 'Modo presentación',
+    onPressed: () => Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PresentacionScreen(cancion: widget.cancion),
+      ),
+    ),
+  ),
+  IconButton(
+    icon: const Icon(Icons.share),
+    tooltip: 'Compartir',
+    onPressed: _compartir,
+  ),
+  if (puedeDescargar && c.imagenUrl.isNotEmpty)
+    IconButton(
+      icon: const Icon(Icons.download),
+      tooltip: 'Descargar partitura',
+      onPressed: () => _descargar(c.imagenUrl),
+    ),
+],
       ),
       body: ListView(
         children: [

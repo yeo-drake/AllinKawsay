@@ -1,15 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'numerofonia.dart';
 
 class Cancion {
   final String id;
   final String titulo;
   final String autor;
-  final String tipo; // 'original' | 'adaptacion'
+  final String tipo;
   final String ritmo;
   final String region;
-  final String numerofonia;
+  final String numerofonia; // legacy (compatibilidad)
+  final List<SeccionNumerofonia> numerofoniaEstructurada; // nuevo
   final String letra;
-  final String imagenUrl; // imagen de la partitura
+  final String imagenUrl;
   final String audioUrl;
   final String descripcion;
   final List<String> tags;
@@ -25,6 +27,7 @@ class Cancion {
     required this.ritmo,
     required this.region,
     required this.numerofonia,
+    required this.numerofoniaEstructurada,
     required this.letra,
     required this.imagenUrl,
     required this.audioUrl,
@@ -35,8 +38,17 @@ class Cancion {
     this.fechaCreacion,
   });
 
+  bool get tieneNumerofoniaTabla =>
+      numerofoniaEstructurada.any((s) => !s.vacia);
+  bool get tieneNumerofoniaString => numerofonia.isNotEmpty;
+
   factory Cancion.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
+    final estruc = (d['numerofoniaEstructurada'] as List?)
+            ?.map((x) => SeccionNumerofonia.fromMap(
+                Map<String, dynamic>.from(x)))
+            .toList() ??
+        <SeccionNumerofonia>[];
     return Cancion(
       id: doc.id,
       titulo: d['titulo'] ?? '',
@@ -45,6 +57,7 @@ class Cancion {
       ritmo: d['ritmo'] ?? '',
       region: d['region'] ?? '',
       numerofonia: d['numerofonia'] ?? '',
+      numerofoniaEstructurada: estruc,
       letra: d['letra'] ?? '',
       imagenUrl: d['imagenUrl'] ?? '',
       audioUrl: d['audioUrl'] ?? '',
@@ -63,6 +76,8 @@ class Cancion {
         'ritmo': ritmo,
         'region': region,
         'numerofonia': numerofonia,
+        'numerofoniaEstructurada':
+            numerofoniaEstructurada.map((s) => s.toMap()).toList(),
         'letra': letra,
         'imagenUrl': imagenUrl,
         'audioUrl': audioUrl,

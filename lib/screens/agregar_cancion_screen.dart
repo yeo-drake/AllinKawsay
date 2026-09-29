@@ -23,7 +23,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   final _autor = TextEditingController();
   final _ritmo = TextEditingController();
   final _region = TextEditingController();
-  final _numerofonia = TextEditingController();
   final _letra = TextEditingController();
   final _descripcion = TextEditingController();
   final _tagCtrl = TextEditingController();

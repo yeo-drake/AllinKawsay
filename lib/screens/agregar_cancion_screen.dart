@@ -48,7 +48,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       _autor.text = c.autor;
       _ritmo.text = c.ritmo;
       _region.text = c.region;
-      _numerofonia.text = c.numerofonia;
+      _numerofoniaEstructurada =
+    c.numerofoniaEstructurada.map((s) => s.copy()).toList();
       _letra.text = c.letra;
       _descripcion.text = c.descripcion;
       _tipo = c.tipo;
@@ -64,7 +65,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
     _autor.dispose();
     _ritmo.dispose();
     _region.dispose();
-    _numerofonia.dispose();
     _letra.dispose();
     _descripcion.dispose();
     _tagCtrl.dispose();
@@ -124,7 +124,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           tipo: _tipo,
           ritmo: _ritmo.text.trim(),
           region: _region.text.trim(),
-          numerofonia: _numerofonia.text.trim(),
+          numerofonia: '',
+numerofoniaEstructurada: _numerofoniaEstructurada,
           letra: _letra.text.trim(),
           imagenUrl: '',
           audioUrl: '',
@@ -154,7 +155,9 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         'tipo': _tipo,
         'ritmo': _ritmo.text.trim(),
         'region': _region.text.trim(),
-        'numerofonia': _numerofonia.text.trim(),
+        'numerofonia': '',
+'numerofoniaEstructurada':
+    _numerofoniaEstructurada.map((s) => s.toMap()).toList(),
         'letra': _letra.text.trim(),
         'descripcion': _descripcion.text.trim(),
         'tags': _tags,
@@ -366,15 +369,12 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           ],
           const SizedBox(height: 12),
 
-          // === NUMEROFONÍA ===
-          TextField(
-            controller: _numerofonia,
-            maxLines: 3,
-            decoration: const InputDecoration(
-                labelText: 'Numerofonía (ej: 5 5 6 5 | 3 3 5 3)',
-                prefixIcon: Icon(Icons.numbers)),
-          ),
-          const SizedBox(height: 12),
+          // === NUMEROFONÍA (editor tabla) ===
+EditorNumerofonia(
+  inicial: _numerofoniaEstructurada,
+  onChanged: (v) => _numerofoniaEstructurada = v,
+),
+const SizedBox(height: 12),
 
           // === LETRA ===
           TextField(

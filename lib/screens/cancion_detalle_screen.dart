@@ -10,7 +10,8 @@ import '../models/usuario.dart';
 import '../services/comentario_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
-import '../widgets/numerofonia_widget.dart';
+import 'presentacion_screen.dart';
+import '../widgets/visor_numerofonia.dart';
 
 class CancionDetalleScreen extends StatefulWidget {
   final Cancion cancion;
@@ -240,11 +241,37 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
             const SizedBox(height: 24),
           ],
 
-          if (c.numerofonia.isNotEmpty) ...[
-            const Divider(),
-            NumerofoniaWidget(numerofonia: c.numerofonia),
-            const SizedBox(height: 16),
-          ],
+          // === 4. NUMEROFONÍA (tabla) ===
+if (c.tieneNumerofoniaTabla) ...[
+  const Divider(),
+  Padding(
+    padding: const EdgeInsets.all(12),
+    child: VisorNumerofonia(
+        secciones: c.numerofoniaEstructurada),
+  ),
+  const SizedBox(height: 8),
+]
+// Si no hay tabla pero hay string viejo, mostrarlo
+else if (c.tieneNumerofoniaString) ...[
+  const Divider(),
+  Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Numerofonía',
+            style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.granate)),
+        const SizedBox(height: 8),
+        Text(c.numerofonia,
+            style: const TextStyle(
+                fontFamily: 'monospace', fontSize: 16)),
+      ],
+    ),
+  ),
+],
 
           const Divider(),
           ExpansionTile(

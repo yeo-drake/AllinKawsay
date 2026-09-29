@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/cancion.dart';
+import '../models/numerofonia.dart';
+import '../widgets/editor_numerofonia.dart';
 import '../services/cancion_service.dart';
 import '../services/storage_service.dart';
 import '../theme/colors.dart';

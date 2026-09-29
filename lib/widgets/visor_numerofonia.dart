@@ -22,7 +22,7 @@ class VisorNumerofonia extends StatelessWidget {
       children: [
         for (final s in validas) ...[
           _seccion(s),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
         ],
       ],
     );
@@ -31,155 +31,115 @@ class VisorNumerofonia extends StatelessWidget {
   Widget _seccion(SeccionNumerofonia s) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.negro,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.dorado, width: 1.5),
+        color: AppColors.blanco,
+        border: Border.all(color: AppColors.negro, width: 1.5),
       ),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(6 * 1.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.granate,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'SECCIÓN ${s.nombre}',
-                  style: TextStyle(
-                    color: AppColors.dorado,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12 * escala,
-                    letterSpacing: 1.5,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              if (s.conBis)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.dorado,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.repeat,
-                          size: 14 * escala, color: AppColors.negro),
-                      const SizedBox(width: 4),
-                      Text(
-                        'BIS',
-                        style: TextStyle(
-                          color: AppColors.negro,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12 * escala,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+          Text(
+            'SECCIÓN ${s.nombre}',
+            style: TextStyle(
+              color: AppColors.granate,
+              fontWeight: FontWeight.bold,
+              fontSize: 10 * escala,
+              letterSpacing: 1.2,
+            ),
           ),
-          const SizedBox(height: 10),
-          // Tabla
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: _tabla(s),
-          ),
+          const SizedBox(height: 4),
+          for (int i = 0; i < s.lineas.length; i++) ...[
+            _linea(s.lineas[i]),
+            if (i < s.lineas.length - 1) const SizedBox(height: 4),
+          ],
         ],
       ),
     );
   }
 
-  Widget _tabla(SeccionNumerofonia s) {
-    final cols = s.columnas;
-    final cellW = 38.0 * escala;
-    final cellH = 34.0 * escala;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Etiqueta "7"
-        Column(
+  Widget _linea(LineaNumerofonia l) {
+    if (l.vacia) return const SizedBox.shrink();
+    final cols = l.columnas;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.negro, width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _etiqueta('7', cellW, cellH),
-            const SizedBox(height: 2),
-            _etiqueta('6', cellW, cellH),
+            Row(
+              children: [
+                _etiqueta('7'),
+                for (int i = 0; i < cols; i++)
+                  _celda(
+                    i < l.fila7.length ? l.fila7[i] : '',
+                    esUltima: i == cols - 1,
+                  ),
+              ],
+            ),
+            Row(
+              children: [
+                _etiqueta('6'),
+                for (int i = 0; i < cols; i++)
+                  _celda(
+                    i < l.fila6.length ? l.fila6[i] : '',
+                    esUltima: i == cols - 1,
+                  ),
+              ],
+            ),
           ],
         ),
-        const SizedBox(width: 6),
-        // Celdas
-        for (int i = 0; i < cols; i++) ...[
-          Column(
-            children: [
-              _celda(
-                i < s.fila7.length ? s.fila7[i] : '',
-                cellW,
-                cellH,
-              ),
-              const SizedBox(height: 2),
-              _celda(
-                i < s.fila6.length ? s.fila6[i] : '',
-                cellW,
-                cellH,
-              ),
-            ],
-          ),
-          const SizedBox(width: 2),
-        ],
-      ],
+      ),
     );
   }
 
-  Widget _etiqueta(String texto, double w, double h) {
+  Widget _etiqueta(String t) {
     return Container(
-      width: w,
-      height: h,
+      width: 22 * escala,
+      padding: EdgeInsets.symmetric(vertical: 3 * escala),
       alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: AppColors.granate,
-        borderRadius: BorderRadius.circular(4),
+      decoration: const BoxDecoration(
+        color: AppColors.blanco,
+        border: Border(
+          right: BorderSide(color: AppColors.negro, width: 1),
+        ),
       ),
       child: Text(
-        texto,
+        t,
         style: TextStyle(
-          color: AppColors.dorado,
+          color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 16 * escala,
+          fontSize: 13 * escala,
         ),
       ),
     );
   }
 
-  Widget _celda(String contenido, double w, double h) {
-    final vacia = contenido.isEmpty;
+  Widget _celda(String contenido, {required bool esUltima}) {
     return Container(
-      width: w,
-      height: h,
+      constraints: BoxConstraints(minWidth: 20 * escala),
+      padding: EdgeInsets.symmetric(
+        horizontal: 4 * escala,
+        vertical: 3 * escala,
+      ),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: vacia ? AppColors.negro : Colors.black,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: vacia
-              ? AppColors.dorado.withOpacity(0.3)
-              : AppColors.dorado,
-          width: 1,
-        ),
+        color: AppColors.blanco,
+        border: esUltima
+            ? null
+            : const Border(
+                right: BorderSide(color: AppColors.negro, width: 0.8),
+              ),
       ),
       child: Text(
-        contenido,
+        contenido.isEmpty ? '' : contenido,
         style: TextStyle(
-          color: AppColors.dorado,
+          color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 14 * escala,
+          fontSize: 13 * escala,
+          fontFamily: 'monospace',
         ),
       ),
     );

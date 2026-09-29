@@ -62,7 +62,7 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Escribe con espacios. Ej: 4 3 3 _ _ 5 6  (_ = vacío)',
+          'Toca una celda para escribir. Usa "+ Columna" para agregar un compás.',
           style: TextStyle(
             color: AppColors.negro.withOpacity(0.6),
             fontSize: 12,
@@ -71,9 +71,8 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
         const SizedBox(height: 12),
         for (int i = 0; i < _secciones.length; i++)
           _SeccionEditor(
-            key: ValueKey('sec_$i'),
+            key: ValueKey('sec_${_secciones[i].nombre}_$i'),
             seccion: _secciones[i],
-            numero: i + 1,
             puedeEliminar: _secciones.length > 1,
             onDelete: () => _eliminarSeccion(i),
             onChanged: _notificar,
@@ -95,7 +94,6 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
 
 class _SeccionEditor extends StatefulWidget {
   final SeccionNumerofonia seccion;
-  final int numero;
   final bool puedeEliminar;
   final VoidCallback onDelete;
   final VoidCallback onChanged;
@@ -103,7 +101,6 @@ class _SeccionEditor extends StatefulWidget {
   const _SeccionEditor({
     super.key,
     required this.seccion,
-    required this.numero,
     required this.puedeEliminar,
     required this.onDelete,
     required this.onChanged,
@@ -114,44 +111,12 @@ class _SeccionEditor extends StatefulWidget {
 }
 
 class _SeccionEditorState extends State<_SeccionEditor> {
-  late TextEditingController _ctrl7;
-  late TextEditingController _ctrl6;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl7 = TextEditingController(
-      text: SeccionNumerofonia.stringifyFila(widget.seccion.fila7),
-    );
-    _ctrl6 = TextEditingController(
-      text: SeccionNumerofonia.stringifyFila(widget.seccion.fila6),
-    );
-    _ctrl7.addListener(_onTextChanged);
-    _ctrl6.addListener(_onTextChanged);
-  }
-
-  void _onTextChanged() {
-    widget.seccion.fila7 =
-        SeccionNumerofonia.parseFila(_ctrl7.text);
-    widget.seccion.fila6 =
-        SeccionNumerofonia.parseFila(_ctrl6.text);
-    setState(() {});
-    widget.onChanged();
-  }
-
-  @override
-  void dispose() {
-    _ctrl7.dispose();
-    _ctrl6.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = widget.seccion;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: AppColors.blanco,
         borderRadius: BorderRadius.circular(12),
@@ -161,7 +126,6 @@ class _SeccionEditorState extends State<_SeccionEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
           Row(
             children: [
               Container(
@@ -182,24 +146,6 @@ class _SeccionEditorState extends State<_SeccionEditor> {
                 ),
               ),
               const Spacer(),
-              // BIS
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Checkbox(
-                    value: s.conBis,
-                    activeColor: AppColors.granate,
-                    checkColor: AppColors.dorado,
-                    onChanged: (v) {
-                      setState(() => s.conBis = v ?? false);
-                      widget.onChanged();
-                    },
-                  ),
-                  const Text('BIS',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 12)),
-                ],
-              ),
               if (widget.puedeEliminar)
                 IconButton(
                   icon: const Icon(Icons.delete_outline,
@@ -208,168 +154,218 @@ class _SeccionEditorState extends State<_SeccionEditor> {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
-          // Caña 7
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.granate,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text('7',
-                    style: TextStyle(
-                      color: AppColors.dorado,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    )),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _ctrl7,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '_ _ 5 4 4 4 5 _ _',
-                    hintStyle: TextStyle(
-                      color: AppColors.negro.withOpacity(0.3),
-                      fontFamily: 'monospace',
-                    ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Caña 6
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 46,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: AppColors.granate,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text('6',
-                    style: TextStyle(
-                      color: AppColors.dorado,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    )),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _ctrl6,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '4 3 3 3 4 _ _ 6 5 6',
-                    hintStyle: TextStyle(
-                      color: AppColors.negro.withOpacity(0.3),
-                      fontFamily: 'monospace',
-                    ),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          // Preview
-          if (!s.vacia) ...[
-            const Text('Vista previa:',
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.granate)),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.negro,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    Column(
-                      children: [
-                        _celdaPreview('7', true),
-                        const SizedBox(height: 2),
-                        _celdaPreview('6', true),
-                      ],
-                    ),
-                    const SizedBox(width: 6),
-                    for (int i = 0; i < s.columnas; i++) ...[
-                      Column(
-                        children: [
-                          _celdaPreview(
-                            i < s.fila7.length ? s.fila7[i] : '',
-                            false,
-                          ),
-                          const SizedBox(height: 2),
-                          _celdaPreview(
-                            i < s.fila6.length ? s.fila6[i] : '',
-                            false,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 2),
-                    ],
-                  ],
-                ),
-              ),
+          const SizedBox(height: 6),
+          for (int i = 0; i < s.lineas.length; i++)
+            _LineaEditor(
+              key: ValueKey('linea_${s.nombre}_$i'),
+              linea: s.lineas[i],
+              puedeEliminar: s.lineas.length > 1,
+              onDelete: () {
+                setState(() => s.lineas.removeAt(i));
+                widget.onChanged();
+              },
+              onChanged: widget.onChanged,
             ),
-          ],
+          const SizedBox(height: 4),
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() => s.lineas.add(LineaNumerofonia()));
+              widget.onChanged();
+            },
+            icon: const Icon(Icons.add, size: 16),
+            label: const Text('Agregar línea (compás)',
+                style: TextStyle(fontSize: 13)),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LineaEditor extends StatefulWidget {
+  final LineaNumerofonia linea;
+  final bool puedeEliminar;
+  final VoidCallback onDelete;
+  final VoidCallback onChanged;
+
+  const _LineaEditor({
+    super.key,
+    required this.linea,
+    required this.puedeEliminar,
+    required this.onDelete,
+    required this.onChanged,
+  });
+
+  @override
+  State<_LineaEditor> createState() => _LineaEditorState();
+}
+
+class _LineaEditorState extends State<_LineaEditor> {
+  void _agregarColumna() {
+    setState(() {
+      widget.linea.fila7.add('');
+      widget.linea.fila6.add('');
+    });
+    widget.onChanged();
+  }
+
+  void _quitarColumna() {
+    if (widget.linea.columnas == 0) return;
+    setState(() {
+      if (widget.linea.fila7.isNotEmpty) widget.linea.fila7.removeLast();
+      if (widget.linea.fila6.isNotEmpty) widget.linea.fila6.removeLast();
+    });
+    widget.onChanged();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = widget.linea;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.grisClaro,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          // Tabla editable
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.blanco,
+              border: Border.all(color: AppColors.negro, width: 1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _filaEditable(l.fila7, '7'),
+                _filaEditable(l.fila6, '6'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Botones
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _agregarColumna,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Columna',
+                      style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    minimumSize: const Size(0, 34),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _quitarColumna,
+                  icon: const Icon(Icons.remove, size: 16),
+                  label: const Text('Columna',
+                      style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
+                    minimumSize: const Size(0, 34),
+                    foregroundColor: AppColors.granate,
+                  ),
+                ),
+              ),
+              if (widget.puedeEliminar) ...[
+                const SizedBox(width: 6),
+                IconButton(
+                  icon: const Icon(Icons.close,
+                      color: AppColors.granate, size: 20),
+                  onPressed: widget.onDelete,
+                  tooltip: 'Quitar línea',
+                ),
+              ],
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _celdaPreview(String c, bool etiqueta) {
-    final vacia = c.isEmpty;
-    return Container(
-      width: 32,
-      height: 28,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: etiqueta ? AppColors.granate : AppColors.negro,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: etiqueta
-              ? AppColors.dorado
-              : (vacia
-                  ? AppColors.dorado.withOpacity(0.25)
-                  : AppColors.dorado),
-          width: 1,
-        ),
+  Widget _filaEditable(List<String> fila, String etiqueta) {
+    final cols = widget.linea.columnas;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          // Etiqueta 7 / 6
+          Container(
+            width: 26,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              border: Border(
+                right: BorderSide(color: AppColors.negro, width: 1),
+              ),
+            ),
+            child: Text(
+              etiqueta,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: AppColors.negro,
+              ),
+            ),
+          ),
+          // Celdas
+          for (int i = 0; i < cols; i++)
+            _celdaEditable(fila, i, esUltima: i == cols - 1),
+        ],
       ),
-      child: Text(
-        c,
-        style: TextStyle(
-          color: AppColors.dorado,
+    );
+  }
+
+  Widget _celdaEditable(List<String> fila, int index,
+      {required bool esUltima}) {
+    final valor = index < fila.length ? fila[index] : '';
+    final controller = TextEditingController(text: valor);
+    controller.selection = TextSelection.collapsed(
+      offset: controller.text.length,
+    );
+
+    return Container(
+      constraints: const BoxConstraints(minWidth: 40),
+      decoration: BoxDecoration(
+        border: esUltima
+            ? null
+            : const Border(
+                right: BorderSide(color: AppColors.negro, width: 0.8),
+              ),
+      ),
+      child: TextField(
+        controller: controller,
+        textAlign: TextAlign.center,
+        maxLength: 6,
+        style: const TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 13,
           fontWeight: FontWeight.bold,
-          fontSize: etiqueta ? 14 : 12,
+          color: AppColors.negro,
         ),
+        decoration: const InputDecoration(
+          counterText: '',
+          isDense: true,
+          contentPadding:
+              EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          border: InputBorder.none,
+          hintText: '',
+        ),
+        onChanged: (v) {
+          if (index >= fila.length) return;
+          fila[index] = v.trim();
+          widget.onChanged();
+        },
       ),
     );
   }

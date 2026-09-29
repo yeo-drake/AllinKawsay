@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import '../models/cancion.dart';
 import '../theme/colors.dart';
 import '../widgets/visor_numerofonia.dart';
@@ -13,18 +12,6 @@ class PresentacionScreen extends StatefulWidget {
 }
 
 class _PresentacionScreenState extends State<PresentacionScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WakelockPlus.enable();
-  }
-
-  @override
-  void dispose() {
-    WakelockPlus.disable();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final c = widget.cancion;
@@ -46,7 +33,6 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // Título grande
             Text(
               c.titulo.toUpperCase(),
               textAlign: TextAlign.center,
@@ -72,7 +58,6 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
               ),
             const SizedBox(height: 20),
 
-            // Numerofonía grande
             if (c.tieneNumerofoniaTabla)
               VisorNumerofonia(
                 secciones: c.numerofoniaEstructurada,
@@ -98,7 +83,6 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
                 ),
               ),
 
-            // Letra
             if (c.letra.isNotEmpty) ...[
               const SizedBox(height: 32),
               Container(

@@ -1,7 +1,7 @@
 name: sikuris_app
 description: App para grupo de sikuris
 publish_to: 'none'
-version: 1.0.0+15
+version: 1.0.0+16
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -22,7 +22,6 @@ dependencies:
   url_launcher: ^6.3.0
   permission_handler: ^11.3.1
   shared_preferences: ^2.3.2
-  wakelock_plus: ^1.2.8
 
 dev_dependencies:
   flutter_lints: ^4.0.0

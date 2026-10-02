@@ -45,10 +45,16 @@ jobs:
       - name: Aplicar MainActivity custom
         run: |
           if [ -f "android_config/MainActivity.kt" ]; then
+            # Borrar cualquier MainActivity.java o .kt que haya generado Flutter
+            find android/app/src/main -name "MainActivity.java" -delete || true
+            find android/app/src/main -name "MainActivity.kt" -delete || true
+
+            # Crear carpeta y copiar el nuestro
             mkdir -p android/app/src/main/kotlin/com/sikuris/sikuris_app
             cp android_config/MainActivity.kt \
               android/app/src/main/kotlin/com/sikuris/sikuris_app/MainActivity.kt
             echo "✅ MainActivity custom copiado"
+            ls -la android/app/src/main/kotlin/com/sikuris/sikuris_app/
           fi
 
       - name: Configurar keystore de release

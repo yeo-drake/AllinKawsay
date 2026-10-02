@@ -3,12 +3,16 @@ import '../models/numerofonia.dart';
 import '../theme/colors.dart';
 
 class EditorNumerofonia extends StatefulWidget {
-  final List<SeccionNumerofonia> inicial;
-  final ValueChanged<List<SeccionNumerofonia>> onChanged;
+  final List<EstrofaNumerofonia> inicial;
+  final String autor;
+  final String ritmo;
+  final ValueChanged<List<EstrofaNumerofonia>> onChanged;
 
   const EditorNumerofonia({
     super.key,
     required this.inicial,
+    required this.autor,
+    required this.ritmo,
     required this.onChanged,
   });
 
@@ -17,163 +21,102 @@ class EditorNumerofonia extends StatefulWidget {
 }
 
 class _EditorNumerofoniaState extends State<EditorNumerofonia> {
-  late List<SeccionNumerofonia> _secciones;
+  late List<EstrofaNumerofonia> _estrofas;
 
   @override
   void initState() {
     super.initState();
-    _secciones = widget.inicial.map((s) => s.copy()).toList();
-    if (_secciones.isEmpty) {
-      _secciones.add(SeccionNumerofonia(nombre: 'A'));
+    _estrofas = widget.inicial.map((e) => e.copy()).toList();
+    if (_estrofas.isEmpty) {
+      _estrofas.add(EstrofaNumerofonia());
     }
   }
 
-  void _notificar() => widget.onChanged(_secciones);
+  void _notificar() => widget.onChanged(_estrofas);
 
-  void _agregarSeccion() {
-    const letras = ['A', 'B', 'C', 'D', 'E', 'F'];
-    final siguiente = letras[_secciones.length % letras.length];
-    setState(() => _secciones.add(SeccionNumerofonia(nombre: siguiente)));
+  void _agregarEstrofa() {
+    setState(() => _estrofas.add(EstrofaNumerofonia()));
     _notificar();
   }
 
-  void _eliminarSeccion(int i) {
-    if (_secciones.length == 1) return;
-    setState(() => _secciones.removeAt(i));
+  void _eliminarEstrofa(int i) {
+    if (_estrofas.length == 1) return;
+    setState(() => _estrofas.removeAt(i));
     _notificar();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const Text(
-          'Numerofonía',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.granate,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Toca una celda para escribir. Usa + para agregar una columna nueva.',
-          style: TextStyle(
-            color: AppColors.negro.withOpacity(0.6),
-            fontSize: 12,
-          ),
-        ),
-        const SizedBox(height: 12),
-        for (int i = 0; i < _secciones.length; i++)
-          _SeccionEditor(
-            key: ValueKey('sec_${_secciones[i].nombre}_$i'),
-            seccion: _secciones[i],
-            puedeEliminar: _secciones.length > 1,
-            onDelete: () => _eliminarSeccion(i),
-            onChanged: _notificar,
-          ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: _agregarSeccion,
-          icon: const Icon(Icons.add),
-          label: const Text('Agregar sección'),
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 14),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-
-class _SeccionEditor extends StatefulWidget {
-  final SeccionNumerofonia seccion;
-  final bool puedeEliminar;
-  final VoidCallback onDelete;
-  final VoidCallback onChanged;
-
-  const _SeccionEditor({
-    super.key,
-    required this.seccion,
-    required this.puedeEliminar,
-    required this.onDelete,
-    required this.onChanged,
-  });
-
-  @override
-  State<_SeccionEditor> createState() => _SeccionEditorState();
-}
-
-class _SeccionEditorState extends State<_SeccionEditor> {
-  @override
-  Widget build(BuildContext context) {
-    final s = widget.seccion;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.blanco,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: AppColors.dorado.withOpacity(0.4), width: 1),
+        border: Border.all(color: AppColors.negro, width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header
+          const Center(
+            child: Text(
+              'NUMEROFONÍA',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.negro,
+                fontSize: 16,
+                letterSpacing: 2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.granate,
-                  borderRadius: BorderRadius.circular(6),
-                ),
+              Expanded(
                 child: Text(
-                  'SECCIÓN ${s.nombre}',
+                  'Autor: ${widget.autor.isEmpty ? '—' : widget.autor}',
                   style: const TextStyle(
-                    color: AppColors.dorado,
-                    fontWeight: FontWeight.bold,
                     fontSize: 12,
-                    letterSpacing: 1,
+                    color: AppColors.negro,
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
               ),
-              const Spacer(),
-              if (widget.puedeEliminar)
-                IconButton(
-                  icon: const Icon(Icons.delete_outline,
-                      color: AppColors.granate, size: 20),
-                  onPressed: widget.onDelete,
+              Expanded(
+                child: Text(
+                  'Ritmo: ${widget.ritmo.isEmpty ? '—' : widget.ritmo}',
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.negro,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 8),
-          for (int i = 0; i < s.lineas.length; i++)
-            _LineaEditor(
-              key: ValueKey('linea_${s.nombre}_$i'),
-              linea: s.lineas[i],
-              numeroLinea: i + 1,
-              puedeEliminar: s.lineas.length > 1,
-              onDelete: () {
-                setState(() => s.lineas.removeAt(i));
-                widget.onChanged();
-              },
-              onChanged: widget.onChanged,
+          const SizedBox(height: 12),
+
+          // Lista de estrofas
+          for (int i = 0; i < _estrofas.length; i++)
+            _EstrofaEditor(
+              key: ValueKey('estrofa_$i'),
+              estrofa: _estrofas[i],
+              numero: i + 1,
+              puedeEliminar: _estrofas.length > 1,
+              onDelete: () => _eliminarEstrofa(i),
+              onChanged: _notificar,
             ),
+
           const SizedBox(height: 4),
           OutlinedButton.icon(
-            onPressed: () {
-              setState(() => s.lineas.add(LineaNumerofonia()));
-              widget.onChanged();
-            },
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Agregar otra línea de compás',
-                style: TextStyle(fontSize: 13)),
+            onPressed: _agregarEstrofa,
+            icon: const Icon(Icons.add),
+            label: const Text('AÑADIR ESTROFA'),
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              foregroundColor: AppColors.granate,
+              side: const BorderSide(color: AppColors.granate, width: 1.5),
             ),
           ),
         ],
@@ -182,34 +125,35 @@ class _SeccionEditorState extends State<_SeccionEditor> {
   }
 }
 
-class _LineaEditor extends StatefulWidget {
-  final LineaNumerofonia linea;
-  final int numeroLinea;
+
+class _EstrofaEditor extends StatefulWidget {
+  final EstrofaNumerofonia estrofa;
+  final int numero;
   final bool puedeEliminar;
   final VoidCallback onDelete;
   final VoidCallback onChanged;
 
-  const _LineaEditor({
+  const _EstrofaEditor({
     super.key,
-    required this.linea,
-    required this.numeroLinea,
+    required this.estrofa,
+    required this.numero,
     required this.puedeEliminar,
     required this.onDelete,
     required this.onChanged,
   });
 
   @override
-  State<_LineaEditor> createState() => _LineaEditorState();
+  State<_EstrofaEditor> createState() => _EstrofaEditorState();
 }
 
-class _LineaEditorState extends State<_LineaEditor> {
-  void _insertarColumna(int pos) {
-    setState(() => widget.linea.insertarColumna(pos));
+class _EstrofaEditorState extends State<_EstrofaEditor> {
+  void _agregarColumna() {
+    setState(() => widget.estrofa.agregarColumna());
     widget.onChanged();
   }
 
   void _eliminarColumna(int index) async {
-    if (widget.linea.columnas <= 1) {
+    if (widget.estrofa.columnas <= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debe quedar al menos una columna')),
       );
@@ -231,20 +175,22 @@ class _LineaEditorState extends State<_LineaEditor> {
       ),
     );
     if (ok == true) {
-      setState(() => widget.linea.eliminarColumna(index));
+      setState(() => widget.estrofa.eliminarColumna(index));
       widget.onChanged();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l = widget.linea;
+    final e = widget.estrofa;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: AppColors.grisClaro,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+            color: AppColors.negro.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -252,7 +198,7 @@ class _LineaEditorState extends State<_LineaEditor> {
           Row(
             children: [
               Text(
-                'Línea ${widget.numeroLinea}',
+                'Estrofa ${widget.numero}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -263,92 +209,149 @@ class _LineaEditorState extends State<_LineaEditor> {
               if (widget.puedeEliminar)
                 TextButton.icon(
                   onPressed: widget.onDelete,
-                  icon: const Icon(Icons.close, size: 16),
+                  icon: const Icon(Icons.close, size: 14),
                   label: const Text('Quitar',
-                      style: TextStyle(fontSize: 12)),
+                      style: TextStyle(fontSize: 11)),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.granate,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    minimumSize: const Size(0, 32),
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    minimumSize: const Size(0, 28),
                   ),
                 ),
             ],
           ),
           const SizedBox(height: 6),
-          _tablaEditable(l),
-        ],
-      ),
-    );
-  }
-
-  Widget _tablaEditable(LineaNumerofonia l) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.blanco,
-          border: Border.all(color: AppColors.negro, width: 1.2),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Etiquetas
-            Column(
-              children: [
-                _etiqueta('7'),
-                Container(height: 1.2, color: AppColors.negro),
-                _etiqueta('6'),
-              ],
-            ),
-            // Columnas + botones "+" intercalados
-            for (int i = 0; i < l.columnas; i++) ...[
-              _columnaCeldas(l, i),
-              _botonInsertar(i + 1),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Tabla
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.blanco,
+                      border:
+                          Border.all(color: AppColors.negro, width: 1.2),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Etiquetas 7 / 6
+                        Column(
+                          children: [
+                            _etiqueta('7'),
+                            Container(height: 1.2, color: AppColors.negro),
+                            _etiqueta('6'),
+                          ],
+                        ),
+                        // Columnas
+                        for (int i = 0; i < e.columnas; i++)
+                          _columna(e, i),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              // Botón +
+              InkWell(
+                onTap: _agregarColumna,
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.dorado.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: AppColors.granate, width: 1.5),
+                  ),
+                  child: const Icon(Icons.add,
+                      color: AppColors.granate, size: 22),
+                ),
+              ),
+              const SizedBox(width: 6),
+              // BIS toggle
+              InkWell(
+                onTap: () {
+                  setState(() => e.bis = !e.bis);
+                  widget.onChanged();
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: e.bis
+                        ? AppColors.granate
+                        : AppColors.negro.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: e.bis
+                          ? AppColors.dorado
+                          : AppColors.negro.withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Text(
+                    e.bis ? 'BIS ON' : 'BIS OFF',
+                    style: TextStyle(
+                      color: e.bis
+                          ? AppColors.dorado
+                          : AppColors.negro.withOpacity(0.5),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+              ),
             ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _etiqueta(String t) {
     return Container(
-      width: 26,
-      height: 34,
+      width: 28,
+      height: 40,
       alignment: Alignment.center,
       child: Text(
         t,
         style: const TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 14,
+          fontSize: 15,
         ),
       ),
     );
   }
 
-  Widget _columnaCeldas(LineaNumerofonia l, int index) {
+  Widget _columna(EstrofaNumerofonia e, int index) {
     return Container(
       decoration: const BoxDecoration(
         border: Border(
-          left: BorderSide(color: AppColors.negro, width: 1),
+          left: BorderSide(color: AppColors.negro, width: 1.2),
         ),
       ),
       child: Column(
         children: [
           _celdaEditable(
-            valor: l.fila7[index],
+            valor: e.fila7[index],
             onChanged: (v) {
-              l.fila7[index] = v;
+              e.fila7[index] = v;
               widget.onChanged();
             },
             onLongPress: () => _eliminarColumna(index),
           ),
-          Container(height: 1, color: AppColors.negro),
+          Container(height: 1.2, color: AppColors.negro),
           _celdaEditable(
-            valor: l.fila6[index],
+            valor: e.fila6[index],
             onChanged: (v) {
-              l.fila6[index] = v;
+              e.fila6[index] = v;
               widget.onChanged();
             },
             onLongPress: () => _eliminarColumna(index),
@@ -367,16 +370,19 @@ class _LineaEditorState extends State<_LineaEditor> {
     controller.selection = TextSelection.collapsed(
       offset: controller.text.length,
     );
+    final ancho = valor.isEmpty
+        ? 55.0
+        : (valor.length * 11.0 + 24.0).clamp(55.0, 130.0);
 
     return GestureDetector(
       onLongPress: onLongPress,
-      child: Container(
-        constraints: const BoxConstraints(minWidth: 48),
-        height: 34,
+      child: SizedBox(
+        width: ancho,
+        height: 40,
         child: TextField(
           controller: controller,
           textAlign: TextAlign.center,
-          maxLength: 8,
+          maxLength: 10,
           style: const TextStyle(
             fontFamily: 'monospace',
             fontSize: 14,
@@ -386,35 +392,13 @@ class _LineaEditorState extends State<_LineaEditor> {
           decoration: const InputDecoration(
             counterText: '',
             isDense: true,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            contentPadding: EdgeInsets.zero,
             border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
             hintText: '',
           ),
           onChanged: (v) => onChanged(v.trim()),
-        ),
-      ),
-    );
-  }
-
-  Widget _botonInsertar(int pos) {
-    return SizedBox(
-      width: 26,
-      child: Center(
-        child: InkWell(
-          onTap: () => _insertarColumna(pos),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: AppColors.dorado.withOpacity(0.2),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.granate, width: 1),
-            ),
-            child: const Icon(Icons.add,
-                size: 14, color: AppColors.granate),
-          ),
         ),
       ),
     );

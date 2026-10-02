@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/colors.dart';
 
 class WatermarkOverlay extends StatelessWidget {
   final Widget child;
@@ -7,16 +8,13 @@ class WatermarkOverlay extends StatelessWidget {
   const WatermarkOverlay({
     super.key,
     required this.child,
-    this.opacity = 0.06,
+    this.opacity = 0.08,
     this.size = 280,
   });
 
   @override
   Widget build(BuildContext context) {
     return Stack(
-      // StackFit.expand obliga a TODOS los hijos no-posicionados a
-      // ocupar el mismo tamaño que el Stack. Esto evita que el
-      // ListView se expanda indefinidamente.
       fit: StackFit.expand,
       children: [
         child,
@@ -24,12 +22,20 @@ class WatermarkOverlay extends StatelessWidget {
           child: Center(
             child: Opacity(
               opacity: opacity,
-              child: Image.asset(
-                'assets/logo.png',
-                width: size,
-                height: size,
-                fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              child: ColorFiltered(
+                // Convierte el logo a silueta dorada (las zonas blancas
+                // se vuelven transparentes, las oscuras toman el color).
+                colorFilter: ColorFilter.mode(
+                  AppColors.dorado,
+                  BlendMode.srcIn,
+                ),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: size,
+                  height: size,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
               ),
             ),
           ),

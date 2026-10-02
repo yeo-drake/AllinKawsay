@@ -44,8 +44,6 @@ class UsuarioService {
 
   Future<void> cambiarRol(String uid, String nuevoRol) async {
     await _db.collection('usuarios').doc(uid).update({'rol': nuevoRol});
-
-    // Obtener el nombre del afectado para el log
     String nombre = uid;
     try {
       final doc = await _db.collection('usuarios').doc(uid).get();
@@ -53,7 +51,6 @@ class UsuarioService {
         nombre = (doc.data()?['nombre'] ?? uid).toString();
       }
     } catch (_) {}
-
     ActividadService.registrar(
       'cambiar_rol',
       'Cambió el rol de "$nombre" a ${nuevoRol.toUpperCase()}',
@@ -91,5 +88,23 @@ class UsuarioService {
         .collection('usuarios')
         .doc(uid)
         .update({'favoritos': favs});
+  }
+
+  /// Guarda una nota privada del usuario para una canción.
+  /// Si la nota está vacía, la elimina.
+  Future<void> guardarNota(String cancionId, String texto) async {
+    final uid = miUid();
+    if (uid == null) return;
+
+    final ref = _db.collection('usuarios').doc(uid);
+    if (texto.trim().isEmpty) {
+      await ref.update({
+        'notasPorCancion.$cancionId': FieldValue.delete(),
+      });
+    } else {
+      await ref.update({
+        'notasPorCancion.$cancionId': texto.trim(),
+      });
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/numerofonia.dart';
 import '../theme/colors.dart';
@@ -57,7 +58,6 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
           const Center(
             child: Text(
               'NUMEROFONÍA',
@@ -97,7 +97,6 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
           ),
           const SizedBox(height: 12),
 
-          // Lista de estrofas
           for (int i = 0; i < _estrofas.length; i++)
             _EstrofaEditor(
               key: ValueKey('estrofa_$i'),
@@ -126,7 +125,7 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
 }
 
 
-class _EstrofaEditor extends StatefulWidget {
+class _EstrofaEditor extends StatelessWidget {
   final EstrofaNumerofonia estrofa;
   final int numero;
   final bool puedeEliminar;
@@ -142,18 +141,13 @@ class _EstrofaEditor extends StatefulWidget {
     required this.onChanged,
   });
 
-  @override
-  State<_EstrofaEditor> createState() => _EstrofaEditorState();
-}
-
-class _EstrofaEditorState extends State<_EstrofaEditor> {
   void _agregarColumna() {
-    setState(() => widget.estrofa.agregarColumna());
-    widget.onChanged();
+    estrofa.agregarColumna();
+    onChanged();
   }
 
-  void _eliminarColumna(int index) async {
-    if (widget.estrofa.columnas <= 1) {
+  void _eliminarColumna(BuildContext context, int index) async {
+    if (estrofa.columnas <= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debe quedar al menos una columna')),
       );
@@ -175,22 +169,22 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
       ),
     );
     if (ok == true) {
-      setState(() => widget.estrofa.eliminarColumna(index));
-      widget.onChanged();
+      estrofa.eliminarColumna(index);
+      onChanged();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final e = widget.estrofa;
+    final e = estrofa;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: AppColors.grisClaro,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-            color: AppColors.negro.withOpacity(0.3), width: 1),
+        border:
+            Border.all(color: AppColors.negro.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -198,7 +192,7 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
           Row(
             children: [
               Text(
-                'Estrofa ${widget.numero}',
+                'Estrofa $numero',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -206,9 +200,9 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
                 ),
               ),
               const Spacer(),
-              if (widget.puedeEliminar)
+              if (puedeEliminar)
                 TextButton.icon(
-                  onPressed: widget.onDelete,
+                  onPressed: onDelete,
                   icon: const Icon(Icons.close, size: 14),
                   label: const Text('Quitar',
                       style: TextStyle(fontSize: 11)),
@@ -224,7 +218,6 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Tabla
               Expanded(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -237,7 +230,6 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Etiquetas 7 / 6
                         Column(
                           children: [
                             _etiqueta('7'),
@@ -245,16 +237,14 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
                             _etiqueta('6'),
                           ],
                         ),
-                        // Columnas
                         for (int i = 0; i < e.columnas; i++)
-                          _columna(e, i),
+                          _columna(context, e, i),
                       ],
                     ),
                   ),
                 ),
               ),
               const SizedBox(width: 6),
-              // Botón +
               InkWell(
                 onTap: _agregarColumna,
                 borderRadius: BorderRadius.circular(20),
@@ -272,11 +262,10 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
                 ),
               ),
               const SizedBox(width: 6),
-              // BIS toggle
               InkWell(
                 onTap: () {
-                  setState(() => e.bis = !e.bis);
-                  widget.onChanged();
+                  e.bis = !e.bis;
+                  onChanged();
                 },
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
@@ -330,7 +319,7 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
     );
   }
 
-  Widget _columna(EstrofaNumerofonia e, int index) {
+  Widget _columna(BuildContext context, EstrofaNumerofonia e, int index) {
     return Container(
       decoration: const BoxDecoration(
         border: Border(
@@ -339,48 +328,97 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
       ),
       child: Column(
         children: [
-          _celdaEditable(
-            valor: e.fila7[index],
+          _CeldaEditable(
+            key: ValueKey('c7_$numero$index'),
+            valorInicial: e.fila7[index],
             onChanged: (v) {
               e.fila7[index] = v;
-              widget.onChanged();
+              onChanged();
             },
-            onLongPress: () => _eliminarColumna(index),
+            onLongPress: () => _eliminarColumna(context, index),
           ),
           Container(height: 1.2, color: AppColors.negro),
-          _celdaEditable(
-            valor: e.fila6[index],
+          _CeldaEditable(
+            key: ValueKey('c6_$numero$index'),
+            valorInicial: e.fila6[index],
             onChanged: (v) {
               e.fila6[index] = v;
-              widget.onChanged();
+              onChanged();
             },
-            onLongPress: () => _eliminarColumna(index),
+            onLongPress: () => _eliminarColumna(context, index),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _celdaEditable({
-    required String valor,
-    required ValueChanged<String> onChanged,
-    required VoidCallback onLongPress,
-  }) {
-    final controller = TextEditingController(text: valor);
-    controller.selection = TextSelection.collapsed(
-      offset: controller.text.length,
-    );
+/// Celda individual con su propio controller y debounce.
+/// NO se reconstruye desde el padre cuando se escribe.
+class _CeldaEditable extends StatefulWidget {
+  final String valorInicial;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onLongPress;
+
+  const _CeldaEditable({
+    super.key,
+    required this.valorInicial,
+    required this.onChanged,
+    required this.onLongPress,
+  });
+
+  @override
+  State<_CeldaEditable> createState() => _CeldaEditableState();
+}
+
+class _CeldaEditableState extends State<_CeldaEditable> {
+  late TextEditingController _ctrl;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.valorInicial);
+  }
+
+  @override
+  void didUpdateWidget(covariant _CeldaEditable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Si el valor cambió externamente (raro), actualizar el controller
+    if (widget.valorInicial != oldWidget.valorInicial &&
+        _ctrl.text != widget.valorInicial) {
+      _ctrl.text = widget.valorInicial;
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String v) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      widget.onChanged(v.trim());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final valor = _ctrl.text;
     final ancho = valor.isEmpty
         ? 55.0
         : (valor.length * 11.0 + 24.0).clamp(55.0, 130.0);
 
     return GestureDetector(
-      onLongPress: onLongPress,
+      onLongPress: widget.onLongPress,
       child: SizedBox(
         width: ancho,
         height: 40,
         child: TextField(
-          controller: controller,
+          controller: _ctrl,
           textAlign: TextAlign.center,
           maxLength: 10,
           style: const TextStyle(
@@ -398,9 +436,10 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
             focusedBorder: InputBorder.none,
             hintText: '',
           ),
-          onChanged: (v) => onChanged(v.trim()),
+          onChanged: _onChanged,
         ),
       ),
     );
   }
 }
+

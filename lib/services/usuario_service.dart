@@ -44,4 +44,16 @@ class UsuarioService {
   Future<void> cambiarRol(String uid, String nuevoRol) {
     return _db.collection('usuarios').doc(uid).update({'rol': nuevoRol});
   }
+
+  /// Actualiza la URL de la foto de perfil del usuario actual
+  Future<void> actualizarFotoPerfil(String uid, String fotoUrl) {
+    return _db.collection('usuarios').doc(uid).update({'fotoUrl': fotoUrl});
+  }
+
+  /// Actualiza el nombre del usuario actual
+  Future<void> actualizarNombre(String uid, String nombre) async {
+    await _db.collection('usuarios').doc(uid).update({'nombre': nombre});
+    // También actualizar en Firebase Auth
+    await FirebaseAuth.instance.currentUser?.updateDisplayName(nombre);
+  }
 }

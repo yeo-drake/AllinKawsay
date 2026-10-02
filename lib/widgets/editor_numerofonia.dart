@@ -58,25 +58,26 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header
           const Center(
             child: Text(
               'NUMEROFONÍA',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: AppColors.negro,
-                fontSize: 16,
+                fontSize: 15,
                 letterSpacing: 2,
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Row(
             children: [
               Expanded(
                 child: Text(
                   'Autor: ${widget.autor.isEmpty ? '—' : widget.autor}',
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: AppColors.negro,
                     fontStyle: FontStyle.italic,
                   ),
@@ -87,7 +88,7 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
                   'Ritmo: ${widget.ritmo.isEmpty ? '—' : widget.ritmo}',
                   textAlign: TextAlign.right,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: AppColors.negro,
                     fontStyle: FontStyle.italic,
                   ),
@@ -95,7 +96,7 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const Divider(height: 16),
 
           for (int i = 0; i < _estrofas.length; i++)
             _EstrofaEditor(
@@ -226,10 +227,10 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
             ],
           ),
           const SizedBox(height: 6),
-          // Tabla (todo el ancho, sin scroll)
+          // Tabla
           _tabla(e),
           const SizedBox(height: 8),
-          // Botones debajo
+          // Botones
           Row(
             children: [
               Expanded(
@@ -275,67 +276,79 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
   }
 
   Widget _tabla(EstrofaNumerofonia e) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.blanco,
-        border: Border.all(color: AppColors.negro, width: 1.2),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Etiquetas 7 / 6
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _etiqueta('7'),
-              Container(height: 1.2, color: AppColors.negro),
-              _etiqueta('6'),
-            ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const etiquetaW = 26.0;
+        final cols = e.columnas;
+        final disponible = constraints.maxWidth - etiquetaW;
+        final anchoCol = cols > 0 ? disponible / cols : 0.0;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.blanco,
+            border: Border.all(color: AppColors.negro, width: 1.2),
           ),
-          // Columnas (cada una ocupa 1/N del ancho disponible)
-          for (int i = 0; i < e.columnas; i++)
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  border: Border(
-                    left: BorderSide(color: AppColors.negro, width: 1),
-                  ),
-                ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Etiquetas
+              SizedBox(
+                width: etiquetaW,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _CeldaEditable(
-                      key: ValueKey('c7_${widget.numero}_$i'),
-                      valorInicial: e.fila7[i],
-                      onChanged: (v) {
-                        e.fila7[i] = v;
-                        widget.onChanged();
-                      },
-                      onLongPress: () => _eliminarColumna(i),
-                    ),
-                    Container(height: 1, color: AppColors.negro),
-                    _CeldaEditable(
-                      key: ValueKey('c6_${widget.numero}_$i'),
-                      valorInicial: e.fila6[i],
-                      onChanged: (v) {
-                        e.fila6[i] = v;
-                        widget.onChanged();
-                      },
-                      onLongPress: () => _eliminarColumna(i),
-                    ),
+                    _etiqueta('7'),
+                    Container(height: 1.2, color: AppColors.negro),
+                    _etiqueta('6'),
                   ],
                 ),
               ),
-            ),
-        ],
-      ),
+              // Columnas
+              for (int i = 0; i < cols; i++)
+                SizedBox(
+                  width: anchoCol,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: AppColors.negro, width: 1),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _CeldaEditable(
+                          key: ValueKey('c7_${widget.numero}_$i'),
+                          valorInicial: e.fila7[i],
+                          onChanged: (v) {
+                            e.fila7[i] = v;
+                            widget.onChanged();
+                          },
+                          onLongPress: () => _eliminarColumna(i),
+                        ),
+                        Container(height: 1.2, color: AppColors.negro),
+                        _CeldaEditable(
+                          key: ValueKey('c6_${widget.numero}_$i'),
+                          valorInicial: e.fila6[i],
+                          onChanged: (v) {
+                            e.fila6[i] = v;
+                            widget.onChanged();
+                          },
+                          onLongPress: () => _eliminarColumna(i),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _etiqueta(String t) {
     return Container(
-      width: 24,
-      height: 42,
+      height: 44,
       alignment: Alignment.center,
       child: Text(
         t,
@@ -403,34 +416,28 @@ class _CeldaEditableState extends State<_CeldaEditable> {
     return GestureDetector(
       onLongPress: widget.onLongPress,
       child: SizedBox(
-        height: 42,
+        height: 44,
         child: Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: TextField(
-                controller: _ctrl,
-                textAlign: TextAlign.center,
-                maxLength: 12,
-                style: const TextStyle(
-                  fontFamily: 'monospace',
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.negro,
-                ),
-                decoration: const InputDecoration(
-                  counterText: '',
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  hintText: '',
-                ),
-                onChanged: _onChanged,
-              ),
+          child: TextField(
+            controller: _ctrl,
+            textAlign: TextAlign.center,
+            maxLength: 15,
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColors.negro,
             ),
+            decoration: const InputDecoration(
+              counterText: '',
+              isDense: true,
+              contentPadding: EdgeInsets.symmetric(horizontal: 2),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              hintText: '',
+            ),
+            onChanged: _onChanged,
           ),
         ),
       ),

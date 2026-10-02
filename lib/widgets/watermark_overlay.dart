@@ -15,7 +15,9 @@ class WatermarkOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Fondo: logo en el centro con opacidad baja
+        // El child va PRIMERO (define el tamaño del Stack)
+        child,
+        // Logo encima, ocupando todo el Stack
         Positioned.fill(
           child: IgnorePointer(
             child: Opacity(
@@ -32,8 +34,6 @@ class WatermarkOverlay extends StatelessWidget {
             ),
           ),
         ),
-        // Contenido encima (toma el tamaño del padre)
-        child,
       ],
     );
   }

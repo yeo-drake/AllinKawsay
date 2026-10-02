@@ -25,14 +25,44 @@ class CancionService {
     return _db.collection('canciones').doc(id).delete();
   }
 
-  /// Incrementa en 1 el contador de reproducciones de una canción.
   Future<void> incrementarReproduccion(String id) async {
     try {
       await _db.collection('canciones').doc(id).update({
         'reproducciones': FieldValue.increment(1),
       });
+    } catch (_) {}
+  }
+
+  /// Cuenta cuántas canciones subió un usuario en particular
+  Future<int> contarPorUsuario(String uid) async {
+    try {
+      final snap = await _db
+          .collection('canciones')
+          .where('creadoPor', isEqualTo: uid)
+          .count()
+          .get();
+      return snap.count ?? 0;
     } catch (_) {
-      // Silenciar errores (por si la canción no existe o falla la red)
+      return 0;
+    }
+  }
+
+  /// Suma total de reproducciones de las canciones subidas por un usuario
+  Future<int> totalReproduccionesDeUsuario(String uid) async {
+    try {
+      final snap = await _db
+          .collection('canciones')
+          .where('creadoPor', isEqualTo: uid)
+          .get();
+      int total = 0;
+      for (final doc in snap.docs) {
+        final d = doc.data();
+        final r = d['reproducciones'];
+        if (r is int) total += r;
+      }
+      return total;
+    } catch (_) {
+      return 0;
     }
   }
 }

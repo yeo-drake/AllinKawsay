@@ -34,12 +34,28 @@ class UsuarioService {
     return u?.esAdmin ?? false;
   }
 
+  /// Lista usuarios NO baneados (por defecto)
   Stream<List<Usuario>> listar() {
     return _db
         .collection('usuarios')
         .orderBy('fechaRegistro', descending: true)
         .snapshots()
-        .map((snap) => snap.docs.map(Usuario.fromDoc).toList());
+        .map((snap) => snap.docs
+            .map(Usuario.fromDoc)
+            .where((u) => !u.baneado)
+            .toList());
+  }
+
+  /// Lista usuarios baneados
+  Stream<List<Usuario>> listarBaneados() {
+    return _db
+        .collection('usuarios')
+        .orderBy('fechaRegistro', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map(Usuario.fromDoc)
+            .where((u) => u.baneado)
+            .toList());
   }
 
   Future<void> cambiarRol(String uid, String nuevoRol) async {
@@ -90,15 +106,53 @@ class UsuarioService {
         .update({'favoritos': favs});
   }
 
-  /// Guarda una nota privada del usuario para una canción.
+  /// Banea a un usuario
+  Future<void> banear(String uid) async {
+    String nombre = uid;
+    try {
+      final doc = await _db.collection('usuarios').doc(uid).get();
+      if (doc.exists) {
+        nombre = (doc.data()?['nombre'] ?? uid).toString();
+      }
+    } catch (_) {}
+
+    await _db.collection('usuarios').doc(uid).update({
+      'baneado': true,
+      'rol': 'publico', // Degradarlo al banear
+    });
+
+    ActividadService.registrar(
+      'banear_usuario',
+      'Suspendió a "$nombre"',
+    );
+  }
+
+  /// Desbanea a un usuario
+  Future<void> desbanear(String uid) async {
+    String nombre = uid;
+    try {
+      final doc = await _db.collection('usuarios').doc(uid).get();
+      if (doc.exists) {
+        nombre = (doc.data()?['nombre'] ?? uid).toString();
+      }
+    } catch (_) {}
+
+    await _db.collection('usuarios').doc(uid).update({
+      'baneado': false,
+    });
+
+    ActividadService.registrar(
+      'desbanear_usuario',
+      'Reactivó a "$nombre"',
+    );
+  }
+
   Future<void> guardarNota(String cancionId, String texto) =>
       _guardarNotaEn('notasPorCancion', cancionId, texto);
 
-  /// Guarda una nota privada del usuario para un evento.
   Future<void> guardarNotaEvento(String eventoId, String texto) =>
       _guardarNotaEn('notasPorEvento', eventoId, texto);
 
-  /// Guarda una nota privada del usuario para un recuerdo.
   Future<void> guardarNotaRecuerdo(String recuerdoId, String texto) =>
       _guardarNotaEn('notasPorRecuerdo', recuerdoId, texto);
 

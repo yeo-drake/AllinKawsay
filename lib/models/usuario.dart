@@ -5,6 +5,7 @@ class Usuario {
   final String nombre;
   final String email;
   final String rol;
+  final String fotoUrl;
   final DateTime? fechaRegistro;
 
   Usuario({
@@ -12,6 +13,7 @@ class Usuario {
     required this.nombre,
     required this.email,
     required this.rol,
+    this.fotoUrl = '',
     this.fechaRegistro,
   });
 
@@ -41,6 +43,7 @@ class Usuario {
       nombre: d['nombre'] ?? '',
       email: d['email'] ?? '',
       rol: d['rol'] ?? 'publico',
+      fotoUrl: d['fotoUrl'] ?? '',
       fechaRegistro: (d['fechaRegistro'] as Timestamp?)?.toDate(),
     );
   }
@@ -49,6 +52,7 @@ class Usuario {
         'nombre': nombre,
         'email': email,
         'rol': rol,
+        'fotoUrl': fotoUrl,
         'fechaRegistro': fechaRegistro ?? FieldValue.serverTimestamp(),
       };
 }

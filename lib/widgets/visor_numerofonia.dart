@@ -5,10 +5,12 @@ import '../theme/colors.dart';
 class VisorNumerofonia extends StatelessWidget {
   final List<EstrofaNumerofonia> estrofas;
   final double escala;
+  final bool ajustarAncho;
   const VisorNumerofonia({
     super.key,
     required this.estrofas,
     this.escala = 1.0,
+    this.ajustarAncho = false,
   });
 
   @override
@@ -21,7 +23,11 @@ class VisorNumerofonia extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (int i = 0; i < validas.length; i++) ...[
-          _EstrofaVisor(estrofa: validas[i], escala: escala),
+          _EstrofaVisor(
+            estrofa: validas[i],
+            escala: escala,
+            ajustarAncho: ajustarAncho,
+          ),
           if (i < validas.length - 1) const SizedBox(height: 8),
         ],
       ],
@@ -32,10 +38,23 @@ class VisorNumerofonia extends StatelessWidget {
 class _EstrofaVisor extends StatelessWidget {
   final EstrofaNumerofonia estrofa;
   final double escala;
-  const _EstrofaVisor({required this.estrofa, required this.escala});
+  final bool ajustarAncho;
+  const _EstrofaVisor({
+    required this.estrofa,
+    required this.escala,
+    required this.ajustarAncho,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (ajustarAncho) {
+      return _conAjuste(context);
+    }
+    return _conScroll();
+  }
+
+  /// Modo con scroll horizontal (para detalle de canción)
+  Widget _conScroll() {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.blanco,
@@ -43,38 +62,82 @@ class _EstrofaVisor extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              height: 26 * escala,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _etiqueta('7'),
-                  for (int i = 0; i < estrofa.columnas; i++)
-                    _celda(estrofa.fila7[i]),
-                  if (estrofa.bis) _bisBadge(),
-                ],
-              ),
-            ),
-            Container(height: 1.2, color: AppColors.negro),
-            SizedBox(
-              height: 26 * escala,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _etiqueta('6'),
-                  for (int i = 0; i < estrofa.columnas; i++)
-                    _celda(estrofa.fila6[i]),
-                  if (estrofa.bis)
-                    SizedBox(width: 44 * escala, height: 26 * escala),
-                ],
-              ),
-            ),
-          ],
-        ),
+        child: _tabla(null),
       ),
+    );
+  }
+
+  /// Modo ajustado al ancho disponible (para tarjeta compartida)
+  Widget _conAjuste(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.blanco,
+            border: Border.all(color: AppColors.negro, width: 1.2),
+          ),
+          child: _tabla(constraints.maxWidth),
+        );
+      },
+    );
+  }
+
+  Widget _tabla(double? anchoDisponible) {
+    final cols = estrofa.columnas;
+    final tieneBis = estrofa.bis;
+
+    // Calcular ancho de cada celda
+    double anchoCol;
+    if (anchoDisponible != null && cols > 0) {
+      final anchoEtiqueta = 22.0 * escala;
+      final anchoBis = tieneBis ? 44.0 * escala : 0.0;
+      anchoCol = (anchoDisponible - anchoEtiqueta - anchoBis) / cols;
+      if (anchoCol < 30) anchoCol = 30;
+    } else {
+      anchoCol = 0; // auto
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          height: 26 * escala,
+          child: Row(
+            mainAxisSize: anchoDisponible != null
+                ? MainAxisSize.max
+                : MainAxisSize.min,
+            children: [
+              _etiqueta('7'),
+              for (int i = 0; i < cols; i++)
+                _celda(
+                  estrofa.fila7[i],
+                  ancho: anchoDisponible != null ? anchoCol : null,
+                ),
+              if (tieneBis) _bisBadge(),
+            ],
+          ),
+        ),
+        Container(height: 1.2, color: AppColors.negro),
+        SizedBox(
+          height: 26 * escala,
+          child: Row(
+            mainAxisSize: anchoDisponible != null
+                ? MainAxisSize.max
+                : MainAxisSize.min,
+            children: [
+              _etiqueta('6'),
+              for (int i = 0; i < cols; i++)
+                _celda(
+                  estrofa.fila6[i],
+                  ancho: anchoDisponible != null ? anchoCol : null,
+                ),
+              if (tieneBis)
+                SizedBox(
+                    width: 44 * escala, height: 26 * escala),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -99,13 +162,15 @@ class _EstrofaVisor extends StatelessWidget {
     );
   }
 
-  Widget _celda(String contenido) {
-    final ancho = contenido.isEmpty
-        ? 34.0 * escala
-        : ((contenido.length * 8.5) + 14.0).clamp(34.0, 130.0) * escala;
+  Widget _celda(String contenido, {double? ancho}) {
+    final anchoFinal = ancho ??
+        (contenido.isEmpty
+            ? 34.0 * escala
+            : ((contenido.length * 8.5) + 14.0).clamp(34.0, 130.0) *
+                escala);
 
     return Container(
-      width: ancho,
+      width: anchoFinal,
       height: 26 * escala,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
@@ -113,13 +178,19 @@ class _EstrofaVisor extends StatelessWidget {
           right: BorderSide(color: AppColors.negro, width: 0.8),
         ),
       ),
-      child: Text(
-        contenido,
-        style: TextStyle(
-          color: AppColors.negro,
-          fontWeight: FontWeight.bold,
-          fontSize: 12 * escala,
-          fontFamily: 'monospace',
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Text(
+            contenido,
+            style: TextStyle(
+              color: AppColors.negro,
+              fontWeight: FontWeight.bold,
+              fontSize: 12 * escala,
+              fontFamily: 'monospace',
+            ),
+          ),
         ),
       ),
     );

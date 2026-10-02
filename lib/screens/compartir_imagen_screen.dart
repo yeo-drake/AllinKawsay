@@ -23,13 +23,21 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
   Future<void> _compartir() async {
     setState(() => _compartiendo = true);
     try {
-      // Esperar un frame para asegurar que el widget esté renderizado
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 200));
 
       final boundary = _repaintKey.currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) {
         throw Exception('No se pudo capturar la imagen');
+      }
+
+      // Verificar que el boundary tenga tamaño válido
+      final size = boundary.size;
+      if (size.width.isInfinite ||
+          size.height.isInfinite ||
+          size.width <= 0 ||
+          size.height <= 0) {
+        throw Exception('Tamaño de imagen inválido');
       }
 
       final ui.Image image = await boundary.toImage(pixelRatio: 2.0);
@@ -70,7 +78,6 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
       ),
       body: Column(
         children: [
-          // Preview con scroll + zoom
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -78,19 +85,23 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
                 minScale: 0.5,
                 maxScale: 2.0,
                 child: Center(
+                  // Envolver con SizedBox de tamaño fijo para que
+                  // RenderRepaintBoundary no tenga dimensiones infinitas
                   child: RepaintBoundary(
                     key: _repaintKey,
-                    child: Material(
-                      color: AppColors.blanco,
-                      child: TarjetaCompartible(
-                          cancion: widget.cancion),
+                    child: SizedBox(
+                      width: 800,
+                      child: Material(
+                        color: AppColors.blanco,
+                        child: TarjetaCompartible(
+                            cancion: widget.cancion),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
           ),
-          // Botón compartir
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(

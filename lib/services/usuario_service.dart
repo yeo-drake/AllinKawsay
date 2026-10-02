@@ -34,7 +34,6 @@ class UsuarioService {
     return u?.esAdmin ?? false;
   }
 
-  /// Lista usuarios NO baneados (por defecto)
   Stream<List<Usuario>> listar() {
     return _db
         .collection('usuarios')
@@ -46,7 +45,6 @@ class UsuarioService {
             .toList());
   }
 
-  /// Lista usuarios baneados
   Stream<List<Usuario>> listarBaneados() {
     return _db
         .collection('usuarios')
@@ -106,7 +104,6 @@ class UsuarioService {
         .update({'favoritos': favs});
   }
 
-  /// Banea a un usuario
   Future<void> banear(String uid) async {
     String nombre = uid;
     try {
@@ -118,7 +115,7 @@ class UsuarioService {
 
     await _db.collection('usuarios').doc(uid).update({
       'baneado': true,
-      'rol': 'publico', // Degradarlo al banear
+      'rol': 'publico',
     });
 
     ActividadService.registrar(
@@ -127,7 +124,6 @@ class UsuarioService {
     );
   }
 
-  /// Desbanea a un usuario
   Future<void> desbanear(String uid) async {
     String nombre = uid;
     try {

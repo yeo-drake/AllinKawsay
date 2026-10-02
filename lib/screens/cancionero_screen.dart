@@ -217,6 +217,7 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
 
 @override
 Widget build(BuildContext context) {
+  final onSurface = Theme.of(context).colorScheme.onSurface;
   return Scaffold(
     appBar: AppBar(
       title: const Text('CANCIONERO'),
@@ -277,14 +278,13 @@ Widget build(BuildContext context) {
                       children: [
                         Icon(Icons.sort,
                             size: 14,
-                            color:
-                                AppColors.negro.withOpacity(0.6)),
+                            color: onSurface.withOpacity(0.6)),
                         const SizedBox(width: 4),
                         Text(
                           'Ordenado por ${_nombreOrden()} ${_ascendente ? '↑' : '↓'}',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.negro.withOpacity(0.6),
+                            color: onSurface.withOpacity(0.6),
                           ),
                         ),
                       ],
@@ -335,8 +335,8 @@ Widget build(BuildContext context) {
                                         : 'El admin aún no ha subido canciones',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                        color: AppColors.negro
-                                            .withOpacity(0.6)),
+                                        color:
+                                            onSurface.withOpacity(0.6)),
                                   ),
                                 ],
                               ),
@@ -350,14 +350,12 @@ Widget build(BuildContext context) {
 
                         return Column(
                           children: [
-                            // Chips: Favoritos + Categorías + tags
                             StreamBuilder<List<Categoria>>(
                               stream: CategoriaService().listar(),
                               builder: (context, catSnap) {
                                 final cats = catSnap.data ?? [];
                                 return Column(
                                   children: [
-                                    // Fila categorías
                                     if (cats.isNotEmpty)
                                       SizedBox(
                                         height: 40,
@@ -382,15 +380,6 @@ Widget build(BuildContext context) {
                                                   selectedColor:
                                                       AppColors
                                                           .granate,
-                                                  labelStyle:
-                                                      TextStyle(
-                                                    color: _categoriaFiltro ==
-                                                            cat.id
-                                                        ? AppColors
-                                                            .dorado
-                                                        : AppColors
-                                                            .negro,
-                                                  ),
                                                   onSelected: (sel) =>
                                                       setState(() =>
                                                           _categoriaFiltro =
@@ -402,7 +391,6 @@ Widget build(BuildContext context) {
                                           ],
                                         ),
                                       ),
-                                    // Fila favoritos + tags
                                     SizedBox(
                                       height: 40,
                                       child: ListView(
@@ -420,7 +408,7 @@ Widget build(BuildContext context) {
                                               size: 16,
                                               color: _soloFavoritos
                                                   ? AppColors.granate
-                                                  : AppColors.negro
+                                                  : onSurface
                                                       .withOpacity(0.5),
                                             ),
                                             label:
@@ -463,15 +451,6 @@ Widget build(BuildContext context) {
                                                     _tagFiltro == t,
                                                 selectedColor:
                                                     AppColors.granate,
-                                                labelStyle:
-                                                    TextStyle(
-                                                  color:
-                                                      _tagFiltro == t
-                                                          ? AppColors
-                                                              .dorado
-                                                          : AppColors
-                                                              .negro,
-                                                ),
                                                 onSelected: (sel) =>
                                                     setState(() =>
                                                         _tagFiltro =
@@ -496,7 +475,7 @@ Expanded(
                 ? 'Aún no marcaste favoritos'
                 : 'Sin resultados',
             style: TextStyle(
-                color: AppColors.negro
+                color: onSurface
                     .withOpacity(0.5)),
           ),
         )
@@ -582,12 +561,12 @@ Expanded(
                             Text(
                               c.titulo,
                               style:
-                                  const TextStyle(
+                                  TextStyle(
                                 fontWeight:
                                     FontWeight
                                         .bold,
-                                color: AppColors
-                                    .negro,
+                                color:
+                                    onSurface,
                                 fontSize:
                                     15,
                               ),
@@ -599,8 +578,7 @@ Expanded(
                               style: TextStyle(
                                   fontSize:
                                       12,
-                                  color: AppColors
-                                      .negro
+                                  color: onSurface
                                       .withOpacity(
                                           0.6)),
                             ),
@@ -623,8 +601,7 @@ Expanded(
                                       TextStyle(
                                     fontSize:
                                         11,
-                                    color: AppColors
-                                        .negro
+                                    color: onSurface
                                         .withOpacity(
                                             0.5),
                                   ),
@@ -644,8 +621,7 @@ Expanded(
                           color: esFav
                               ? AppColors
                                   .granate
-                              : AppColors
-                                  .negro
+                              : onSurface
                                   .withOpacity(
                                       0.4),
                         ),

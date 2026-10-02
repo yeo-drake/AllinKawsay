@@ -1,6 +1,11 @@
 package com.sikuris.sikuris_app
 
+import android.content.ContentValues
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.view.WindowManager
 import androidx.core.content.FileProvider
 import com.ryanheise.audioservice.AudioServiceActivity
@@ -51,8 +56,75 @@ class MainActivity : AudioServiceActivity() {
                             result.error("ERROR", e.message, null)
                         }
                     }
+                    "guardarEnDescargas" -> {
+                        try {
+                            val bytes = call.argument<ByteArray>("bytes")
+                            val nombre = call.argument<String>("nombre") ?: "archivo"
+                            val mime = call.argument<String>("mime")
+                                ?: "application/octet-stream"
+
+                            if (bytes == null) {
+                                result.error("NO_BYTES", "No hay datos", null)
+                                return@setMethodCallHandler
+                            }
+
+                            val uri = guardarEnDescargas(bytes, nombre, mime)
+                            if (uri != null) {
+                                result.success(uri.toString())
+                            } else {
+                                result.error("ERROR", "No se pudo guardar", null)
+                            }
+                        } catch (e: Exception) {
+                            result.error("ERROR", e.message, null)
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             }
+    }
+
+    private fun guardarEnDescargas(
+        bytes: ByteArray,
+        nombre: String,
+        mime: String
+    ): Uri? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // Android 10+ → usar MediaStore
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, nombre)
+                    put(MediaStore.MediaColumns.MIME_TYPE, mime)
+                    put(
+                        MediaStore.MediaColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_DOWNLOADS
+                    )
+                }
+
+                val resolver = contentResolver
+                val uri = resolver.insert(
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                    values
+                ) ?: return null
+
+                resolver.openOutputStream(uri)?.use { out ->
+                    out.write(bytes)
+                    out.flush()
+                }
+                uri
+            } else {
+                // Android 9 e inferior → escribir directo a Download
+                @Suppress("DEPRECATION")
+                val dir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS
+                )
+                if (!dir.exists()) dir.mkdirs()
+                val file = File(dir, nombre)
+                file.writeBytes(bytes)
+                Uri.fromFile(file)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }

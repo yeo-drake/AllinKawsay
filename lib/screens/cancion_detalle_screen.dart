@@ -2,17 +2,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/cancion.dart';
 import '../models/comentario.dart';
 import '../models/usuario.dart';
-import '../models/numerofonia.dart';
 import '../services/comentario_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
-import 'presentacion_screen.dart';
 import '../widgets/visor_numerofonia.dart';
+import 'presentacion_screen.dart';
 
 class CancionDetalleScreen extends StatefulWidget {
   final Cancion cancion;
@@ -42,29 +40,14 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   }
 
   Future<void> _cargarAudio() async {
-  if (widget.cancion.audioUrl.isEmpty) return;
-  try {
-    await _player.setAudioSource(
-      AudioSource.uri(
-        Uri.parse(widget.cancion.audioUrl),
-        tag: MediaItem(
-          id: 'cancion_${widget.cancion.id}',
-          album: 'Sikuris',
-          title: widget.cancion.titulo,
-          artist: widget.cancion.autor.isNotEmpty
-              ? widget.cancion.autor
-              : 'Anónimo',
-          artUri: widget.cancion.imagenUrl.isNotEmpty
-              ? Uri.parse(widget.cancion.imagenUrl)
-              : null,
-        ),
-      ),
-    );
-    if (mounted) setState(() => _listo = true);
-  } catch (e) {
-    if (mounted) setState(() => _error = 'No se pudo cargar el audio');
+    if (widget.cancion.audioUrl.isEmpty) return;
+    try {
+      await _player.setUrl(widget.cancion.audioUrl);
+      if (mounted) setState(() => _listo = true);
+    } catch (e) {
+      if (mounted) setState(() => _error = 'No se pudo cargar el audio');
+    }
   }
-}
 
   @override
   void dispose() {
@@ -93,41 +76,41 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     }
   }
 
-Future<void> _compartir() async {
-  final c = widget.cancion;
-  final sb = StringBuffer();
-  sb.writeln('🎵 *${c.titulo}*');
-  if (c.autor.isNotEmpty) sb.writeln('✍️ Autor: ${c.autor}');
-  if (c.ritmo.isNotEmpty) sb.writeln('🎶 Ritmo: ${c.ritmo}');
-  if (c.region.isNotEmpty) sb.writeln('📍 Región: ${c.region}');
-  if (c.letra.isNotEmpty) {
+  Future<void> _compartir() async {
+    final c = widget.cancion;
+    final sb = StringBuffer();
+    sb.writeln('🎵 *${c.titulo}*');
+    if (c.autor.isNotEmpty) sb.writeln('✍️ Autor: ${c.autor}');
+    if (c.ritmo.isNotEmpty) sb.writeln('🎶 Ritmo: ${c.ritmo}');
+    if (c.region.isNotEmpty) sb.writeln('📍 Región: ${c.region}');
+    if (c.letra.isNotEmpty) {
+      sb.writeln('');
+      sb.writeln('📝 Letra:');
+      sb.writeln(c.letra);
+    }
     sb.writeln('');
-    sb.writeln('📝 Letra:');
-    sb.writeln(c.letra);
-  }
-  sb.writeln('');
-  sb.writeln('— Enviado desde Allin Kawsay');
+    sb.writeln('— Enviado desde Allin Kawsay');
 
-  final texto = Uri.encodeComponent(sb.toString());
-  final url = Uri.parse('https://wa.me/?text=$texto');
+    final texto = Uri.encodeComponent(sb.toString());
+    final url = Uri.parse('https://wa.me/?text=$texto');
 
-  try {
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('No se pudo abrir WhatsApp')),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('No se pudo abrir WhatsApp')),
+          SnackBar(content: Text('Error: $e')),
         );
       }
     }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
   }
-}
 
   void _enviarComentario() async {
     final texto = _comentarioCtrl.text.trim();
@@ -160,7 +143,8 @@ Future<void> _compartir() async {
                 imageUrl: widget.cancion.imagenUrl,
                 fit: BoxFit.contain,
                 placeholder: (_, __) => const Center(
-                  child: CircularProgressIndicator(color: AppColors.dorado),
+                  child: CircularProgressIndicator(
+                      color: AppColors.dorado),
                 ),
               ),
             ),
@@ -178,6 +162,7 @@ Future<void> _compartir() async {
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     final c = widget.cancion;
@@ -188,31 +173,33 @@ Future<void> _compartir() async {
       appBar: AppBar(
         title: Text(c.titulo),
         actions: [
-  IconButton(
-    icon: const Icon(Icons.slideshow),
-    tooltip: 'Modo presentación',
-    onPressed: () => Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PresentacionScreen(cancion: widget.cancion),
-      ),
-    ),
-  ),
-  IconButton(
-    icon: const Icon(Icons.share),
-    tooltip: 'Compartir',
-    onPressed: _compartir,
-  ),
-  if (puedeDescargar && c.imagenUrl.isNotEmpty)
-    IconButton(
-      icon: const Icon(Icons.download),
-      tooltip: 'Descargar partitura',
-      onPressed: () => _descargar(c.imagenUrl),
-    ),
-],
+          IconButton(
+            icon: const Icon(Icons.slideshow),
+            tooltip: 'Modo presentación',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    PresentacionScreen(cancion: widget.cancion),
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Compartir',
+            onPressed: _compartir,
+          ),
+          if (puedeDescargar && c.imagenUrl.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.download),
+              tooltip: 'Descargar partitura',
+              onPressed: () => _descargar(c.imagenUrl),
+            ),
+        ],
       ),
       body: ListView(
         children: [
+          // === 1. IMAGEN ===
           if (c.imagenUrl.isNotEmpty)
             GestureDetector(
               onTap: _verImagen,
@@ -261,6 +248,7 @@ Future<void> _compartir() async {
 
           const SizedBox(height: 12),
 
+          // === 2. AUDIO ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: _audioPlayerCompacto(puedeDescargar),
@@ -268,6 +256,38 @@ Future<void> _compartir() async {
 
           const SizedBox(height: 16),
 
+          // === 3. NUMEROFONÍA (tabla) ===
+          if (c.tieneNumerofonia) ...[
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: VisorNumerofonia(estrofas: c.estrofas),
+            ),
+            const SizedBox(height: 8),
+          ]
+          // Si no hay tabla pero hay string viejo, mostrarlo
+          else if (c.tieneNumerofoniaString) ...[
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Numerofonía',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.granate)),
+                  const SizedBox(height: 8),
+                  Text(c.numerofonia,
+                      style: const TextStyle(
+                          fontFamily: 'monospace', fontSize: 16)),
+                ],
+              ),
+            ),
+          ],
+
+          // === 4. LETRA ===
           if (c.letra.isNotEmpty) ...[
             const Divider(),
             const Padding(
@@ -293,39 +313,9 @@ Future<void> _compartir() async {
             const SizedBox(height: 24),
           ],
 
-          // === 4. NUMEROFONÍA (tabla) ===
-if (c.tieneNumerofoniaTabla) ...[
-  const Divider(),
-  Padding(
-    padding: const EdgeInsets.all(12),
-    child: VisorNumerofonia(
-        secciones: c.numerofoniaEstructurada),
-  ),
-  const SizedBox(height: 8),
-]
-// Si no hay tabla pero hay string viejo, mostrarlo
-else if (c.tieneNumerofoniaString) ...[
-  const Divider(),
-  Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Numerofonía',
-            style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.granate)),
-        const SizedBox(height: 8),
-        Text(c.numerofonia,
-            style: const TextStyle(
-                fontFamily: 'monospace', fontSize: 16)),
-      ],
-    ),
-  ),
-],
-
           const Divider(),
+
+          // === 5. INFO DESPLEGABLE ===
           ExpansionTile(
             leading:
                 const Icon(Icons.info_outline, color: AppColors.granate),
@@ -396,6 +386,7 @@ else if (c.tieneNumerofoniaString) ...[
             ],
           ),
 
+          // === 6. COMENTARIOS ===
           ExpansionTile(
             leading: const Icon(Icons.comment, color: AppColors.granate),
             title: const Text('Comentarios',
@@ -686,3 +677,4 @@ else if (c.tieneNumerofoniaString) ...[
     );
   }
 }
+

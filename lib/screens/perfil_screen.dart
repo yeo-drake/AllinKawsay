@@ -16,6 +16,7 @@ import 'actividad_screen.dart';
 import 'cancion_detalle_screen.dart';
 import 'estadisticas_admin_screen.dart';
 import 'gestion_usuarios_screen.dart';
+import 'exportar_respaldo_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   final String nombreUsuario;
@@ -583,6 +584,24 @@ Widget build(BuildContext context) {
                       builder: (_) => const ActividadScreen()),
                 ),
               ),
+
+// === ADMIN: EXPORTAR RESPALDO ===
+if (esAdmin)
+  ListTile(
+    leading: const Icon(Icons.backup,
+        color: AppColors.granate),
+    title: const Text('Exportar respaldo'),
+    subtitle: const Text(
+        'Descarga todas las canciones, eventos y recuerdos'),
+    trailing: const Icon(Icons.chevron_right,
+        color: AppColors.dorado),
+    onTap: () => Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) =>
+              const ExportarRespaldoScreen()),
+    ),
+  ),
 
             // === ADMIN: GESTIÓN DE USUARIOS ===
             if (esAdmin)

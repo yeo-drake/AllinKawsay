@@ -69,6 +69,7 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
             InteractiveViewer(
               child: CachedNetworkImage(
                 imageUrl: url,
+                memCacheWidth: 1200,
                 fit: BoxFit.contain,
                 placeholder: (_, __) => const Center(
                   child: CircularProgressIndicator(
@@ -283,6 +284,7 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                           BorderRadius.circular(12),
                                       child: CachedNetworkImage(
                                         imageUrl: r.fotos[j],
+                                        memCacheWidth: 300,
                                         width: 130,
                                         height: 130,
                                         fit: BoxFit.cover,

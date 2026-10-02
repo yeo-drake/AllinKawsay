@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import '../models/cancion.dart';
 import '../models/numerofonia.dart';
 import '../services/cancion_service.dart';
@@ -22,7 +21,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   final _titulo = TextEditingController();
   final _autor = TextEditingController();
   final _ritmo = TextEditingController();
-  final _region = TextEditingController();
   final _letra = TextEditingController();
   final _descripcion = TextEditingController();
   final _tagCtrl = TextEditingController();
@@ -30,9 +28,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   String _tipo = 'original';
   final List<String> _tags = [];
   List<EstrofaNumerofonia> _numerofoniaEstrofas = [];
-  File? _imagenNueva;
   File? _audioNuevo;
-  String _imagenUrlActual = '';
   String _audioUrlActual = '';
   bool _guardando = false;
   String _estado = '';
@@ -47,12 +43,10 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       _titulo.text = c.titulo;
       _autor.text = c.autor;
       _ritmo.text = c.ritmo;
-      _region.text = c.region;
       _letra.text = c.letra;
       _descripcion.text = c.descripcion;
       _tipo = c.tipo;
       _tags.addAll(c.tags);
-      _imagenUrlActual = c.imagenUrl;
       _audioUrlActual = c.audioUrl;
       _numerofoniaEstrofas =
           c.estrofas.map((e) => e.copy()).toList();
@@ -64,20 +58,10 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
     _titulo.dispose();
     _autor.dispose();
     _ritmo.dispose();
-    _region.dispose();
     _letra.dispose();
     _descripcion.dispose();
     _tagCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _elegirImagen({bool camara = false}) async {
-    final picker = ImagePicker();
-    final x = await picker.pickImage(
-      source: camara ? ImageSource.camera : ImageSource.gallery,
-      imageQuality: 80,
-    );
-    if (x != null) setState(() => _imagenNueva = File(x.path));
   }
 
   Future<void> _elegirAudio() async {
@@ -112,7 +96,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       final storage = StorageService();
 
       String id = widget.cancion?.id ?? '';
-      String imagenUrl = _imagenUrlActual;
       String audioUrl = _audioUrlActual;
 
       if (!_esEdicion) {
@@ -122,7 +105,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           autor: _autor.text.trim(),
           tipo: _tipo,
           ritmo: _ritmo.text.trim(),
-          region: _region.text.trim(),
+          region: '',
           numerofonia: '',
           estrofas: _numerofoniaEstrofas,
           letra: _letra.text.trim(),
@@ -135,10 +118,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         ));
       }
 
-      if (_imagenNueva != null) {
-        setState(() => _estado = 'Subiendo partitura...');
-        imagenUrl = await storage.subirPartitura(_imagenNueva!, id);
-      }
       if (_audioNuevo != null) {
         setState(() => _estado = 'Subiendo audio...');
         audioUrl = await storage.subirAudio(_audioNuevo!, id);
@@ -149,14 +128,14 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         'autor': _autor.text.trim(),
         'tipo': _tipo,
         'ritmo': _ritmo.text.trim(),
-        'region': _region.text.trim(),
+        'region': '',
         'numerofonia': '',
         'estrofas':
             _numerofoniaEstrofas.map((e) => e.toMap()).toList(),
         'letra': _letra.text.trim(),
         'descripcion': _descripcion.text.trim(),
         'tags': _tags,
-        'imagenUrl': imagenUrl,
+        'imagenUrl': '',
         'audioUrl': audioUrl,
       });
 
@@ -185,92 +164,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // === IMAGEN ===
-          const Text('Partitura (imagen)',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold, color: AppColors.granate)),
-          const SizedBox(height: 8),
-
-          if (_imagenNueva != null)
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(_imagenNueva!,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    style: IconButton.styleFrom(
-                        backgroundColor: Colors.black54),
-                    onPressed: () =>
-                        setState(() => _imagenNueva = null),
-                  ),
-                ),
-              ],
-            )
-          else if (_esEdicion && _imagenUrlActual.isNotEmpty)
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(_imagenUrlActual,
-                      width: double.infinity,
-                      height: 200,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                            height: 200,
-                            color: AppColors.grisClaro,
-                            child: const Icon(Icons.broken_image,
-                                size: 60, color: AppColors.granate),
-                          )),
-                ),
-                Positioned(
-                  bottom: 8,
-                  right: 8,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.edit, size: 16),
-                    label: const Text('Cambiar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.granate,
-                      foregroundColor: AppColors.dorado,
-                    ),
-                    onPressed: () => _mostrarOpcionesImagen(),
-                  ),
-                ),
-              ],
-            )
-          else
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _guardando
-                        ? null
-                        : () => _elegirImagen(camara: false),
-                    icon: const Icon(Icons.photo_library),
-                    label: const Text('Galería'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _guardando
-                        ? null
-                        : () => _elegirImagen(camara: true),
-                    icon: const Icon(Icons.camera_alt),
-                    label: const Text('Cámara'),
-                  ),
-                ),
-              ],
-            ),
-          const SizedBox(height: 20),
-
           // === TÍTULO ===
           TextField(
             controller: _titulo,
@@ -310,14 +203,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             decoration: const InputDecoration(
                 labelText: 'Ritmo (huayño, sikuri, etc.)',
                 prefixIcon: Icon(Icons.graphic_eq)),
-          ),
-          const SizedBox(height: 12),
-
-          // === REGIÓN ===
-          TextField(
-            controller: _region,
-            decoration: const InputDecoration(
-                labelText: 'Región', prefixIcon: Icon(Icons.place)),
           ),
           const SizedBox(height: 12),
 
@@ -389,7 +274,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             controller: _descripcion,
             maxLines: 3,
             decoration: const InputDecoration(
-                labelText: 'Notas / descripción',
+                labelText: 'Descripción',
                 prefixIcon: Icon(Icons.description)),
           ),
           const SizedBox(height: 20),
@@ -466,51 +351,4 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       ),
     );
   }
-
-  void _mostrarOpcionesImagen() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.blanco,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            ListTile(
-              leading: const Icon(Icons.photo_library,
-                  color: AppColors.granate),
-              title: const Text('Elegir de galería'),
-              onTap: () {
-                Navigator.pop(context);
-                _elegirImagen(camara: false);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt,
-                  color: AppColors.granate),
-              title: const Text('Tomar foto'),
-              onTap: () {
-                Navigator.pop(context);
-                _elegirImagen(camara: true);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete_outline,
-                  color: AppColors.granate),
-              title: const Text('Quitar imagen'),
-              onTap: () {
-                Navigator.pop(context);
-                setState(() => _imagenUrlActual = '');
-              },
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
 }
-

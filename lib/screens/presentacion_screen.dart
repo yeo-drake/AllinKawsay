@@ -58,9 +58,9 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
               ),
             const SizedBox(height: 20),
 
-            if (c.tieneNumerofoniaTabla)
+            if (c.tieneNumerofonia)
               VisorNumerofonia(
-                secciones: c.numerofoniaEstructurada,
+                estrofas: c.estrofas,
                 escala: 1.4,
               )
             else if (c.tieneNumerofoniaString)

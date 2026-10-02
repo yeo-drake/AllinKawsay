@@ -8,6 +8,8 @@ class Usuario {
   final String fotoUrl;
   final List<String> favoritos;
   final Map<String, String> notasPorCancion;
+  final Map<String, String> notasPorEvento;
+  final Map<String, String> notasPorRecuerdo;
   final DateTime? fechaRegistro;
 
   Usuario({
@@ -18,6 +20,8 @@ class Usuario {
     this.fotoUrl = '',
     this.favoritos = const [],
     this.notasPorCancion = const {},
+    this.notasPorEvento = const {},
+    this.notasPorRecuerdo = const {},
     this.fechaRegistro,
   });
 
@@ -42,18 +46,23 @@ class Usuario {
 
   bool esFavorito(String cancionId) => favoritos.contains(cancionId);
 
-  /// Devuelve la nota personal del usuario para esa canción
   String notaDe(String cancionId) => notasPorCancion[cancionId] ?? '';
+  String notaEvento(String eventoId) => notasPorEvento[eventoId] ?? '';
+  String notaRecuerdo(String recuerdoId) =>
+      notasPorRecuerdo[recuerdoId] ?? '';
+
+  static Map<String, String> _parseMap(dynamic raw) {
+    final out = <String, String>{};
+    if (raw is Map) {
+      raw.forEach((k, v) {
+        out[k.toString()] = v.toString();
+      });
+    }
+    return out;
+  }
 
   factory Usuario.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
-    final notasRaw = d['notasPorCancion'] ?? {};
-    final Map<String, String> notas = {};
-    if (notasRaw is Map) {
-      notasRaw.forEach((k, v) {
-        notas[k.toString()] = v.toString();
-      });
-    }
     return Usuario(
       uid: doc.id,
       nombre: d['nombre'] ?? '',
@@ -61,7 +70,9 @@ class Usuario {
       rol: d['rol'] ?? 'publico',
       fotoUrl: d['fotoUrl'] ?? '',
       favoritos: List<String>.from(d['favoritos'] ?? []),
-      notasPorCancion: notas,
+      notasPorCancion: _parseMap(d['notasPorCancion']),
+      notasPorEvento: _parseMap(d['notasPorEvento']),
+      notasPorRecuerdo: _parseMap(d['notasPorRecuerdo']),
       fechaRegistro: (d['fechaRegistro'] as Timestamp?)?.toDate(),
     );
   }
@@ -73,6 +84,8 @@ class Usuario {
         'fotoUrl': fotoUrl,
         'favoritos': favoritos,
         'notasPorCancion': notasPorCancion,
+        'notasPorEvento': notasPorEvento,
+        'notasPorRecuerdo': notasPorRecuerdo,
         'fechaRegistro': fechaRegistro ?? FieldValue.serverTimestamp(),
       };
 }

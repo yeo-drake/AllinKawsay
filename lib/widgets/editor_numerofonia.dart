@@ -53,24 +53,25 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
       decoration: BoxDecoration(
         color: AppColors.blanco,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.negro, width: 1.2),
+        border: Border.all(color: AppColors.dorado, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
+          // Título (sin recuadro)
           const Center(
             child: Text(
               'NUMEROFONÍA',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: AppColors.negro,
+                color: AppColors.granate,
                 fontSize: 15,
                 letterSpacing: 2,
               ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
+          // Autor / Ritmo
           Row(
             children: [
               Expanded(
@@ -97,7 +98,7 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
             ],
           ),
           const Divider(height: 16),
-
+          // Lista de estrofas
           for (int i = 0; i < _estrofas.length; i++)
             _EstrofaEditor(
               key: ValueKey('estrofa_$i'),
@@ -107,8 +108,8 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
               onDelete: () => _eliminarEstrofa(i),
               onChanged: _notificar,
             ),
-
           const SizedBox(height: 4),
+          // Botón añadir estrofa
           OutlinedButton.icon(
             onPressed: _agregarEstrofa,
             icon: const Icon(Icons.add),
@@ -193,8 +194,8 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
       decoration: BoxDecoration(
         color: AppColors.grisClaro,
         borderRadius: BorderRadius.circular(8),
-        border:
-            Border.all(color: AppColors.negro.withOpacity(0.3), width: 1),
+        border: Border.all(
+            color: AppColors.negro.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -290,7 +291,7 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Etiquetas
+              // Etiquetas 7 y 6
               SizedBox(
                 width: etiquetaW,
                 child: Column(

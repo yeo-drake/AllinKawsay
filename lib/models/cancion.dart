@@ -8,8 +8,8 @@ class Cancion {
   final String tipo;
   final String ritmo;
   final String region;
-  final String numerofonia; // legacy (compatibilidad)
-  final List<SeccionNumerofonia> numerofoniaEstructurada; // nuevo
+  final String numerofonia;
+  final List<EstrofaNumerofonia> estrofas;
   final String letra;
   final String imagenUrl;
   final String audioUrl;
@@ -27,7 +27,7 @@ class Cancion {
     required this.ritmo,
     required this.region,
     required this.numerofonia,
-    required this.numerofoniaEstructurada,
+    required this.estrofas,
     required this.letra,
     required this.imagenUrl,
     required this.audioUrl,
@@ -38,17 +38,18 @@ class Cancion {
     this.fechaCreacion,
   });
 
-  bool get tieneNumerofoniaTabla =>
-      numerofoniaEstructurada.any((s) => !s.vacia);
+  bool get tieneNumerofonia => estrofas.any((e) => !e.vacia);
   bool get tieneNumerofoniaString => numerofonia.isNotEmpty;
 
   factory Cancion.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
-    final estruc = (d['numerofoniaEstructurada'] as List?)
-            ?.map((x) => SeccionNumerofonia.fromMap(
+    // Compatibilidad: leer 'compases' o 'estrofas'
+    final raw = d['estrofas'] ?? d['compases'] ?? d['numerofoniaEstructurada'];
+    final lista = (raw as List?)
+            ?.map((x) => EstrofaNumerofonia.fromMap(
                 Map<String, dynamic>.from(x)))
             .toList() ??
-        <SeccionNumerofonia>[];
+        <EstrofaNumerofonia>[];
     return Cancion(
       id: doc.id,
       titulo: d['titulo'] ?? '',
@@ -57,7 +58,7 @@ class Cancion {
       ritmo: d['ritmo'] ?? '',
       region: d['region'] ?? '',
       numerofonia: d['numerofonia'] ?? '',
-      numerofoniaEstructurada: estruc,
+      estrofas: lista,
       letra: d['letra'] ?? '',
       imagenUrl: d['imagenUrl'] ?? '',
       audioUrl: d['audioUrl'] ?? '',
@@ -76,8 +77,7 @@ class Cancion {
         'ritmo': ritmo,
         'region': region,
         'numerofonia': numerofonia,
-        'numerofoniaEstructurada':
-            numerofoniaEstructurada.map((s) => s.toMap()).toList(),
+        'estrofas': estrofas.map((e) => e.toMap()).toList(),
         'letra': letra,
         'imagenUrl': imagenUrl,
         'audioUrl': audioUrl,

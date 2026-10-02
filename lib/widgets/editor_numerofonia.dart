@@ -125,7 +125,7 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
 }
 
 
-class _EstrofaEditor extends StatelessWidget {
+class _EstrofaEditor extends StatefulWidget {
   final EstrofaNumerofonia estrofa;
   final int numero;
   final bool puedeEliminar;
@@ -141,13 +141,23 @@ class _EstrofaEditor extends StatelessWidget {
     required this.onChanged,
   });
 
+  @override
+  State<_EstrofaEditor> createState() => _EstrofaEditorState();
+}
+
+class _EstrofaEditorState extends State<_EstrofaEditor> {
   void _agregarColumna() {
-    estrofa.agregarColumna();
-    onChanged();
+    setState(() => widget.estrofa.agregarColumna());
+    widget.onChanged();
   }
 
-  void _eliminarColumna(BuildContext context, int index) async {
-    if (estrofa.columnas <= 1) {
+  void _toggleBis() {
+    setState(() => widget.estrofa.bis = !widget.estrofa.bis);
+    widget.onChanged();
+  }
+
+  void _eliminarColumna(int index) async {
+    if (widget.estrofa.columnas <= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Debe quedar al menos una columna')),
       );
@@ -169,14 +179,14 @@ class _EstrofaEditor extends StatelessWidget {
       ),
     );
     if (ok == true) {
-      estrofa.eliminarColumna(index);
-      onChanged();
+      setState(() => widget.estrofa.eliminarColumna(index));
+      widget.onChanged();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final e = estrofa;
+    final e = widget.estrofa;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(8),
@@ -192,7 +202,7 @@ class _EstrofaEditor extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Estrofa $numero',
+                'Estrofa ${widget.numero}',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -200,9 +210,9 @@ class _EstrofaEditor extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              if (puedeEliminar)
+              if (widget.puedeEliminar)
                 TextButton.icon(
-                  onPressed: onDelete,
+                  onPressed: widget.onDelete,
                   icon: const Icon(Icons.close, size: 14),
                   label: const Text('Quitar',
                       style: TextStyle(fontSize: 11)),
@@ -238,7 +248,7 @@ class _EstrofaEditor extends StatelessWidget {
                           ],
                         ),
                         for (int i = 0; i < e.columnas; i++)
-                          _columna(context, e, i),
+                          _columna(e, i),
                       ],
                     ),
                   ),
@@ -263,10 +273,7 @@ class _EstrofaEditor extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               InkWell(
-                onTap: () {
-                  e.bis = !e.bis;
-                  onChanged();
-                },
+                onTap: _toggleBis,
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -319,7 +326,7 @@ class _EstrofaEditor extends StatelessWidget {
     );
   }
 
-  Widget _columna(BuildContext context, EstrofaNumerofonia e, int index) {
+  Widget _columna(EstrofaNumerofonia e, int index) {
     return Container(
       decoration: const BoxDecoration(
         border: Border(
@@ -329,23 +336,23 @@ class _EstrofaEditor extends StatelessWidget {
       child: Column(
         children: [
           _CeldaEditable(
-            key: ValueKey('c7_$numero$index'),
+            key: ValueKey('c7_${widget.numero}_$index'),
             valorInicial: e.fila7[index],
             onChanged: (v) {
               e.fila7[index] = v;
-              onChanged();
+              widget.onChanged();
             },
-            onLongPress: () => _eliminarColumna(context, index),
+            onLongPress: () => _eliminarColumna(index),
           ),
           Container(height: 1.2, color: AppColors.negro),
           _CeldaEditable(
-            key: ValueKey('c6_$numero$index'),
+            key: ValueKey('c6_${widget.numero}_$index'),
             valorInicial: e.fila6[index],
             onChanged: (v) {
               e.fila6[index] = v;
-              onChanged();
+              widget.onChanged();
             },
-            onLongPress: () => _eliminarColumna(context, index),
+            onLongPress: () => _eliminarColumna(index),
           ),
         ],
       ),
@@ -353,8 +360,6 @@ class _EstrofaEditor extends StatelessWidget {
   }
 }
 
-/// Celda individual con su propio controller y debounce.
-/// NO se reconstruye desde el padre cuando se escribe.
 class _CeldaEditable extends StatefulWidget {
   final String valorInicial;
   final ValueChanged<String> onChanged;
@@ -384,7 +389,6 @@ class _CeldaEditableState extends State<_CeldaEditable> {
   @override
   void didUpdateWidget(covariant _CeldaEditable oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Si el valor cambió externamente (raro), actualizar el controller
     if (widget.valorInicial != oldWidget.valorInicial &&
         _ctrl.text != widget.valorInicial) {
       _ctrl.text = widget.valorInicial;
@@ -442,4 +446,3 @@ class _CeldaEditableState extends State<_CeldaEditable> {
     );
   }
 }
-

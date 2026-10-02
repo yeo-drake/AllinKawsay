@@ -24,6 +24,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   final _letra = TextEditingController();
   final _descripcion = TextEditingController();
   final _tagCtrl = TextEditingController();
+  final _videoCtrl = TextEditingController();
 
   String _tipo = 'original';
   final List<String> _tags = [];
@@ -45,6 +46,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       _ritmo.text = c.ritmo;
       _letra.text = c.letra;
       _descripcion.text = c.descripcion;
+      _videoCtrl.text = c.videoUrl;
       _tipo = c.tipo;
       _tags.addAll(c.tags);
       _audioUrlActual = c.audioUrl;
@@ -61,6 +63,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
     _letra.dispose();
     _descripcion.dispose();
     _tagCtrl.dispose();
+    _videoCtrl.dispose();
     super.dispose();
   }
 
@@ -111,6 +114,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           letra: _letra.text.trim(),
           imagenUrl: '',
           audioUrl: '',
+          videoUrl: _videoCtrl.text.trim(),
           descripcion: _descripcion.text.trim(),
           tags: _tags,
           creadoPor: user.uid,
@@ -137,6 +141,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         'tags': _tags,
         'imagenUrl': '',
         'audioUrl': audioUrl,
+        'videoUrl': _videoCtrl.text.trim(),
       });
 
       if (mounted) {
@@ -154,7 +159,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,7 +168,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // === TÍTULO ===
           TextField(
             controller: _titulo,
             textCapitalization: TextCapitalization.sentences,
@@ -173,16 +176,12 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.music_note)),
           ),
           const SizedBox(height: 12),
-
-          // === AUTOR ===
           TextField(
             controller: _autor,
             decoration: const InputDecoration(
                 labelText: 'Autor', prefixIcon: Icon(Icons.person)),
           ),
           const SizedBox(height: 12),
-
-          // === TIPO ===
           const Text('Tipo',
               style: TextStyle(
                   fontWeight: FontWeight.bold, color: AppColors.granate)),
@@ -196,8 +195,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             onSelectionChanged: (s) => setState(() => _tipo = s.first),
           ),
           const SizedBox(height: 12),
-
-          // === RITMO ===
           TextField(
             controller: _ritmo,
             decoration: const InputDecoration(
@@ -205,8 +202,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.graphic_eq)),
           ),
           const SizedBox(height: 12),
-
-          // === TAGS ===
           const Text('Tags (para búsqueda)',
               style: TextStyle(
                   fontWeight: FontWeight.bold, color: AppColors.granate)),
@@ -248,8 +243,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             ),
           ],
           const SizedBox(height: 16),
-
-          // === NUMEROFONÍA ===
           EditorNumerofonia(
             inicial: _numerofoniaEstrofas,
             autor: _autor.text.trim(),
@@ -257,8 +250,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             onChanged: (v) => _numerofoniaEstrofas = v,
           ),
           const SizedBox(height: 16),
-
-          // === LETRA ===
           TextField(
             controller: _letra,
             maxLines: 6,
@@ -268,8 +259,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.text_fields)),
           ),
           const SizedBox(height: 12),
-
-          // === DESCRIPCIÓN ===
           TextField(
             controller: _descripcion,
             maxLines: 3,
@@ -278,8 +267,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.description)),
           ),
           const SizedBox(height: 20),
-
-          // === AUDIO ===
           const Text('Audio',
               style: TextStyle(
                   fontWeight: FontWeight.bold, color: AppColors.granate)),
@@ -322,8 +309,22 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                     color: AppColors.granate, width: 1.5),
               ),
             ),
+          const SizedBox(height: 16),
+          // === VIDEO LINK ===
+          const Text('Video (opcional)',
+              style: TextStyle(
+                  fontWeight: FontWeight.bold, color: AppColors.granate)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _videoCtrl,
+            keyboardType: TextInputType.url,
+            decoration: const InputDecoration(
+              labelText: 'Link de YouTube, Drive, etc.',
+              hintText: 'https://youtube.com/watch?v=...',
+              prefixIcon: Icon(Icons.video_library),
+            ),
+          ),
           const SizedBox(height: 32),
-
           if (_guardando)
             Column(
               children: [

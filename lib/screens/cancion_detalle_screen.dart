@@ -7,14 +7,15 @@ import '../models/comentario.dart';
 import '../models/usuario.dart';
 import '../services/cancion_service.dart';
 import '../services/comentario_service.dart';
+import '../services/descarga_service.dart';
 import '../services/player_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
+import '../widgets/tarjeta_video.dart';
 import '../widgets/visor_numerofonia.dart';
 import '../widgets/watermark_overlay.dart';
-import 'presentacion_screen.dart';
 import 'compartir_imagen_screen.dart';
-import '../widgets/tarjeta_video.dart';
+import 'presentacion_screen.dart';
 
 class CancionDetalleScreen extends StatefulWidget {
   final Cancion cancion;
@@ -56,21 +57,63 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     }
   }
 
-  Future<void> _descargar(String url) async {
+  Future<void> _descargar(String url,
+      {String? nombre, String mime = 'application/octet-stream'}) async {
     if (url.isEmpty) return;
-    final uri = Uri.parse(url);
-    try {
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No se pudo abrir el enlace')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.dorado,
+                  strokeWidth: 2.5,
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Descargando...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
+
+    final nombreFinal = nombre ??
+        DescargaService.nombreConTimestamp(
+            widget.cancion.titulo, 'mp3');
+
+    final resultado =
+        await DescargaService.descargar(url, nombreFinal, mime);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (resultado != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle,
+                    color: AppColors.dorado),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Guardado en Descargas: $resultado'),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo descargar'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -183,6 +226,12 @@ Widget build(BuildContext context) {
             await _cargarUsuario();
           },
         ),
+        if (c.tieneVideo)
+          IconButton(
+            icon: const Icon(Icons.video_library),
+            tooltip: 'Ver video',
+            onPressed: () => _abrirVideo(c.videoUrl),
+          ),
         IconButton(
           icon: const Icon(Icons.slideshow),
           tooltip: 'Modo presentación',
@@ -194,21 +243,21 @@ Widget build(BuildContext context) {
             ),
           ),
         ),
-IconButton(
-  icon: const Icon(Icons.image),
-  tooltip: 'Compartir como imagen',
-  onPressed: () => Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => CompartirImagenScreen(
-        cancion: widget.cancion,
-      ),
-    ),
-  ),
-),
+        IconButton(
+          icon: const Icon(Icons.image),
+          tooltip: 'Compartir como imagen',
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CompartirImagenScreen(
+                cancion: widget.cancion,
+              ),
+            ),
+          ),
+        ),
         IconButton(
           icon: const Icon(Icons.share),
-          tooltip: 'Compartir',
+          tooltip: 'Compartir texto',
           onPressed: _compartir,
         ),
       ],
@@ -289,14 +338,14 @@ IconButton(
             ),
           ],
 
-// === 2.5. VIDEO ===
-if (c.tieneVideo) ...[
-  const Divider(),
-  TarjetaVideo(
-    url: c.videoUrl,
-    titulo: c.titulo,
-  ),
-],
+          // === 2.5. VIDEO ===
+          if (c.tieneVideo) ...[
+            const Divider(),
+            TarjetaVideo(
+              url: c.videoUrl,
+              titulo: c.titulo,
+            ),
+          ],
 
           // === 3. AUDIO ===
           const Divider(),
@@ -579,7 +628,12 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
                 icon:
                     const Icon(Icons.download, color: AppColors.dorado),
                 tooltip: 'Descargar audio',
-                onPressed: () => _descargar(widget.cancion.audioUrl),
+                onPressed: () => _descargar(
+                  widget.cancion.audioUrl,
+                  nombre: DescargaService.nombreConTimestamp(
+                      widget.cancion.titulo, 'mp3'),
+                  mime: 'audio/mpeg',
+                ),
               ),
             const SizedBox(width: 4),
           ],

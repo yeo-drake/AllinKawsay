@@ -13,6 +13,7 @@ class Cancion {
   final String letra;
   final String imagenUrl;
   final String audioUrl;
+  final String videoUrl;
   final String descripcion;
   final List<String> tags;
   final int reproducciones;
@@ -32,6 +33,7 @@ class Cancion {
     required this.letra,
     required this.imagenUrl,
     required this.audioUrl,
+    this.videoUrl = '',
     required this.descripcion,
     required this.tags,
     this.reproducciones = 0,
@@ -42,6 +44,7 @@ class Cancion {
 
   bool get tieneNumerofonia => estrofas.any((e) => !e.vacia);
   bool get tieneNumerofoniaString => numerofonia.isNotEmpty;
+  bool get tieneVideo => videoUrl.isNotEmpty;
 
   factory Cancion.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
@@ -63,6 +66,7 @@ class Cancion {
       letra: d['letra'] ?? '',
       imagenUrl: d['imagenUrl'] ?? '',
       audioUrl: d['audioUrl'] ?? '',
+      videoUrl: d['videoUrl'] ?? '',
       descripcion: d['descripcion'] ?? '',
       tags: List<String>.from(d['tags'] ?? []),
       reproducciones: (d['reproducciones'] ?? 0) is int
@@ -85,6 +89,7 @@ class Cancion {
         'letra': letra,
         'imagenUrl': imagenUrl,
         'audioUrl': audioUrl,
+        'videoUrl': videoUrl,
         'descripcion': descripcion,
         'tags': tags,
         'reproducciones': reproducciones,

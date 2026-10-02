@@ -1,19 +1,103 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/usuario.dart';
 import '../services/auth_service.dart';
+import '../services/cancion_service.dart';
+import '../services/storage_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
 import '../widgets/social_buttons.dart';
 import 'gestion_usuarios_screen.dart';
 
-class PerfilScreen extends StatelessWidget {
+class PerfilScreen extends StatefulWidget {
   final String nombreUsuario;
   const PerfilScreen({super.key, required this.nombreUsuario});
+
+  @override
+  State<PerfilScreen> createState() => _PerfilScreenState();
+}
+
+class _PerfilScreenState extends State<PerfilScreen> {
+  bool _subiendoFoto = false;
+
+  Future<void> _cambiarFoto(Usuario u) async {
+    final picker = ImagePicker();
+    final x = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 500,
+      maxHeight: 500,
+    );
+    if (x == null) return;
+
+    setState(() => _subiendoFoto = true);
+    try {
+      final file = File(x.path);
+      final url = await StorageService().subirFotoPerfil(file, u.uid);
+      await UsuarioService().actualizarFotoPerfil(u.uid, url);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('¡Foto actualizada!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _subiendoFoto = false);
+    }
+  }
+
+  Future<void> _cambiarNombre(Usuario u) async {
+    final ctrl = TextEditingController(text: u.nombre);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Cambiar nombre'),
+        content: TextField(
+          controller: ctrl,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            labelText: 'Nombre completo',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Guardar')),
+        ],
+      ),
+    );
+    if (ok == true && ctrl.text.trim().isNotEmpty) {
+      try {
+        await UsuarioService().actualizarNombre(u.uid, ctrl.text.trim());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('¡Nombre actualizado!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
+      }
+    }
+  }
 
   void _abrir(BuildContext context, String titulo, String contenido) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.blanco,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -79,34 +163,87 @@ class PerfilScreen extends StatelessWidget {
           final u = snap.data;
           final esAdmin = u?.esAdmin ?? false;
           final rol = u?.rol ?? 'publico';
+
           return ListView(
             children: [
               const SizedBox(height: 24),
+              // === FOTO DE PERFIL ===
               Center(
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border:
-                        Border.all(color: AppColors.dorado, width: 3),
-                  ),
-                  child: const CircleAvatar(
-                    radius: 48,
-                    backgroundColor: AppColors.granate,
-                    child: Icon(Icons.person,
-                        size: 56, color: AppColors.dorado),
-                  ),
+                child: Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.dorado, width: 3),
+                      ),
+                      child: CircleAvatar(
+                        radius: 48,
+                        backgroundColor: AppColors.granate,
+                        backgroundImage: (u?.fotoUrl.isNotEmpty ?? false)
+                            ? NetworkImage(u!.fotoUrl)
+                            : null,
+                        child: (u?.fotoUrl.isEmpty ?? true)
+                            ? const Icon(Icons.person,
+                                size: 56, color: AppColors.dorado)
+                            : null,
+                      ),
+                    ),
+                    if (u != null)
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: _subiendoFoto ? null : () => _cambiarFoto(u),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.dorado,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: AppColors.granate, width: 2),
+                            ),
+                            child: _subiendoFoto
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.granate,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.camera_alt,
+                                    size: 16, color: AppColors.granate),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
+              // === NOMBRE ===
               Center(
-                child: Text(
-                  u?.nombre ?? nombreUsuario,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.granate,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      u?.nombre ?? widget.nombreUsuario,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.granate,
+                      ),
+                    ),
+                    if (u != null) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.edit,
+                            size: 16, color: AppColors.granate),
+                        onPressed: () => _cambiarNombre(u),
+                      ),
+                    ],
+                  ],
                 ),
               ),
               Center(
@@ -144,15 +281,23 @@ class PerfilScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
 
-              // === REDES SOCIALES ===
+              const SizedBox(height: 20),
+
+              // === ESTADÍSTICAS ===
+              if (u != null)
+                _estadisticas(u.uid, esAdmin)
+              else
+                const SizedBox.shrink(),
+
+              const SizedBox(height: 8),
+
+              // === REDES ===
               const Divider(),
               const SocialButtons(),
-
               const Divider(),
 
-              // === GESTIÓN DE USUARIOS (solo admin) ===
+              // === GESTIÓN DE USUARIOS ===
               if (esAdmin)
                 ListTile(
                   leading: const Icon(Icons.people,
@@ -215,7 +360,7 @@ class PerfilScreen extends StatelessWidget {
                 onTap: () => _abrir(
                   context,
                   'Acerca de',
-                  'Sikuris App\nVersión 1.0.0\n\n'
+                  'Allin Kawsay\nVersión 1.0.0\n\n'
                       'Aplicación oficial del grupo de sikuris.\n\n'
                       'Hecha con ❤️ para el grupo.',
                 ),
@@ -240,6 +385,94 @@ class PerfilScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _estadisticas(String uid, bool esAdmin) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Mis estadísticas',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: AppColors.granate,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: FutureBuilder<int>(
+                      future: CancionService().contarPorUsuario(uid),
+                      builder: (context, snap) {
+                        return _statCard(
+                          Icons.library_music,
+                          snap.data?.toString() ?? '...',
+                          'Canciones subidas',
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FutureBuilder<int>(
+                      future:
+                          CancionService().totalReproduccionesDeUsuario(uid),
+                      builder: (context, snap) {
+                        return _statCard(
+                          Icons.play_arrow,
+                          snap.data?.toString() ?? '...',
+                          'Reproducciones',
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statCard(IconData icono, String valor, String label) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.granate.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(icono, color: AppColors.granate, size: 24),
+          const SizedBox(height: 4),
+          Text(
+            valor,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.granate,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              color: AppColors.negro.withOpacity(0.6),
+            ),
+          ),
+        ],
       ),
     );
   }

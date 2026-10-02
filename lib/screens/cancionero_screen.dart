@@ -7,6 +7,8 @@ import '../widgets/watermark_overlay.dart';
 import 'agregar_cancion_screen.dart';
 import 'cancion_detalle_screen.dart';
 
+enum _OrdenCancion { fecha, titulo, autor, reproducciones }
+
 class CancioneroScreen extends StatefulWidget {
   const CancioneroScreen({super.key});
 
@@ -20,6 +22,8 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
   bool _esAdmin = false;
   String _query = '';
   String? _tagFiltro;
+  _OrdenCancion _orden = _OrdenCancion.fecha;
+  bool _ascendente = false;
 
   @override
   void initState() {
@@ -66,6 +70,81 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
     );
   }
 
+  void _abrirMenuOrden() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.dorado,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text('Ordenar por',
+                style: TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            _itemOrden('Fecha de subida', _OrdenCancion.fecha),
+            _itemOrden('Título (A-Z)', _OrdenCancion.titulo),
+            _itemOrden('Autor (A-Z)', _OrdenCancion.autor),
+            _itemOrden(
+                'Más reproducidas', _OrdenCancion.reproducciones),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _itemOrden(String label, _OrdenCancion valor) {
+    final selected = _orden == valor;
+    return ListTile(
+      leading: Icon(
+        selected ? Icons.radio_button_checked : Icons.radio_button_off,
+        color: AppColors.granate,
+      ),
+      title: Text(label),
+      trailing: selected
+          ? IconButton(
+              icon: Icon(
+                _ascendente
+                    ? Icons.arrow_upward
+                    : Icons.arrow_downward,
+                color: AppColors.granate,
+              ),
+              onPressed: () {
+                setState(() => _ascendente = !_ascendente);
+                Navigator.pop(context);
+              },
+            )
+          : null,
+      onTap: () {
+        setState(() {
+          _orden = valor;
+          // Defaults razonables
+          if (valor == _OrdenCancion.fecha ||
+              valor == _OrdenCancion.reproducciones) {
+            _ascendente = false;
+          } else {
+            _ascendente = true;
+          }
+        });
+        Navigator.pop(context);
+      },
+    );
+  }
+
   List<Cancion> _filtrar(List<Cancion> lista) {
     var r = lista;
     if (_query.isNotEmpty) {
@@ -79,6 +158,27 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
     if (_tagFiltro != null) {
       r = r.where((c) => c.tags.contains(_tagFiltro)).toList();
     }
+    r.sort((a, b) {
+      int cmp;
+      switch (_orden) {
+        case _OrdenCancion.titulo:
+          cmp = a.titulo.toLowerCase().compareTo(b.titulo.toLowerCase());
+          break;
+        case _OrdenCancion.autor:
+          cmp = a.autor.toLowerCase().compareTo(b.autor.toLowerCase());
+          break;
+        case _OrdenCancion.reproducciones:
+          cmp = a.reproducciones.compareTo(b.reproducciones);
+          break;
+        case _OrdenCancion.fecha:
+        default:
+          final fa = a.fechaCreacion ?? DateTime(2000);
+          final fb = b.fechaCreacion ?? DateTime(2000);
+          cmp = fa.compareTo(fb);
+          break;
+      }
+      return _ascendente ? cmp : -cmp;
+    });
     return r;
   }
 
@@ -91,10 +191,33 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
     return l;
   }
 
+  String _nombreOrden() {
+    switch (_orden) {
+      case _OrdenCancion.titulo:
+        return 'Título';
+      case _OrdenCancion.autor:
+        return 'Autor';
+      case _OrdenCancion.reproducciones:
+        return 'Reproducciones';
+      case _OrdenCancion.fecha:
+      default:
+        return 'Fecha';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('CANCIONERO')),
+      appBar: AppBar(
+        title: const Text('CANCIONERO'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.sort),
+            tooltip: 'Ordenar',
+            onPressed: _abrirMenuOrden,
+          ),
+        ],
+      ),
       floatingActionButton: _esAdmin
           ? FloatingActionButton(
               backgroundColor: AppColors.granate,
@@ -111,7 +234,7 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
               child: TextField(
                 controller: _searchCtrl,
                 onChanged: (v) => setState(() => _query = v),
@@ -129,6 +252,23 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
                         )
                       : null,
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: Row(
+                children: [
+                  Icon(Icons.sort, size: 14,
+                      color: AppColors.negro.withOpacity(0.6)),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Ordenado por ${_nombreOrden()} ${_ascendente ? '↑' : '↓'}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.negro.withOpacity(0.6),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
@@ -252,8 +392,33 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             color: AppColors.negro)),
-                                    subtitle: Text(
-                                      '${c.ritmo}${c.autor.isNotEmpty ? ' · ${c.autor}' : ''}',
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${c.ritmo}${c.autor.isNotEmpty ? ' · ${c.autor}' : ''}',
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            const Icon(
+                                                Icons.play_arrow,
+                                                size: 12,
+                                                color:
+                                                    AppColors.granate),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              '${c.reproducciones} reproducciones',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: AppColors.negro
+                                                    .withOpacity(0.5),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                     trailing: _esAdmin
                                         ? PopupMenuButton<String>(

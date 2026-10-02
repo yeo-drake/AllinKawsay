@@ -125,7 +125,6 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
   }
 }
 
-
 class _EstrofaEditor extends StatefulWidget {
   final EstrofaNumerofonia estrofa;
   final int numero;

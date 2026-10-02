@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class StorageService {
-  // ⚠️ Reemplaza con tu Cloud name
+  // ⚠️ Reemplaza con tu Cloud name de Cloudinary
   static const String cloudName = 'eveyybgz';
   static const String uploadPreset = 'sikuris_preset';
 
@@ -36,4 +36,8 @@ class StorageService {
 
   Future<String> subirFoto(File archivo, String carpeta) =>
       _subirConAuto(archivo, 'sikuris/$carpeta');
+
+  /// Sube la foto de perfil de un usuario (a `sikuris/perfiles/<uid>`)
+  Future<String> subirFotoPerfil(File archivo, String uid) =>
+      _subirConAuto(archivo, 'sikuris/perfiles/$uid');
 }

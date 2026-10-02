@@ -31,8 +31,7 @@ class Usuario {
   bool get esMiembro => rol == 'miembro' || rol == 'admin';
   bool get esPublico => rol == 'publico';
 
-  bool get puedeDescargar =>
-      !baneado && (esAdmin || rol == 'miembro');
+  bool get puedeDescargar => !baneado && (esAdmin || rol == 'miembro');
   bool get puedeComentar => !baneado && (esAdmin || rol == 'miembro');
   bool get puedeSubir => !baneado && esAdmin;
 

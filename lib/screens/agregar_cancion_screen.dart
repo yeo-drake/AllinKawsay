@@ -3,8 +3,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../models/cancion.dart';
+import '../models/categoria.dart';
 import '../models/numerofonia.dart';
 import '../services/cancion_service.dart';
+import '../services/categoria_service.dart';
 import '../services/storage_service.dart';
 import '../theme/colors.dart';
 import '../widgets/editor_numerofonia.dart';
@@ -27,6 +29,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
   final _videoCtrl = TextEditingController();
 
   String _tipo = 'original';
+  String _categoriaId = '';
   final List<String> _tags = [];
   List<EstrofaNumerofonia> _numerofoniaEstrofas = [];
   File? _audioNuevo;
@@ -48,6 +51,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       _descripcion.text = c.descripcion;
       _videoCtrl.text = c.videoUrl;
       _tipo = c.tipo;
+      _categoriaId = c.categoriaId;
       _tags.addAll(c.tags);
       _audioUrlActual = c.audioUrl;
       _numerofoniaEstrofas =
@@ -117,6 +121,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           videoUrl: _videoCtrl.text.trim(),
           descripcion: _descripcion.text.trim(),
           tags: _tags,
+          categoriaId: _categoriaId,
           creadoPor: user.uid,
           creadorNombre: user.displayName ?? user.email ?? 'Anónimo',
         ));
@@ -139,6 +144,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
         'letra': _letra.text.trim(),
         'descripcion': _descripcion.text.trim(),
         'tags': _tags,
+        'categoriaId': _categoriaId,
         'imagenUrl': '',
         'audioUrl': audioUrl,
         'videoUrl': _videoCtrl.text.trim(),
@@ -202,6 +208,37 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.graphic_eq)),
           ),
           const SizedBox(height: 12),
+
+          // === CATEGORÍA ===
+          StreamBuilder<List<Categoria>>(
+            stream: CategoriaService().listar(),
+            builder: (context, snap) {
+              final categorias = snap.data ?? [];
+              return DropdownButtonFormField<String>(
+                value: _categoriaId.isEmpty ? null : _categoriaId,
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  labelText: 'Categoría',
+                  prefixIcon: Icon(Icons.category),
+                ),
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: '',
+                    child: Text('Sin categoría'),
+                  ),
+                  ...categorias.map((cat) => DropdownMenuItem<String>(
+                        value: cat.id,
+                        child: Text('${cat.emoji} ${cat.nombre}'),
+                      )),
+                ],
+                onChanged: (v) =>
+                    setState(() => _categoriaId = v ?? ''),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // === TAGS ===
           const Text('Tags (para búsqueda)',
               style: TextStyle(
                   fontWeight: FontWeight.bold, color: AppColors.granate)),
@@ -243,6 +280,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             ),
           ],
           const SizedBox(height: 16),
+
+          // === NUMEROFONÍA ===
           EditorNumerofonia(
             inicial: _numerofoniaEstrofas,
             autor: _autor.text.trim(),
@@ -250,6 +289,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             onChanged: (v) => _numerofoniaEstrofas = v,
           ),
           const SizedBox(height: 16),
+
+          // === LETRA ===
           TextField(
             controller: _letra,
             maxLines: 6,
@@ -259,6 +300,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.text_fields)),
           ),
           const SizedBox(height: 12),
+
+          // === DESCRIPCIÓN ===
           TextField(
             controller: _descripcion,
             maxLines: 3,
@@ -267,6 +310,8 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
                 prefixIcon: Icon(Icons.description)),
           ),
           const SizedBox(height: 20),
+
+          // === AUDIO ===
           const Text('Audio',
               style: TextStyle(
                   fontWeight: FontWeight.bold, color: AppColors.granate)),
@@ -310,6 +355,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
               ),
             ),
           const SizedBox(height: 16),
+
           // === VIDEO LINK ===
           const Text('Video (opcional)',
               style: TextStyle(
@@ -325,6 +371,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
             ),
           ),
           const SizedBox(height: 32),
+
           if (_guardando)
             Column(
               children: [

@@ -16,4 +16,35 @@ class AppColors {
   static const fondoCardOscuro = Color(0xFF1E1E1E);
   static const textoOscuroClaro = Color(0xFFE0E0E0);
   static const textoOscuroMedio = Color(0xFFB0B0B0);
+
+  // === HELPERS DE TEXTO ===
+  // Devuelve el color correcto según el tema activo
+
+  /// Texto principal (títulos, contenido)
+  static Color textoPrincipal(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? textoOscuroClaro
+        : negro;
+  }
+
+  /// Texto secundario (subtítulos, textos con opacidad)
+  static Color textoSecundario(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? textoOscuroMedio
+        : negro.withOpacity(0.6);
+  }
+
+  /// Texto terciario (hints, textos muy suaves)
+  static Color textoTerciario(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? textoOscuroMedio.withOpacity(0.7)
+        : negro.withOpacity(0.5);
+  }
+
+  /// Color del borde y separadores
+  static Color borde(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? dorado.withOpacity(0.4)
+        : dorado;
+  }
 }

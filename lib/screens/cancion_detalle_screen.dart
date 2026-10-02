@@ -146,7 +146,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     FocusScope.of(context).unfocus();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final c = widget.cancion;

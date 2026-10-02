@@ -17,6 +17,7 @@ class VisorNumerofonia extends StatelessWidget {
     if (validas.isEmpty) return const SizedBox.shrink();
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (int i = 0; i < validas.length; i++) ...[
@@ -35,112 +36,113 @@ class _EstrofaVisor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const etiquetaW = 22.0;
-        final bisW = estrofa.bis ? 44.0 : 0.0;
-        final disponible = constraints.maxWidth - etiquetaW - bisW;
-        final cols = estrofa.columnas;
-        final anchoCol = cols > 0 ? disponible / cols : 0.0;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.blanco,
-            border: Border.all(color: AppColors.negro, width: 1.2),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Etiquetas
-              SizedBox(
-                width: etiquetaW,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _etiqueta('7'),
-                    Container(height: 1.2, color: AppColors.negro),
-                    _etiqueta('6'),
-                  ],
-                ),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.blanco,
+        border: Border.all(color: AppColors.negro, width: 1.2),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 26 * escala,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _etiqueta('7'),
+                  for (int i = 0; i < estrofa.columnas; i++)
+                    _celda(estrofa.fila7[i]),
+                  if (estrofa.bis) _bisBadge(),
+                ],
               ),
-              // Columnas
-              for (int i = 0; i < cols; i++)
-                Container(
-                  width: anchoCol,
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      left: BorderSide(color: AppColors.negro, width: 1),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _celda(estrofa.fila7[i]),
-                      Container(height: 1, color: AppColors.negro),
-                      _celda(estrofa.fila6[i]),
-                    ],
-                  ),
-                ),
-              // BIS
-              if (estrofa.bis)
-                Container(
-                  width: bisW,
-                  decoration: const BoxDecoration(
-                    color: AppColors.dorado,
-                    border: Border(
-                      left: BorderSide(color: AppColors.negro, width: 1.2),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    'BIS',
-                    style: TextStyle(
-                      color: AppColors.negro,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
+            ),
+            Container(height: 1.2, color: AppColors.negro),
+            SizedBox(
+              height: 26 * escala,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _etiqueta('6'),
+                  for (int i = 0; i < estrofa.columnas; i++)
+                    _celda(estrofa.fila6[i]),
+                  if (estrofa.bis)
+                    SizedBox(width: 44 * escala, height: 26 * escala),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _etiqueta(String t) {
     return Container(
-      height: 26,
+      width: 22 * escala,
+      height: 26 * escala,
       alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        border: Border(
+          right: BorderSide(color: AppColors.negro, width: 1.2),
+        ),
+      ),
       child: Text(
         t,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 12,
+          fontSize: 12 * escala,
         ),
       ),
     );
   }
 
   Widget _celda(String contenido) {
+    final ancho = contenido.isEmpty
+        ? 34.0 * escala
+        : ((contenido.length * 8.5) + 14.0).clamp(34.0, 130.0) * escala;
+
     return Container(
-      height: 26,
+      width: ancho,
+      height: 26 * escala,
       alignment: Alignment.center,
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Text(
-            contenido,
-            style: const TextStyle(
-              color: AppColors.negro,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              fontFamily: 'monospace',
-            ),
-          ),
+      decoration: const BoxDecoration(
+        border: Border(
+          right: BorderSide(color: AppColors.negro, width: 0.8),
+        ),
+      ),
+      child: Text(
+        contenido,
+        style: TextStyle(
+          color: AppColors.negro,
+          fontWeight: FontWeight.bold,
+          fontSize: 12 * escala,
+          fontFamily: 'monospace',
+        ),
+      ),
+    );
+  }
+
+  Widget _bisBadge() {
+    return Container(
+      width: 44 * escala,
+      height: 52 * escala,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        color: AppColors.dorado,
+        border: Border(
+          right: BorderSide(color: AppColors.negro, width: 1.2),
+        ),
+      ),
+      child: Text(
+        'BIS',
+        style: TextStyle(
+          color: AppColors.negro,
+          fontWeight: FontWeight.bold,
+          fontSize: 10 * escala,
+          letterSpacing: 0.5,
         ),
       ),
     );

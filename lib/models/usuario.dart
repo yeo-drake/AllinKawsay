@@ -6,6 +6,7 @@ class Usuario {
   final String email;
   final String rol;
   final String fotoUrl;
+  final List<String> favoritos;
   final DateTime? fechaRegistro;
 
   Usuario({
@@ -14,6 +15,7 @@ class Usuario {
     required this.email,
     required this.rol,
     this.fotoUrl = '',
+    this.favoritos = const [],
     this.fechaRegistro,
   });
 
@@ -36,6 +38,8 @@ class Usuario {
     }
   }
 
+  bool esFavorito(String cancionId) => favoritos.contains(cancionId);
+
   factory Usuario.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
     return Usuario(
@@ -44,6 +48,7 @@ class Usuario {
       email: d['email'] ?? '',
       rol: d['rol'] ?? 'publico',
       fotoUrl: d['fotoUrl'] ?? '',
+      favoritos: List<String>.from(d['favoritos'] ?? []),
       fechaRegistro: (d['fechaRegistro'] as Timestamp?)?.toDate(),
     );
   }
@@ -53,6 +58,7 @@ class Usuario {
         'email': email,
         'rol': rol,
         'fotoUrl': fotoUrl,
+        'favoritos': favoritos,
         'fechaRegistro': fechaRegistro ?? FieldValue.serverTimestamp(),
       };
 }

@@ -7,6 +7,7 @@ class Usuario {
   final String rol;
   final String fotoUrl;
   final List<String> favoritos;
+  final Map<String, String> notasPorCancion;
   final DateTime? fechaRegistro;
 
   Usuario({
@@ -16,6 +17,7 @@ class Usuario {
     required this.rol,
     this.fotoUrl = '',
     this.favoritos = const [],
+    this.notasPorCancion = const {},
     this.fechaRegistro,
   });
 
@@ -40,8 +42,18 @@ class Usuario {
 
   bool esFavorito(String cancionId) => favoritos.contains(cancionId);
 
+  /// Devuelve la nota personal del usuario para esa canción
+  String notaDe(String cancionId) => notasPorCancion[cancionId] ?? '';
+
   factory Usuario.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
+    final notasRaw = d['notasPorCancion'] ?? {};
+    final Map<String, String> notas = {};
+    if (notasRaw is Map) {
+      notasRaw.forEach((k, v) {
+        notas[k.toString()] = v.toString();
+      });
+    }
     return Usuario(
       uid: doc.id,
       nombre: d['nombre'] ?? '',
@@ -49,6 +61,7 @@ class Usuario {
       rol: d['rol'] ?? 'publico',
       fotoUrl: d['fotoUrl'] ?? '',
       favoritos: List<String>.from(d['favoritos'] ?? []),
+      notasPorCancion: notas,
       fechaRegistro: (d['fechaRegistro'] as Timestamp?)?.toDate(),
     );
   }
@@ -59,6 +72,7 @@ class Usuario {
         'rol': rol,
         'fotoUrl': fotoUrl,
         'favoritos': favoritos,
+        'notasPorCancion': notasPorCancion,
         'fechaRegistro': fechaRegistro ?? FieldValue.serverTimestamp(),
       };
 }

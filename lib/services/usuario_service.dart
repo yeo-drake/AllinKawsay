@@ -91,19 +91,30 @@ class UsuarioService {
   }
 
   /// Guarda una nota privada del usuario para una canción.
-  /// Si la nota está vacía, la elimina.
-  Future<void> guardarNota(String cancionId, String texto) async {
+  Future<void> guardarNota(String cancionId, String texto) =>
+      _guardarNotaEn('notasPorCancion', cancionId, texto);
+
+  /// Guarda una nota privada del usuario para un evento.
+  Future<void> guardarNotaEvento(String eventoId, String texto) =>
+      _guardarNotaEn('notasPorEvento', eventoId, texto);
+
+  /// Guarda una nota privada del usuario para un recuerdo.
+  Future<void> guardarNotaRecuerdo(String recuerdoId, String texto) =>
+      _guardarNotaEn('notasPorRecuerdo', recuerdoId, texto);
+
+  Future<void> _guardarNotaEn(
+      String campo, String itemId, String texto) async {
     final uid = miUid();
     if (uid == null) return;
 
     final ref = _db.collection('usuarios').doc(uid);
     if (texto.trim().isEmpty) {
       await ref.update({
-        'notasPorCancion.$cancionId': FieldValue.delete(),
+        '$campo.$itemId': FieldValue.delete(),
       });
     } else {
       await ref.update({
-        'notasPorCancion.$cancionId': texto.trim(),
+        '$campo.$itemId': texto.trim(),
       });
     }
   }

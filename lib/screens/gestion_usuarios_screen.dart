@@ -90,12 +90,18 @@ class GestionUsuariosScreen extends StatelessWidget {
                 child: ListTile(
                   leading: CircleAvatar(
                     backgroundColor: _colorRol(u.rol),
-                    child: Text(
-                      u.nombre.isNotEmpty
-                          ? u.nombre[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(color: AppColors.dorado),
-                    ),
+                    backgroundImage: u.fotoUrl.isNotEmpty
+                        ? NetworkImage(u.fotoUrl)
+                        : null,
+                    child: u.fotoUrl.isEmpty
+                        ? Text(
+                            u.nombre.isNotEmpty
+                                ? u.nombre[0].toUpperCase()
+                                : '?',
+                            style: const TextStyle(
+                                color: AppColors.dorado),
+                          )
+                        : null,
                   ),
                   title: Text(u.nombre,
                       style: const TextStyle(

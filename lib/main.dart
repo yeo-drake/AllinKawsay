@@ -73,6 +73,7 @@ class SikurisApp extends StatelessWidget {
         onSecondary: AppColors.negro,
         surface: AppColors.blanco,
         onSurface: AppColors.negro,
+        onSurfaceVariant: AppColors.negro,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.granate,
@@ -153,6 +154,12 @@ class SikurisApp extends StatelessWidget {
         onSecondary: AppColors.negro,
         surface: AppColors.fondoCardOscuro,
         onSurface: AppColors.textoOscuroClaro,
+        onSurfaceVariant: AppColors.textoOscuroClaro,
+        // Forzamos a que los textos sobre cards sean claros
+        background: AppColors.fondoOscuro,
+        onBackground: AppColors.textoOscuroClaro,
+        error: Color(0xFFCF6679),
+        onError: AppColors.negro,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.negro,
@@ -210,6 +217,7 @@ class SikurisApp extends StatelessWidget {
       dividerColor: AppColors.dorado,
       inputDecorationTheme: const InputDecorationTheme(
         labelStyle: TextStyle(color: AppColors.dorado),
+        hintStyle: TextStyle(color: AppColors.textoOscuroMedio),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: AppColors.dorado, width: 2),
         ),
@@ -218,12 +226,18 @@ class SikurisApp extends StatelessWidget {
         ),
         border: OutlineInputBorder(),
       ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: AppColors.textoOscuroClaro),
+        bodyMedium: TextStyle(color: AppColors.textoOscuroClaro),
+        bodySmall: TextStyle(color: AppColors.textoOscuroMedio),
+        titleLarge: TextStyle(color: AppColors.textoOscuroClaro),
+        titleMedium: TextStyle(color: AppColors.textoOscuroClaro),
+        titleSmall: TextStyle(color: AppColors.textoOscuroClaro),
+      ),
     );
   }
 }
 
-/// Escucha auth + rol del usuario, y activa/desactiva bloqueo de
-/// capturas según el rol. Los "público" no pueden sacar capturas.
 class _AuthGate extends StatefulWidget {
   const _AuthGate();
 
@@ -278,7 +292,6 @@ class _AuthGateState extends State<_AuthGate> {
                 'Usuario',
           );
         }
-        // Cuando no hay sesión → desactivar bloqueo
         ScreenSecurityService.disable();
         return const LoginScreen();
       },

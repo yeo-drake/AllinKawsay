@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/cancion.dart';
+import 'actividad_service.dart';
 
 class CancionService {
   final _db = FirebaseFirestore.instance;
@@ -14,15 +15,37 @@ class CancionService {
 
   Future<String> agregar(Cancion c) async {
     final ref = await _db.collection('canciones').add(c.toMap());
+    ActividadService.registrar(
+      'crear_cancion',
+      'Subió la canción "${c.titulo}"',
+    );
     return ref.id;
   }
 
-  Future<void> actualizar(String id, Map<String, dynamic> cambios) {
-    return _db.collection('canciones').doc(id).update(cambios);
+  Future<void> actualizar(String id, Map<String, dynamic> cambios) async {
+    await _db.collection('canciones').doc(id).update(cambios);
+    final titulo = cambios['titulo'] ?? id;
+    ActividadService.registrar(
+      'editar_cancion',
+      'Editó la canción "$titulo"',
+    );
   }
 
-  Future<void> eliminar(String id) {
-    return _db.collection('canciones').doc(id).delete();
+  Future<void> eliminar(String id) async {
+    // Intentar leer el título antes de borrar
+    String titulo = id;
+    try {
+      final doc = await _db.collection('canciones').doc(id).get();
+      if (doc.exists) {
+        titulo = (doc.data()?['titulo'] ?? id).toString();
+      }
+    } catch (_) {}
+
+    await _db.collection('canciones').doc(id).delete();
+    ActividadService.registrar(
+      'eliminar_cancion',
+      'Eliminó la canción "$titulo"',
+    );
   }
 
   Future<void> incrementarReproduccion(String id) async {
@@ -33,7 +56,6 @@ class CancionService {
     } catch (_) {}
   }
 
-  /// Cuenta cuántas canciones subió un usuario en particular
   Future<int> contarPorUsuario(String uid) async {
     try {
       final snap = await _db
@@ -47,7 +69,6 @@ class CancionService {
     }
   }
 
-  /// Suma total de reproducciones de las canciones subidas por un usuario
   Future<int> totalReproduccionesDeUsuario(String uid) async {
     try {
       final snap = await _db
@@ -56,8 +77,7 @@ class CancionService {
           .get();
       int total = 0;
       for (final doc in snap.docs) {
-        final d = doc.data();
-        final r = d['reproducciones'];
+        final r = doc.data()['reproducciones'];
         if (r is int) total += r;
       }
       return total;

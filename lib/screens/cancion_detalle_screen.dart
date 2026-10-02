@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/cancion.dart';
 import '../models/comentario.dart';
 import '../models/usuario.dart';
+import '../services/cancion_service.dart';
 import '../services/comentario_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
@@ -26,6 +27,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   String? _error;
   final _comentarioCtrl = TextEditingController();
   Usuario? _usuario;
+  bool _reproduccionContada = false;
 
   @override
   void initState() {
@@ -45,6 +47,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       await _player.setUrl(widget.cancion.audioUrl);
       if (mounted) setState(() => _listo = true);
     } catch (e) {
+      debugPrint('Error cargando audio: $e');
       if (mounted) setState(() => _error = 'No se pudo cargar el audio');
     }
   }
@@ -54,6 +57,21 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     _player.dispose();
     _comentarioCtrl.dispose();
     super.dispose();
+  }
+
+  /// Reproduce/pausa y suma 1 al contador la primera vez que suena.
+  Future<void> _togglePlay() async {
+    final playing = _player.playing;
+    if (playing) {
+      await _player.pause();
+    } else {
+      await _player.play();
+      if (!_reproduccionContada) {
+        _reproduccionContada = true;
+        await CancionService()
+            .incrementarReproduccion(widget.cancion.id);
+      }
+    }
   }
 
   Future<void> _descargar(String url) async {
@@ -210,9 +228,24 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
                             fontWeight: FontWeight.bold,
                             color: AppColors.granate)),
                     const SizedBox(height: 8),
-                    Text(c.numerofonia,
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: AppColors.blanco,
+                        border:
+                            Border.all(color: AppColors.negro, width: 1),
+                      ),
+                      child: Text(
+                        c.numerofonia,
                         style: const TextStyle(
-                            fontFamily: 'monospace', fontSize: 16)),
+                          fontFamily: 'monospace',
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.negro,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -292,6 +325,8 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
                               : 'Adaptación'),
                       _fila(Icons.graphic_eq, 'Ritmo',
                           c.ritmo.isEmpty ? '—' : c.ritmo),
+                      _fila(Icons.play_arrow, 'Reproducciones',
+                          '${c.reproducciones}'),
                       if (c.tags.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -377,8 +412,41 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       );
     }
     if (_error != null) {
-      return Text(_error!,
-          style: const TextStyle(color: AppColors.granate));
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.grisClaro,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: AppColors.granate.withOpacity(0.3), width: 1),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline,
+                color: AppColors.granate, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_error!,
+                      style: const TextStyle(
+                          color: AppColors.granate,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Puede que el archivo esté dañado o el enlace sea inválido',
+                    style: TextStyle(
+                        color: AppColors.negro.withOpacity(0.5),
+                        fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
     if (!_listo) {
       return Container(
@@ -417,13 +485,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
                           : Icons.play_circle_filled,
                   color: AppColors.dorado,
                 ),
-                onPressed: () {
-                  if (playing) {
-                    _player.pause();
-                  } else {
-                    _player.play();
-                  }
-                },
+                onPressed: _togglePlay,
               );
             },
           ),

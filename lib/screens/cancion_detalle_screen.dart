@@ -183,12 +183,6 @@ Widget build(BuildContext context) {
             await _cargarUsuario();
           },
         ),
-        if (c.tieneVideo)
-          IconButton(
-            icon: const Icon(Icons.video_library),
-            tooltip: 'Ver video',
-            onPressed: () => _abrirVideo(c.videoUrl),
-          ),
         IconButton(
           icon: const Icon(Icons.slideshow),
           tooltip: 'Modo presentación',

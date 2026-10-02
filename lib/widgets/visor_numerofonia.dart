@@ -16,21 +16,47 @@ class VisorNumerofonia extends StatelessWidget {
     final validas = estrofas.where((e) => !e.vacia).toList();
     if (validas.isEmpty) return const SizedBox.shrink();
 
-    // FittedBox escala el contenido hacia abajo si no entra.
-    // Si entra, se muestra a tamaño natural.
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.topLeft,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < validas.length; i++) ...[
-            _estrofa(validas[i]),
-            if (i < validas.length - 1) SizedBox(height: 6 * escala),
-          ],
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Medida natural de las celdas
+        const cellW = 26.0;
+        const etiquetaW = 20.0;
+
+        // Ancho máximo natural (sin escalar)
+        double anchoMax = 0;
+        for (final e in validas) {
+          double ancho = etiquetaW;
+          for (int i = 0; i < e.columnas; i++) {
+            final v7 = e.fila7[i];
+            final v6 = e.fila6[i];
+            final len = v7.length > v6.length ? v7.length : v6.length;
+            ancho += len == 0 ? cellW : (len * 8.5 + 10.0);
+          }
+          if (e.bis) ancho += 40;
+          if (ancho > anchoMax) anchoMax = ancho;
+        }
+
+        final disponible = constraints.maxWidth;
+        final factor = (disponible / anchoMax).clamp(0.0, 1.0);
+
+        return Transform.scale(
+          scale: factor,
+          alignment: Alignment.topLeft,
+          child: SizedBox(
+            width: anchoMax,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (int i = 0; i < validas.length; i++) ...[
+                  _estrofa(validas[i]),
+                  if (i < validas.length - 1) SizedBox(height: 6 * escala),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -42,9 +68,7 @@ class VisorNumerofonia extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Etiquetas 7 / 6
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -53,7 +77,6 @@ class VisorNumerofonia extends StatelessWidget {
               _etiqueta('6'),
             ],
           ),
-          // Celdas
           for (int i = 0; i < e.columnas; i++)
             Container(
               decoration: const BoxDecoration(
@@ -70,7 +93,6 @@ class VisorNumerofonia extends StatelessWidget {
                 ],
               ),
             ),
-          // BIS badge
           if (e.bis)
             Container(
               padding: EdgeInsets.symmetric(

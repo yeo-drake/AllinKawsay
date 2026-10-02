@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/usuario.dart';
+import 'actividad_service.dart';
 
 class UsuarioService {
   final _db = FirebaseFirestore.instance;
@@ -41,8 +42,22 @@ class UsuarioService {
         .map((snap) => snap.docs.map(Usuario.fromDoc).toList());
   }
 
-  Future<void> cambiarRol(String uid, String nuevoRol) {
-    return _db.collection('usuarios').doc(uid).update({'rol': nuevoRol});
+  Future<void> cambiarRol(String uid, String nuevoRol) async {
+    await _db.collection('usuarios').doc(uid).update({'rol': nuevoRol});
+
+    // Obtener el nombre del afectado para el log
+    String nombre = uid;
+    try {
+      final doc = await _db.collection('usuarios').doc(uid).get();
+      if (doc.exists) {
+        nombre = (doc.data()?['nombre'] ?? uid).toString();
+      }
+    } catch (_) {}
+
+    ActividadService.registrar(
+      'cambiar_rol',
+      'Cambió el rol de "$nombre" a ${nuevoRol.toUpperCase()}',
+    );
   }
 
   Future<void> actualizarFotoPerfil(String uid, String fotoUrl) {
@@ -52,9 +67,12 @@ class UsuarioService {
   Future<void> actualizarNombre(String uid, String nombre) async {
     await _db.collection('usuarios').doc(uid).update({'nombre': nombre});
     await FirebaseAuth.instance.currentUser?.updateDisplayName(nombre);
+    ActividadService.registrar(
+      'cambiar_nombre',
+      'Cambió su nombre a "$nombre"',
+    );
   }
 
-  /// Agrega o quita una canción de favoritos del usuario actual.
   Future<void> toggleFavorito(String cancionId) async {
     final uid = miUid();
     if (uid == null) return;

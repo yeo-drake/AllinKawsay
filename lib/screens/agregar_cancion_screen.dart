@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/cancion.dart';
 import '../models/numerofonia.dart';
-import '../widgets/editor_numerofonia.dart';
 import '../services/cancion_service.dart';
 import '../services/storage_service.dart';
 import '../theme/colors.dart';
+import '../widgets/editor_numerofonia.dart';
 
 class AgregarCancionScreen extends StatefulWidget {
   final Cancion? cancion;
@@ -29,7 +29,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
 
   String _tipo = 'original';
   final List<String> _tags = [];
-  List<SeccionNumerofonia> _numerofoniaEstructurada = [];
+  List<EstrofaNumerofonia> _numerofoniaEstrofas = [];
   File? _imagenNueva;
   File? _audioNuevo;
   String _imagenUrlActual = '';
@@ -48,14 +48,14 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       _autor.text = c.autor;
       _ritmo.text = c.ritmo;
       _region.text = c.region;
-      _numerofoniaEstructurada =
-    c.numerofoniaEstructurada.map((s) => s.copy()).toList();
       _letra.text = c.letra;
       _descripcion.text = c.descripcion;
       _tipo = c.tipo;
       _tags.addAll(c.tags);
       _imagenUrlActual = c.imagenUrl;
       _audioUrlActual = c.audioUrl;
+      _numerofoniaEstrofas =
+          c.estrofas.map((e) => e.copy()).toList();
     }
   }
 
@@ -116,7 +116,6 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
       String audioUrl = _audioUrlActual;
 
       if (!_esEdicion) {
-        // Crear canción nueva
         id = await service.agregar(Cancion(
           id: '',
           titulo: _titulo.text.trim(),
@@ -125,7 +124,7 @@ class _AgregarCancionScreenState extends State<AgregarCancionScreen> {
           ritmo: _ritmo.text.trim(),
           region: _region.text.trim(),
           numerofonia: '',
-numerofoniaEstructurada: _numerofoniaEstructurada,
+          estrofas: _numerofoniaEstrofas,
           letra: _letra.text.trim(),
           imagenUrl: '',
           audioUrl: '',
@@ -136,19 +135,15 @@ numerofoniaEstructurada: _numerofoniaEstructurada,
         ));
       }
 
-      // Subir imagen si hay nueva
       if (_imagenNueva != null) {
         setState(() => _estado = 'Subiendo partitura...');
         imagenUrl = await storage.subirPartitura(_imagenNueva!, id);
       }
-
-      // Subir audio si hay nuevo
       if (_audioNuevo != null) {
         setState(() => _estado = 'Subiendo audio...');
         audioUrl = await storage.subirAudio(_audioNuevo!, id);
       }
 
-      // Actualizar el documento (tanto en crear como en editar)
       await service.actualizar(id, {
         'titulo': _titulo.text.trim(),
         'autor': _autor.text.trim(),
@@ -156,8 +151,8 @@ numerofoniaEstructurada: _numerofoniaEstructurada,
         'ritmo': _ritmo.text.trim(),
         'region': _region.text.trim(),
         'numerofonia': '',
-'numerofoniaEstructurada':
-    _numerofoniaEstructurada.map((s) => s.toMap()).toList(),
+        'estrofas':
+            _numerofoniaEstrofas.map((e) => e.toMap()).toList(),
         'letra': _letra.text.trim(),
         'descripcion': _descripcion.text.trim(),
         'tags': _tags,
@@ -180,6 +175,7 @@ numerofoniaEstructurada: _numerofoniaEstructurada,
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -195,7 +191,6 @@ numerofoniaEstructurada: _numerofoniaEstructurada,
                   fontWeight: FontWeight.bold, color: AppColors.granate)),
           const SizedBox(height: 8),
 
-          // Mostrar imagen nueva, o la actual, o botones para elegir
           if (_imagenNueva != null)
             Stack(
               children: [
@@ -367,14 +362,16 @@ numerofoniaEstructurada: _numerofoniaEstructurada,
                   .toList(),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
 
-          // === NUMEROFONÍA (editor tabla) ===
-EditorNumerofonia(
-  inicial: _numerofoniaEstructurada,
-  onChanged: (v) => _numerofoniaEstructurada = v,
-),
-const SizedBox(height: 12),
+          // === NUMEROFONÍA ===
+          EditorNumerofonia(
+            inicial: _numerofoniaEstrofas,
+            autor: _autor.text.trim(),
+            ritmo: _ritmo.text.trim(),
+            onChanged: (v) => _numerofoniaEstrofas = v,
+          ),
+          const SizedBox(height: 16),
 
           // === LETRA ===
           TextField(
@@ -516,3 +513,4 @@ const SizedBox(height: 12),
     );
   }
 }
+

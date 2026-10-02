@@ -15,9 +15,9 @@ import '../widgets/social_buttons.dart';
 import 'actividad_screen.dart';
 import 'cancion_detalle_screen.dart';
 import 'estadisticas_admin_screen.dart';
-import 'gestion_usuarios_screen.dart';
 import 'exportar_respaldo_screen.dart';
 import 'gestion_categorias_screen.dart';
+import 'gestion_usuarios_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   final String nombreUsuario;
@@ -125,7 +125,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
     }
   }
 
-  /// Bottom sheet con las canciones y recuerdos que subió el usuario
   void _abrirMisSubidas(BuildContext context, String uid) {
     showModalBottomSheet(
       context: context,
@@ -203,7 +202,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                   ),
                                 ],
                               ),
-                            );
+                            ),
                           );
                         }
 
@@ -287,121 +286,157 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  /// Bottom sheet de ajustes con toggle de tema
-  void _abrirAjustes(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          return SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.dorado,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+void _abrirAjustes(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Theme.of(context).cardColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => StatefulBuilder(
+      builder: (context, setSheetState) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.dorado,
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                const SizedBox(height: 12),
-                const Text('Ajustes',
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Divider(height: 1),
+              ),
+              const SizedBox(height: 12),
+              const Text('Ajustes',
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Divider(height: 1),
 
-                // Tema
-                ValueListenableBuilder<ThemeMode>(
-                  valueListenable: ThemeProvider.mode,
-                  builder: (context, modo, _) {
-                    return Column(
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('Tema de la app',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    color: AppColors.granate)),
-                          ),
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.light,
-                          groupValue: modo,
-                          activeColor: AppColors.granate,
-                          title: const Text('Claro'),
-                          secondary: const Icon(Icons.light_mode,
-                              color: AppColors.granate),
-                          onChanged: (v) {
-                            ThemeProvider.cambiar(ThemeMode.light);
-                            setSheetState(() {});
-                          },
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.dark,
-                          groupValue: modo,
-                          activeColor: AppColors.granate,
-                          title: const Text('Oscuro'),
-                          secondary: const Icon(Icons.dark_mode,
-                              color: AppColors.granate),
-                          onChanged: (v) {
-                            ThemeProvider.cambiar(ThemeMode.dark);
-                            setSheetState(() {});
-                          },
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.system,
-                          groupValue: modo,
-                          activeColor: AppColors.granate,
-                          title: const Text('Automático (sistema)'),
-                          secondary: const Icon(Icons.brightness_auto,
-                              color: AppColors.granate),
-                          onChanged: (v) {
-                            ThemeProvider.cambiar(ThemeMode.system);
-                            setSheetState(() {});
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                ),
-
-                const Divider(height: 1),
-
-                // Info próximas features
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              ValueListenableBuilder<ThemeMode>(
+                valueListenable: ThemeProvider.mode,
+                builder: (context, modo, _) {
+                  return Column(
                     children: [
-                      Text('Próximamente:',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: AppColors.granate)),
-                      SizedBox(height: 8),
-                      Text('• Notificaciones de eventos'),
-                      Text('• Modo offline'),
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('Tema de la app',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color: AppColors.granate)),
+                        ),
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.light,
+                        groupValue: modo,
+                        activeColor: AppColors.granate,
+                        title: const Text('Claro'),
+                        secondary: const Icon(Icons.light_mode,
+                            color: AppColors.granate),
+                        onChanged: (v) {
+                          ThemeProvider.cambiar(ThemeMode.light);
+                          setSheetState(() {});
+                        },
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.dark,
+                        groupValue: modo,
+                        activeColor: AppColors.granate,
+                        title: const Text('Oscuro'),
+                        secondary: const Icon(Icons.dark_mode,
+                            color: AppColors.granate),
+                        onChanged: (v) {
+                          ThemeProvider.cambiar(ThemeMode.dark);
+                          setSheetState(() {});
+                        },
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.system,
+                        groupValue: modo,
+                        activeColor: AppColors.granate,
+                        title: const Text('Automático (sistema)'),
+                        secondary: const Icon(Icons.brightness_auto,
+                            color: AppColors.granate),
+                        onChanged: (v) {
+                          ThemeProvider.cambiar(ThemeMode.system);
+                          setSheetState(() {});
+                        },
+                      ),
                     ],
-                  ),
+                  );
+                },
+              ),
+
+              const Divider(height: 1),
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Próximamente:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: AppColors.granate)),
+                    SizedBox(height: 8),
+                    Text('• Notificaciones de eventos'),
+                    Text('• Modo offline'),
+                  ],
                 ),
-                const SizedBox(height: 12),
-              ],
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+}
+
+void _abrirAcercaDe(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Theme.of(context).cardColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: AppColors.dorado,
+              borderRadius: BorderRadius.circular(2),
             ),
-          );
-        },
+          ),
+          const Text('Acerca de',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate)),
+          const SizedBox(height: 16),
+          const Text(
+              'Allin Kawsay\nVersión 1.0.0\n\n'
+              'Aplicación oficial del grupo de sikuris.\n\n'
+              'Hecha con ❤️ para el grupo.',
+              style: TextStyle(fontSize: 15, height: 1.5)),
+          const SizedBox(height: 16),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
 @override
 Widget build(BuildContext context) {
@@ -586,41 +621,41 @@ Widget build(BuildContext context) {
                 ),
               ),
 
-// === ADMIN: EXPORTAR RESPALDO ===
-if (esAdmin)
-  ListTile(
-    leading: const Icon(Icons.backup,
-        color: AppColors.granate),
-    title: const Text('Exportar respaldo'),
-    subtitle: const Text(
-        'Descarga todas las canciones, eventos y recuerdos'),
-    trailing: const Icon(Icons.chevron_right,
-        color: AppColors.dorado),
-    onTap: () => Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (_) =>
-              const ExportarRespaldoScreen()),
-    ),
-  ),
+            // === ADMIN: CATEGORÍAS ===
+            if (esAdmin)
+              ListTile(
+                leading: const Icon(Icons.category,
+                    color: AppColors.granate),
+                title: const Text('Categorías'),
+                subtitle: const Text(
+                    'Agrupa las canciones (Carnaval, Religioso, etc.)'),
+                trailing: const Icon(Icons.chevron_right,
+                    color: AppColors.dorado),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          const GestionCategoriasScreen()),
+                ),
+              ),
 
-// === ADMIN: CATEGORÍAS ===
-if (esAdmin)
-  ListTile(
-    leading: const Icon(Icons.category,
-        color: AppColors.granate),
-    title: const Text('Categorías'),
-    subtitle: const Text(
-        'Agrupa las canciones (Carnaval, Religioso, etc.)'),
-    trailing: const Icon(Icons.chevron_right,
-        color: AppColors.dorado),
-    onTap: () => Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (_) =>
-              const GestionCategoriasScreen()),
-    ),
-  ),
+            // === ADMIN: EXPORTAR RESPALDO ===
+            if (esAdmin)
+              ListTile(
+                leading: const Icon(Icons.backup,
+                    color: AppColors.granate),
+                title: const Text('Exportar respaldo'),
+                subtitle: const Text(
+                    'Descarga todas las canciones, eventos y recuerdos'),
+                trailing: const Icon(Icons.chevron_right,
+                    color: AppColors.dorado),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          const ExportarRespaldoScreen()),
+                ),
+              ),
 
             // === ADMIN: GESTIÓN DE USUARIOS ===
             if (esAdmin)
@@ -698,100 +733,60 @@ if (esAdmin)
   );
 }
 
-  void _abrirAcercaDe(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
+Widget _estadisticasPersonales(String uid) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 12),
+    child: Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: AppColors.dorado,
-                borderRadius: BorderRadius.circular(2),
+            const Text(
+              'Mis estadísticas',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                color: AppColors.granate,
               ),
             ),
-            const Text('Acerca de',
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.granate)),
-            const SizedBox(height: 16),
-            const Text(
-                'Allin Kawsay\nVersión 1.0.0\n\n'
-                'Aplicación oficial del grupo de sikuris.\n\n'
-                'Hecha con ❤️ para el grupo.',
-                style: TextStyle(fontSize: 15, height: 1.5)),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: FutureBuilder<int>(
+                    future: CancionService().contarPorUsuario(uid),
+                    builder: (context, snap) {
+                      return _statCard(
+                        Icons.library_music,
+                        snap.data?.toString() ?? '...',
+                        'Canciones subidas',
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FutureBuilder<int>(
+                    future: CancionService()
+                        .totalReproduccionesDeUsuario(uid),
+                    builder: (context, snap) {
+                      return _statCard(
+                        Icons.play_arrow,
+                        snap.data?.toString() ?? '...',
+                        'Reproducciones',
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _estadisticasPersonales(String uid) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Mis estadísticas',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: AppColors.granate,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FutureBuilder<int>(
-                      future: CancionService().contarPorUsuario(uid),
-                      builder: (context, snap) {
-                        return _statCard(
-                          Icons.library_music,
-                          snap.data?.toString() ?? '...',
-                          'Canciones subidas',
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FutureBuilder<int>(
-                      future: CancionService()
-                          .totalReproduccionesDeUsuario(uid),
-                      builder: (context, snap) {
-                        return _statCard(
-                          Icons.play_arrow,
-                          snap.data?.toString() ?? '...',
-                          'Reproducciones',
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _statCard(IconData icono, String valor, String label) {
     return Container(

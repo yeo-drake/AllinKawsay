@@ -22,8 +22,9 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
   bool _esAdmin = false;
   String _query = '';
   String? _tagFiltro;
-  _OrdenCancion _orden = _OrdenCancion.fecha;
-  bool _ascendente = false;
+  // ✅ Orden por defecto: Título A-Z ascendente
+  _OrdenCancion _orden = _OrdenCancion.titulo;
+  bool _ascendente = true;
 
   @override
   void initState() {
@@ -95,11 +96,10 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
                 style: TextStyle(
                     fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            _itemOrden('Fecha de subida', _OrdenCancion.fecha),
             _itemOrden('Título (A-Z)', _OrdenCancion.titulo),
             _itemOrden('Autor (A-Z)', _OrdenCancion.autor),
-            _itemOrden(
-                'Más reproducidas', _OrdenCancion.reproducciones),
+            _itemOrden('Más reproducidas', _OrdenCancion.reproducciones),
+            _itemOrden('Fecha de subida', _OrdenCancion.fecha),
             const SizedBox(height: 8),
           ],
         ),
@@ -132,7 +132,6 @@ class _CancioneroScreenState extends State<CancioneroScreen> {
       onTap: () {
         setState(() {
           _orden = valor;
-          // Defaults razonables
           if (valor == _OrdenCancion.fecha ||
               valor == _OrdenCancion.reproducciones) {
             _ascendente = false;

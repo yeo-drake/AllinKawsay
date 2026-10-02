@@ -24,4 +24,15 @@ class CancionService {
   Future<void> eliminar(String id) {
     return _db.collection('canciones').doc(id).delete();
   }
+
+  /// Incrementa en 1 el contador de reproducciones de una canción.
+  Future<void> incrementarReproduccion(String id) async {
+    try {
+      await _db.collection('canciones').doc(id).update({
+        'reproducciones': FieldValue.increment(1),
+      });
+    } catch (_) {
+      // Silenciar errores (por si la canción no existe o falla la red)
+    }
+  }
 }

@@ -15,6 +15,7 @@ class Cancion {
   final String audioUrl;
   final String descripcion;
   final List<String> tags;
+  final int reproducciones;
   final String creadoPor;
   final String creadorNombre;
   final DateTime? fechaCreacion;
@@ -33,6 +34,7 @@ class Cancion {
     required this.audioUrl,
     required this.descripcion,
     required this.tags,
+    this.reproducciones = 0,
     required this.creadoPor,
     required this.creadorNombre,
     this.fechaCreacion,
@@ -43,7 +45,6 @@ class Cancion {
 
   factory Cancion.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
-    // Compatibilidad: leer 'compases' o 'estrofas'
     final raw = d['estrofas'] ?? d['compases'] ?? d['numerofoniaEstructurada'];
     final lista = (raw as List?)
             ?.map((x) => EstrofaNumerofonia.fromMap(
@@ -64,6 +65,9 @@ class Cancion {
       audioUrl: d['audioUrl'] ?? '',
       descripcion: d['descripcion'] ?? '',
       tags: List<String>.from(d['tags'] ?? []),
+      reproducciones: (d['reproducciones'] ?? 0) is int
+          ? d['reproducciones'] ?? 0
+          : 0,
       creadoPor: d['creadoPor'] ?? '',
       creadorNombre: d['creadorNombre'] ?? '',
       fechaCreacion: (d['fechaCreacion'] as Timestamp?)?.toDate(),
@@ -83,6 +87,7 @@ class Cancion {
         'audioUrl': audioUrl,
         'descripcion': descripcion,
         'tags': tags,
+        'reproducciones': reproducciones,
         'creadoPor': creadoPor,
         'creadorNombre': creadorNombre,
         'fechaCreacion': FieldValue.serverTimestamp(),

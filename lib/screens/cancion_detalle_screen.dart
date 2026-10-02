@@ -7,6 +7,7 @@ import '../models/comentario.dart';
 import '../models/usuario.dart';
 import '../services/cancion_service.dart';
 import '../services/comentario_service.dart';
+import '../services/player_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
 import '../widgets/visor_numerofonia.dart';
@@ -22,9 +23,7 @@ class CancionDetalleScreen extends StatefulWidget {
 }
 
 class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
-  final _player = AudioPlayer();
-  bool _listo = false;
-  String? _error;
+  final _player = PlayerService();
   final _comentarioCtrl = TextEditingController();
   Usuario? _usuario;
   bool _reproduccionContada = false;
@@ -32,7 +31,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
   @override
   void initState() {
     super.initState();
-    _cargarAudio();
     _cargarUsuario();
   }
 
@@ -41,36 +39,19 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     if (mounted) setState(() => _usuario = u);
   }
 
-  Future<void> _cargarAudio() async {
-    if (widget.cancion.audioUrl.isEmpty) return;
-    try {
-      await _player.setUrl(widget.cancion.audioUrl);
-      if (mounted) setState(() => _listo = true);
-    } catch (e) {
-      debugPrint('Error cargando audio: $e');
-      if (mounted) setState(() => _error = 'No se pudo cargar el audio');
-    }
-  }
-
   @override
   void dispose() {
-    _player.dispose();
     _comentarioCtrl.dispose();
     super.dispose();
   }
 
-  /// Reproduce/pausa y suma 1 al contador la primera vez que suena.
+  /// Reproduce/pausa usando el player global. Suma 1 reproducción la 1ra vez.
   Future<void> _togglePlay() async {
-    final playing = _player.playing;
-    if (playing) {
-      await _player.pause();
-    } else {
-      await _player.play();
-      if (!_reproduccionContada) {
-        _reproduccionContada = true;
-        await CancionService()
-            .incrementarReproduccion(widget.cancion.id);
-      }
+    await _player.toggle(widget.cancion);
+    if (!_reproduccionContada && _player.sonando(widget.cancion.id)) {
+      _reproduccionContada = true;
+      await CancionService()
+          .incrementarReproduccion(widget.cancion.id);
     }
   }
 
@@ -115,8 +96,7 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
       if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('No se pudo abrir WhatsApp')),
+            const SnackBar(content: Text('No se pudo abrir WhatsApp')),
           );
         }
       }
@@ -146,408 +126,410 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     FocusScope.of(context).unfocus();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final c = widget.cancion;
-    final puedeDescargar = _usuario?.puedeDescargar ?? false;
-    final puedeComentar = _usuario?.puedeComentar ?? false;
+@override
+Widget build(BuildContext context) {
+  final c = widget.cancion;
+  final puedeDescargar = _usuario?.puedeDescargar ?? false;
+  final puedeComentar = _usuario?.puedeComentar ?? false;
+  final esFavorito = _usuario?.esFavorito(c.id) ?? false;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(c.titulo),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.slideshow),
-            tooltip: 'Modo presentación',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) =>
-                    PresentacionScreen(cancion: widget.cancion),
-              ),
+  return Scaffold(
+    appBar: AppBar(
+      title: Text(c.titulo),
+      actions: [
+        IconButton(
+          icon: Icon(
+            esFavorito ? Icons.favorite : Icons.favorite_border,
+          ),
+          tooltip: 'Favorito',
+          onPressed: () async {
+            await UsuarioService().toggleFavorito(c.id);
+            await _cargarUsuario();
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.slideshow),
+          tooltip: 'Modo presentación',
+          onPressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  PresentacionScreen(cancion: widget.cancion),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.share),
-            tooltip: 'Compartir',
-            onPressed: _compartir,
+        ),
+        IconButton(
+          icon: const Icon(Icons.share),
+          tooltip: 'Compartir',
+          onPressed: _compartir,
+        ),
+      ],
+    ),
+    body: WatermarkOverlay(
+      opacity: 0.05,
+      child: ListView(
+        children: [
+          // === 1. TÍTULO ===
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  c.titulo,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate,
+                  ),
+                ),
+                if (c.autor.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    c.autor,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      color: AppColors.negro.withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ],
-      ),
-      body: WatermarkOverlay(
-        opacity: 0.05,
-        child: ListView(
-          children: [
-            // === 1. TÍTULO ===
+
+          // === 2. NUMEROFONÍA ===
+          if (c.tieneNumerofonia) ...[
+            const Divider(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+              child: VisorNumerofonia(estrofas: c.estrofas),
+            ),
+          ] else if (c.tieneNumerofoniaString) ...[
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    c.titulo,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate,
-                    ),
-                  ),
-                  if (c.autor.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      c.autor,
+                  const Text('Numerofonía',
                       style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.granate)),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.blanco,
+                      border:
+                          Border.all(color: AppColors.negro, width: 1),
+                    ),
+                    child: Text(
+                      c.numerofonia,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
                         fontSize: 14,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.negro.withOpacity(0.6),
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.negro,
                       ),
                     ),
-                  ],
+                  ),
                 ],
               ),
             ),
+          ],
 
-            // === 2. NUMEROFONÍA ===
-            if (c.tieneNumerofonia) ...[
-              const Divider(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
-                child: VisorNumerofonia(estrofas: c.estrofas),
+          // === 3. AUDIO ===
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            child: _audioPlayerCompacto(puedeDescargar),
+          ),
+
+          // === 4. LETRA ===
+          if (c.letra.isNotEmpty) ...[
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text('Letra',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              child: Text(
+                c.letra,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 16,
+                    height: 1.8,
+                    fontStyle: FontStyle.italic),
               ),
-            ] else if (c.tieneNumerofoniaString) ...[
-              const Divider(),
+            ),
+          ],
+
+          // === 5. DESCRIPCIÓN ===
+          if (c.descripcion.isNotEmpty) ...[
+            const Divider(),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Text('Descripción',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Text(c.descripcion,
+                  style: const TextStyle(fontSize: 15, height: 1.5)),
+            ),
+          ],
+
+          const Divider(),
+
+          // === 6. INFORMACIÓN ===
+          ExpansionTile(
+            leading: const Icon(Icons.info_outline,
+                color: AppColors.granate),
+            title: const Text('Información',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate)),
+            children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Numerofonía',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.granate)),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.blanco,
-                        border:
-                            Border.all(color: AppColors.negro, width: 1),
-                      ),
-                      child: Text(
-                        c.numerofonia,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.negro,
+                    _fila(Icons.person, 'Autor',
+                        c.autor.isEmpty ? '—' : c.autor),
+                    _fila(
+                        Icons.category,
+                        'Tipo',
+                        c.tipo == 'original'
+                            ? 'Original'
+                            : 'Adaptación'),
+                    _fila(Icons.graphic_eq, 'Ritmo',
+                        c.ritmo.isEmpty ? '—' : c.ritmo),
+                    _fila(Icons.play_arrow, 'Reproducciones',
+                        '${c.reproducciones}'),
+                    if (c.tags.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8),
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: c.tags
+                              .map((t) => Chip(
+                                    label: Text(t,
+                                        style: const TextStyle(
+                                            fontSize: 12)),
+                                    backgroundColor:
+                                        AppColors.dorado
+                                            .withOpacity(0.2),
+                                    padding: EdgeInsets.zero,
+                                    materialTapTargetSize:
+                                        MaterialTapTargetSize
+                                            .shrinkWrap,
+                                  ))
+                              .toList(),
                         ),
                       ),
-                    ),
+                    if (c.creadorNombre.isNotEmpty)
+                      _fila(
+                          Icons.upload, 'Subido por', c.creadorNombre),
                   ],
                 ),
               ),
             ],
+          ),
 
-            // === 3. AUDIO ===
-            const Divider(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-              child: _audioPlayerCompacto(puedeDescargar),
-            ),
-
-            // === 4. LETRA ===
-            if (c.letra.isNotEmpty) ...[
-              const Divider(),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Text('Letra',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.granate)),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-                child: Text(
-                  c.letra,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.8,
-                      fontStyle: FontStyle.italic),
-                ),
-              ),
-            ],
-
-            // === 5. DESCRIPCIÓN ===
-            if (c.descripcion.isNotEmpty) ...[
-              const Divider(),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Text('Descripción',
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.granate)),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Text(c.descripcion,
-                    style: const TextStyle(fontSize: 15, height: 1.5)),
-              ),
-            ],
-
-            const Divider(),
-
-            // === 6. INFORMACIÓN ===
-            ExpansionTile(
-              leading: const Icon(Icons.info_outline,
-                  color: AppColors.granate),
-              title: const Text('Información',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate)),
-              children: [
+          // === 7. COMENTARIOS ===
+          ExpansionTile(
+            leading:
+                const Icon(Icons.comment, color: AppColors.granate),
+            title: const Text('Comentarios',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate)),
+            children: [
+              SizedBox(height: 300, child: _comentariosBody()),
+              if (puedeComentar)
+                _comentarioInput()
+              else
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Column(
-                    children: [
-                      _fila(Icons.person, 'Autor',
-                          c.autor.isEmpty ? '—' : c.autor),
-                      _fila(
-                          Icons.category,
-                          'Tipo',
-                          c.tipo == 'original'
-                              ? 'Original'
-                              : 'Adaptación'),
-                      _fila(Icons.graphic_eq, 'Ritmo',
-                          c.ritmo.isEmpty ? '—' : c.ritmo),
-                      _fila(Icons.play_arrow, 'Reproducciones',
-                          '${c.reproducciones}'),
-                      if (c.tags.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8),
-                          child: Wrap(
-                            spacing: 6,
-                            runSpacing: 6,
-                            children: c.tags
-                                .map((t) => Chip(
-                                      label: Text(t,
-                                          style: const TextStyle(
-                                              fontSize: 12)),
-                                      backgroundColor:
-                                          AppColors.dorado
-                                              .withOpacity(0.2),
-                                      padding: EdgeInsets.zero,
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize
-                                              .shrinkWrap,
-                                    ))
-                                .toList(),
-                          ),
-                        ),
-                      if (c.creadorNombre.isNotEmpty)
-                        _fila(
-                            Icons.upload, 'Subido por', c.creadorNombre),
-                    ],
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Solo los miembros del grupo pueden comentar.',
+                    style: TextStyle(
+                        color: AppColors.negro.withOpacity(0.5),
+                        fontStyle: FontStyle.italic),
                   ),
                 ),
-              ],
-            ),
+            ],
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    ),
+  );
+}
 
-            // === 7. COMENTARIOS ===
-            ExpansionTile(
-              leading:
-                  const Icon(Icons.comment, color: AppColors.granate),
-              title: const Text('Comentarios',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate)),
-              children: [
-                SizedBox(height: 300, child: _comentariosBody()),
-                if (puedeComentar)
-                  _comentarioInput()
-                else
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      'Solo los miembros del grupo pueden comentar.',
-                      style: TextStyle(
-                          color: AppColors.negro.withOpacity(0.5),
-                          fontStyle: FontStyle.italic),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+Widget _audioPlayerCompacto(bool puedeDescargar) {
+  if (widget.cancion.audioUrl.isEmpty) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.grisClaro,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.music_off,
+              color: AppColors.granate.withOpacity(0.4), size: 22),
+          const SizedBox(width: 12),
+          Text('Sin audio subido',
+              style: TextStyle(
+                  color: AppColors.negro.withOpacity(0.5),
+                  fontSize: 13)),
+        ],
       ),
     );
   }
 
-  Widget _audioPlayerCompacto(bool puedeDescargar) {
-    if (widget.cancion.audioUrl.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.grisClaro,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.music_off,
-                color: AppColors.granate.withOpacity(0.4), size: 22),
-            const SizedBox(width: 12),
-            Text('Sin audio subido',
-                style: TextStyle(
-                    color: AppColors.negro.withOpacity(0.5),
-                    fontSize: 13)),
-          ],
-        ),
-      );
-    }
-    if (_error != null) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.grisClaro,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: AppColors.granate.withOpacity(0.3), width: 1),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.error_outline,
-                color: AppColors.granate, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_error!,
-                      style: const TextStyle(
-                          color: AppColors.granate,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13)),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Puede que el archivo esté dañado o el enlace sea inválido',
-                    style: TextStyle(
-                        color: AppColors.negro.withOpacity(0.5),
-                        fontSize: 11),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    if (!_listo) {
-      return Container(
-        height: 60,
-        alignment: Alignment.center,
-        child:
-            const CircularProgressIndicator(color: AppColors.granate),
-      );
-    }
+  return ValueListenableBuilder<EstadoPlayer>(
+    valueListenable: _player.estado,
+    builder: (context, estado, _) {
+      final esEsta = estado.cancionId == widget.cancion.id;
+      final playing = esEsta && estado.playing;
+      final cargando = esEsta && estado.cargando;
+      final bucle = estado.modoBucle;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.negro,
-        borderRadius: BorderRadius.circular(30),
-      ),
-      child: Row(
-        children: [
-          StreamBuilder<PlayerState>(
-            stream: _player.playerStateStream,
-            builder: (context, snap) {
-              final playing = snap.data?.playing ?? false;
-              final processing =
-                  snap.data?.processingState == ProcessingState.loading ||
-                      snap.data?.processingState ==
-                          ProcessingState.buffering;
-              return IconButton(
-                iconSize: 36,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: Icon(
-                  processing
-                      ? Icons.hourglass_top
-                      : playing
-                          ? Icons.pause_circle_filled
-                          : Icons.play_circle_filled,
-                  color: AppColors.dorado,
-                ),
-                onPressed: _togglePlay,
-              );
-            },
-          ),
-          const SizedBox(width: 4),
-          Expanded(
-            child: StreamBuilder<Duration>(
-              stream: _player.positionStream,
-              builder: (context, snap) {
-                final pos = snap.data ?? Duration.zero;
-                final dur = _player.duration ?? Duration.zero;
-                return Row(
-                  children: [
-                    Expanded(
-                      child: SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          activeTrackColor: AppColors.dorado,
-                          thumbColor: AppColors.dorado,
-                          thumbShape: const RoundSliderThumbShape(
-                              enabledThumbRadius: 6),
-                          overlayShape: const RoundSliderOverlayShape(
-                              overlayRadius: 12),
-                          inactiveTrackColor:
-                              AppColors.dorado.withOpacity(0.2),
-                          trackHeight: 3,
-                        ),
-                        child: Slider(
-                          value: pos.inSeconds.toDouble().clamp(
-                              0,
-                              dur.inSeconds
-                                  .toDouble()
-                                  .clamp(1, double.infinity)),
-                          max: dur.inSeconds
-                              .toDouble()
-                              .clamp(1, double.infinity),
-                          onChanged: (v) =>
-                              _player.seek(Duration(seconds: v.toInt())),
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${_fmt(pos)} / ${_fmt(dur)}',
-                      style: const TextStyle(
-                          color: AppColors.dorado, fontSize: 11),
-                    ),
-                  ],
-                );
-              },
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.negro,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Row(
+          children: [
+            // Play/pause
+            IconButton(
+              iconSize: 36,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              icon: Icon(
+                cargando
+                    ? Icons.hourglass_top
+                    : playing
+                        ? Icons.pause_circle_filled
+                        : Icons.play_circle_filled,
+                color: AppColors.dorado,
+              ),
+              onPressed: _togglePlay,
             ),
-          ),
-          if (puedeDescargar)
+            const SizedBox(width: 4),
+            // Barra de progreso
+            Expanded(
+              child: esEsta
+                  ? StreamBuilder<Duration>(
+                      stream: _player.player.positionStream,
+                      builder: (context, snap) {
+                        final pos = snap.data ?? Duration.zero;
+                        final dur =
+                            _player.player.duration ?? Duration.zero;
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: SliderTheme(
+                                data:
+                                    SliderTheme.of(context).copyWith(
+                                  activeTrackColor: AppColors.dorado,
+                                  thumbColor: AppColors.dorado,
+                                  thumbShape:
+                                      const RoundSliderThumbShape(
+                                          enabledThumbRadius: 6),
+                                  overlayShape:
+                                      const RoundSliderOverlayShape(
+                                          overlayRadius: 12),
+                                  inactiveTrackColor:
+                                      AppColors.dorado
+                                          .withOpacity(0.2),
+                                  trackHeight: 3,
+                                ),
+                                child: Slider(
+                                  value: pos.inSeconds
+                                      .toDouble()
+                                      .clamp(
+                                          0,
+                                          dur.inSeconds
+                                              .toDouble()
+                                              .clamp(
+                                                  1, double.infinity)),
+                                  max: dur.inSeconds
+                                      .toDouble()
+                                      .clamp(1, double.infinity),
+                                  onChanged: (v) => _player.player
+                                      .seek(Duration(
+                                          seconds: v.toInt())),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${_fmt(pos)} / ${_fmt(dur)}',
+                              style: const TextStyle(
+                                  color: AppColors.dorado,
+                                  fontSize: 11),
+                            ),
+                          ],
+                        );
+                      },
+                    )
+                  : const Center(
+                      child: Text('Toca play para escuchar',
+                          style: TextStyle(
+                              color: AppColors.dorado,
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic)),
+                    ),
+            ),
+            // Bucle
             IconButton(
               iconSize: 22,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
-              icon: const Icon(Icons.download, color: AppColors.dorado),
-              tooltip: 'Descargar audio',
-              onPressed: () => _descargar(widget.cancion.audioUrl),
+              icon: Icon(
+                bucle ? Icons.repeat_one : Icons.repeat,
+                color: bucle
+                    ? AppColors.dorado
+                    : AppColors.dorado.withOpacity(0.5),
+              ),
+              tooltip: 'Modo bucle',
+              onPressed: () => _player.toggleBucle(),
             ),
-          const SizedBox(width: 4),
-        ],
-      ),
-    );
-  }
+            // Descargar
+            if (puedeDescargar)
+              IconButton(
+                iconSize: 22,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                icon:
+                    const Icon(Icons.download, color: AppColors.dorado),
+                tooltip: 'Descargar audio',
+                onPressed: () => _descargar(widget.cancion.audioUrl),
+              ),
+            const SizedBox(width: 4),
+          ],
+        ),
+      );
+    },
+  );
+}
 
   Widget _comentariosBody() {
     return StreamBuilder<List<Comentario>>(

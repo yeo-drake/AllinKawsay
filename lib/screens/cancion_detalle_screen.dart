@@ -13,6 +13,7 @@ import '../theme/colors.dart';
 import '../widgets/visor_numerofonia.dart';
 import '../widgets/watermark_overlay.dart';
 import 'presentacion_screen.dart';
+import 'compartir_imagen_screen.dart';
 
 class CancionDetalleScreen extends StatefulWidget {
   final Cancion cancion;
@@ -198,6 +199,18 @@ Widget build(BuildContext context) {
             ),
           ),
         ),
+IconButton(
+  icon: const Icon(Icons.image),
+  tooltip: 'Compartir como imagen',
+  onPressed: () => Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CompartirImagenScreen(
+        cancion: widget.cancion,
+      ),
+    ),
+  ),
+),
         IconButton(
           icon: const Icon(Icons.share),
           tooltip: 'Compartir',

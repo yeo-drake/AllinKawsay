@@ -17,6 +17,7 @@ import 'cancion_detalle_screen.dart';
 import 'estadisticas_admin_screen.dart';
 import 'gestion_usuarios_screen.dart';
 import 'exportar_respaldo_screen.dart';
+import 'gestion_categorias_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   final String nombreUsuario;
@@ -600,6 +601,24 @@ if (esAdmin)
       MaterialPageRoute(
           builder: (_) =>
               const ExportarRespaldoScreen()),
+    ),
+  ),
+
+// === ADMIN: CATEGORÍAS ===
+if (esAdmin)
+  ListTile(
+    leading: const Icon(Icons.category,
+        color: AppColors.granate),
+    title: const Text('Categorías'),
+    subtitle: const Text(
+        'Agrupa las canciones (Carnaval, Religioso, etc.)'),
+    trailing: const Icon(Icons.chevron_right,
+        color: AppColors.dorado),
+    onTap: () => Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (_) =>
+              const GestionCategoriasScreen()),
     ),
   ),
 

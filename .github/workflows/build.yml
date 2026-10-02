@@ -42,19 +42,19 @@ jobs:
           cp android_config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           cp firebase/google-services.json android/app/google-services.json
 
+          # Copiar file_paths.xml para FileProvider
+          mkdir -p android/app/src/main/res/xml
+          cp android_config/file_paths.xml android/app/src/main/res/xml/file_paths.xml
+
       - name: Aplicar MainActivity custom
         run: |
           if [ -f "android_config/MainActivity.kt" ]; then
-            # Borrar cualquier MainActivity.java o .kt que haya generado Flutter
             find android/app/src/main -name "MainActivity.java" -delete || true
             find android/app/src/main -name "MainActivity.kt" -delete || true
-
-            # Crear carpeta y copiar el nuestro
             mkdir -p android/app/src/main/kotlin/com/sikuris/sikuris_app
             cp android_config/MainActivity.kt \
               android/app/src/main/kotlin/com/sikuris/sikuris_app/MainActivity.kt
             echo "✅ MainActivity custom copiado"
-            ls -la android/app/src/main/kotlin/com/sikuris/sikuris_app/
           fi
 
       - name: Configurar keystore de release

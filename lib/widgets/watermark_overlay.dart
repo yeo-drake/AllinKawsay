@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
 
 class WatermarkOverlay extends StatelessWidget {
   final Widget child;
@@ -22,18 +21,12 @@ class WatermarkOverlay extends StatelessWidget {
           child: Center(
             child: Opacity(
               opacity: opacity,
-              child: ColorFiltered(
-                // Convierte el logo a silueta dorada (las zonas blancas
-                // se vuelven transparentes, las oscuras toman el color).
-                colorFilter: ColorFilter.mode(
-                  AppColors.dorado,
-                  BlendMode.srcIn,
-                ),
+              child: ClipOval(
                 child: Image.asset(
                   'assets/logo.png',
                   width: size,
                   height: size,
-                  fit: BoxFit.contain,
+                  fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               ),

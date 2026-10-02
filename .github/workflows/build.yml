@@ -42,14 +42,21 @@ jobs:
           cp android_config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           cp firebase/google-services.json android/app/google-services.json
 
+      - name: Aplicar MainActivity custom
+        run: |
+          if [ -f "android_config/MainActivity.kt" ]; then
+            mkdir -p android/app/src/main/kotlin/com/sikuris/sikuris_app
+            cp android_config/MainActivity.kt \
+              android/app/src/main/kotlin/com/sikuris/sikuris_app/MainActivity.kt
+            echo "✅ MainActivity custom copiado"
+          fi
+
       - name: Configurar keystore de release
         run: |
           if [ -f "android_config/sikuris.keystore" ]; then
             cp android_config/sikuris.keystore android/app/sikuris.keystore
             cp android_config/keystore.properties android/keystore.properties
             echo "✅ Keystore de release configurado"
-          else
-            echo "⚠️ No hay keystore, se usará firma de debug"
           fi
 
       - name: Preparar assets
@@ -57,7 +64,6 @@ jobs:
           mkdir -p assets
           if [ -f "android_config/icono.png" ]; then
             cp android_config/icono.png assets/logo.png
-            echo "✅ Logo copiado a assets/logo.png"
           fi
 
       - name: Generar íconos del lanzador
@@ -78,7 +84,6 @@ jobs:
               android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
             $CONVERT android_config/icono.png -resize 192x192 \
               android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-            echo "✅ Íconos generados"
           fi
 
       - name: Get dependencies
@@ -96,7 +101,6 @@ jobs:
             echo "⚠️ APK muy pequeño"
             exit 1
           fi
-          echo "✅ APK OK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

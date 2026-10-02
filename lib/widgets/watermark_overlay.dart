@@ -14,22 +14,22 @@ class WatermarkOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(
+      // StackFit.expand obliga a TODOS los hijos no-posicionados a
+      // ocupar el mismo tamaño que el Stack. Esto evita que el
+      // ListView se expanda indefinidamente.
+      fit: StackFit.expand,
       children: [
-        // El child va PRIMERO (define el tamaño del Stack)
         child,
-        // Logo encima, ocupando todo el Stack
-        Positioned.fill(
-          child: IgnorePointer(
+        IgnorePointer(
+          child: Center(
             child: Opacity(
               opacity: opacity,
-              child: Center(
-                child: Image.asset(
-                  'assets/logo.png',
-                  width: size,
-                  height: size,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
+              child: Image.asset(
+                'assets/logo.png',
+                width: size,
+                height: size,
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
               ),
             ),
           ),

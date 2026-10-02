@@ -1,7 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../services/descarga_service.dart';
 import '../theme/colors.dart';
 
 class FotoFullscreenScreen extends StatefulWidget {
@@ -68,10 +68,62 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
   }
 
   Future<void> _descargar() async {
-    final uri = Uri.parse(widget.url);
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (_) {}
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.dorado,
+                  strokeWidth: 2.5,
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Descargando...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
+
+    final nombre = DescargaService.nombreConTimestamp(
+        widget.titulo.isEmpty ? 'foto_allin_kawsay' : widget.titulo,
+        'jpg');
+
+    final resultado =
+        await DescargaService.descargar(widget.url, nombre, 'image/jpeg');
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (resultado != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle,
+                    color: AppColors.dorado),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Guardado en Descargas: $resultado'),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo descargar'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -80,7 +132,6 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Foto
           Positioned.fill(
             child: GestureDetector(
               onDoubleTapDown: _toggleZoom,
@@ -92,10 +143,6 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
                 child: Center(
                   child: CachedNetworkImage(
                     imageUrl: widget.url,
-                    // BoxFit.contain ajusta automáticamente:
-                    // - foto 16:9 en celu vertical → se ve ancha y centrada
-                    // - foto 9:16 en celu vertical → se ve alta y completa
-                    // - al rotar el celu → se reajusta automáticamente
                     fit: BoxFit.contain,
                     placeholder: (_, __) => const Center(
                       child: CircularProgressIndicator(
@@ -173,7 +220,7 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
             ),
           ),
 
-          // Hint para hacer zoom (solo si no está zoomeado)
+          // Hint para hacer zoom
           if (!_zoomActivo)
             Positioned(
               bottom: 32,

@@ -16,69 +16,54 @@ class VisorNumerofonia extends StatelessWidget {
     final validas = estrofas.where((e) => !e.vacia).toList();
     if (validas.isEmpty) return const SizedBox.shrink();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Medida natural de las celdas
-        const cellW = 26.0;
-        const etiquetaW = 20.0;
-
-        // Ancho máximo natural (sin escalar)
-        double anchoMax = 0;
-        for (final e in validas) {
-          double ancho = etiquetaW;
-          for (int i = 0; i < e.columnas; i++) {
-            final v7 = e.fila7[i];
-            final v6 = e.fila6[i];
-            final len = v7.length > v6.length ? v7.length : v6.length;
-            ancho += len == 0 ? cellW : (len * 8.5 + 10.0);
-          }
-          if (e.bis) ancho += 40;
-          if (ancho > anchoMax) anchoMax = ancho;
-        }
-
-        final disponible = constraints.maxWidth;
-        final factor = (disponible / anchoMax).clamp(0.0, 1.0);
-
-        return Transform.scale(
-          scale: factor,
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: anchoMax,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (int i = 0; i < validas.length; i++) ...[
-                  _estrofa(validas[i]),
-                  if (i < validas.length - 1) SizedBox(height: 6 * escala),
-                ],
-              ],
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (int i = 0; i < validas.length; i++) ...[
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.topLeft,
+            child: _estrofa(validas[i]),
           ),
-        );
-      },
+          if (i < validas.length - 1) const SizedBox(height: 8),
+        ],
+      ],
     );
   }
 
   Widget _estrofa(EstrofaNumerofonia e) {
+    // Calcular un ancho único de columna basado en el contenido más largo
+    double anchoCol = 22.0;
+    for (int i = 0; i < e.columnas; i++) {
+      final len7 = e.fila7[i].length;
+      final len6 = e.fila6[i].length;
+      final maxLen = len7 > len6 ? len7 : len6;
+      final ancho = maxLen == 0 ? 22.0 : (maxLen * 8.5 + 8.0);
+      if (ancho > anchoCol) anchoCol = ancho;
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.blanco,
-        border: Border.all(color: AppColors.negro, width: 1),
+        border: Border.all(color: AppColors.negro, width: 1.2),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Etiquetas 7 / 6
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _etiqueta('7'),
-              Container(height: 1, color: AppColors.negro),
+              Container(height: 1.2, color: AppColors.negro),
               _etiqueta('6'),
             ],
           ),
+          // Columnas
           for (int i = 0; i < e.columnas; i++)
             Container(
+              width: anchoCol,
               decoration: const BoxDecoration(
                 border: Border(
                   left: BorderSide(color: AppColors.negro, width: 1),
@@ -93,22 +78,23 @@ class VisorNumerofonia extends StatelessWidget {
                 ],
               ),
             ),
+          // BIS (integrado como otra columna)
           if (e.bis)
             Container(
-              padding: EdgeInsets.symmetric(
-                  horizontal: 6 * escala, vertical: 3 * escala),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.dorado,
-                border: const Border(
-                  left: BorderSide(color: AppColors.negro, width: 1),
+                border: Border(
+                  left: BorderSide(color: AppColors.negro, width: 1.2),
                 ),
               ),
-              child: Text(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              alignment: Alignment.center,
+              child: const Text(
                 'BIS',
                 style: TextStyle(
                   color: AppColors.negro,
                   fontWeight: FontWeight.bold,
-                  fontSize: 11 * escala,
+                  fontSize: 11,
                   letterSpacing: 1,
                 ),
               ),
@@ -120,35 +106,30 @@ class VisorNumerofonia extends StatelessWidget {
 
   Widget _etiqueta(String t) {
     return Container(
-      width: 20 * escala,
-      height: 26 * escala,
+      width: 20,
+      height: 24,
       alignment: Alignment.center,
       child: Text(
         t,
-        style: TextStyle(
+        style: const TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 12 * escala,
+          fontSize: 12,
         ),
       ),
     );
   }
 
   Widget _celda(String contenido) {
-    final ancho = contenido.isEmpty
-        ? 24.0 * escala
-        : (contenido.length * 8.5 + 10.0) * escala;
-
     return Container(
-      width: ancho,
-      height: 26 * escala,
+      height: 24,
       alignment: Alignment.center,
       child: Text(
         contenido,
-        style: TextStyle(
+        style: const TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 12 * escala,
+          fontSize: 12,
           fontFamily: 'monospace',
         ),
       ),

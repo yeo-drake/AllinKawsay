@@ -6,6 +6,7 @@ class Usuario {
   final String email;
   final String rol;
   final String fotoUrl;
+  final bool baneado;
   final List<String> favoritos;
   final Map<String, String> notasPorCancion;
   final Map<String, String> notasPorEvento;
@@ -18,6 +19,7 @@ class Usuario {
     required this.email,
     required this.rol,
     this.fotoUrl = '',
+    this.baneado = false,
     this.favoritos = const [],
     this.notasPorCancion = const {},
     this.notasPorEvento = const {},
@@ -29,11 +31,13 @@ class Usuario {
   bool get esMiembro => rol == 'miembro' || rol == 'admin';
   bool get esPublico => rol == 'publico';
 
-  bool get puedeDescargar => esAdmin || rol == 'miembro';
-  bool get puedeComentar => esAdmin || rol == 'miembro';
-  bool get puedeSubir => esAdmin;
+  bool get puedeDescargar =>
+      !baneado && (esAdmin || rol == 'miembro');
+  bool get puedeComentar => !baneado && (esAdmin || rol == 'miembro');
+  bool get puedeSubir => !baneado && esAdmin;
 
   String get rolNombre {
+    if (baneado) return 'SUSPENDIDO';
     switch (rol) {
       case 'admin':
         return 'ADMINISTRADOR';
@@ -69,6 +73,7 @@ class Usuario {
       email: d['email'] ?? '',
       rol: d['rol'] ?? 'publico',
       fotoUrl: d['fotoUrl'] ?? '',
+      baneado: d['baneado'] == true,
       favoritos: List<String>.from(d['favoritos'] ?? []),
       notasPorCancion: _parseMap(d['notasPorCancion']),
       notasPorEvento: _parseMap(d['notasPorEvento']),
@@ -82,6 +87,7 @@ class Usuario {
         'email': email,
         'rol': rol,
         'fotoUrl': fotoUrl,
+        'baneado': baneado,
         'favoritos': favoritos,
         'notasPorCancion': notasPorCancion,
         'notasPorEvento': notasPorEvento,

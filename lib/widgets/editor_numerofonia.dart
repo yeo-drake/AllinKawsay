@@ -199,6 +199,7 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Header
           Row(
             children: [
               Text(
@@ -225,81 +226,44 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
             ],
           ),
           const SizedBox(height: 6),
+          // Tabla (todo el ancho, sin scroll)
+          _tabla(e),
+          const SizedBox(height: 8),
+          // Botones debajo
           Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.blanco,
-                      border:
-                          Border.all(color: AppColors.negro, width: 1.2),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Column(
-                          children: [
-                            _etiqueta('7'),
-                            Container(height: 1.2, color: AppColors.negro),
-                            _etiqueta('6'),
-                          ],
-                        ),
-                        for (int i = 0; i < e.columnas; i++)
-                          _columna(e, i),
-                      ],
-                    ),
+                child: OutlinedButton.icon(
+                  onPressed: _agregarColumna,
+                  icon: const Icon(Icons.add, size: 16),
+                  label: const Text('Columna',
+                      style: TextStyle(fontSize: 12)),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    minimumSize: const Size(0, 36),
+                    foregroundColor: AppColors.granate,
                   ),
                 ),
               ),
               const SizedBox(width: 6),
-              InkWell(
-                onTap: _agregarColumna,
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.dorado.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                    border:
-                        Border.all(color: AppColors.granate, width: 1.5),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _toggleBis,
+                  icon: Icon(
+                    e.bis ? Icons.check_circle : Icons.circle_outlined,
+                    size: 16,
                   ),
-                  child: const Icon(Icons.add,
-                      color: AppColors.granate, size: 22),
-                ),
-              ),
-              const SizedBox(width: 6),
-              InkWell(
-                onTap: _toggleBis,
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: e.bis
-                        ? AppColors.granate
-                        : AppColors.negro.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: e.bis
-                          ? AppColors.dorado
-                          : AppColors.negro.withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Text(
+                  label: Text(
                     e.bis ? 'BIS ON' : 'BIS OFF',
-                    style: TextStyle(
-                      color: e.bis
-                          ? AppColors.dorado
-                          : AppColors.negro.withOpacity(0.5),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      letterSpacing: 0.8,
-                    ),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    minimumSize: const Size(0, 36),
+                    foregroundColor:
+                        e.bis ? AppColors.dorado : AppColors.granate,
+                    backgroundColor:
+                        e.bis ? AppColors.granate : Colors.transparent,
                   ),
                 ),
               ),
@@ -310,51 +274,76 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
     );
   }
 
+  Widget _tabla(EstrofaNumerofonia e) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.blanco,
+        border: Border.all(color: AppColors.negro, width: 1.2),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Etiquetas 7 / 6
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _etiqueta('7'),
+              Container(height: 1.2, color: AppColors.negro),
+              _etiqueta('6'),
+            ],
+          ),
+          // Columnas (cada una ocupa 1/N del ancho disponible)
+          for (int i = 0; i < e.columnas; i++)
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  border: Border(
+                    left: BorderSide(color: AppColors.negro, width: 1),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _CeldaEditable(
+                      key: ValueKey('c7_${widget.numero}_$i'),
+                      valorInicial: e.fila7[i],
+                      onChanged: (v) {
+                        e.fila7[i] = v;
+                        widget.onChanged();
+                      },
+                      onLongPress: () => _eliminarColumna(i),
+                    ),
+                    Container(height: 1, color: AppColors.negro),
+                    _CeldaEditable(
+                      key: ValueKey('c6_${widget.numero}_$i'),
+                      valorInicial: e.fila6[i],
+                      onChanged: (v) {
+                        e.fila6[i] = v;
+                        widget.onChanged();
+                      },
+                      onLongPress: () => _eliminarColumna(i),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _etiqueta(String t) {
     return Container(
-      width: 28,
-      height: 40,
+      width: 24,
+      height: 42,
       alignment: Alignment.center,
       child: Text(
         t,
         style: const TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 15,
+          fontSize: 14,
         ),
-      ),
-    );
-  }
-
-  Widget _columna(EstrofaNumerofonia e, int index) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          left: BorderSide(color: AppColors.negro, width: 1.2),
-        ),
-      ),
-      child: Column(
-        children: [
-          _CeldaEditable(
-            key: ValueKey('c7_${widget.numero}_$index'),
-            valorInicial: e.fila7[index],
-            onChanged: (v) {
-              e.fila7[index] = v;
-              widget.onChanged();
-            },
-            onLongPress: () => _eliminarColumna(index),
-          ),
-          Container(height: 1.2, color: AppColors.negro),
-          _CeldaEditable(
-            key: ValueKey('c6_${widget.numero}_$index'),
-            valorInicial: e.fila6[index],
-            onChanged: (v) {
-              e.fila6[index] = v;
-              widget.onChanged();
-            },
-            onLongPress: () => _eliminarColumna(index),
-          ),
-        ],
       ),
     );
   }
@@ -411,36 +400,38 @@ class _CeldaEditableState extends State<_CeldaEditable> {
 
   @override
   Widget build(BuildContext context) {
-    final valor = _ctrl.text;
-    final ancho = valor.isEmpty
-        ? 55.0
-        : (valor.length * 11.0 + 24.0).clamp(55.0, 130.0);
-
     return GestureDetector(
       onLongPress: widget.onLongPress,
       child: SizedBox(
-        width: ancho,
-        height: 40,
-        child: TextField(
-          controller: _ctrl,
-          textAlign: TextAlign.center,
-          maxLength: 10,
-          style: const TextStyle(
-            fontFamily: 'monospace',
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: AppColors.negro,
+        height: 42,
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: TextField(
+                controller: _ctrl,
+                textAlign: TextAlign.center,
+                maxLength: 12,
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.negro,
+                ),
+                decoration: const InputDecoration(
+                  counterText: '',
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  hintText: '',
+                ),
+                onChanged: _onChanged,
+              ),
+            ),
           ),
-          decoration: const InputDecoration(
-            counterText: '',
-            isDense: true,
-            contentPadding: EdgeInsets.zero,
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            hintText: '',
-          ),
-          onChanged: _onChanged,
         ),
       ),
     );

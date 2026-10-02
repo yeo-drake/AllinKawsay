@@ -8,6 +8,7 @@ import '../services/usuario_service.dart';
 import '../theme/colors.dart';
 import '../widgets/watermark_overlay.dart';
 import 'agregar_recuerdo_screen.dart';
+import 'foto_fullscreen_screen.dart';
 
 class RecuerdosScreen extends StatefulWidget {
   const RecuerdosScreen({super.key});
@@ -92,34 +93,15 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
     }
   }
 
-  void _verFoto(String url) {
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: AppColors.negro,
-        insetPadding: const EdgeInsets.all(8),
-        child: Stack(
-          children: [
-            InteractiveViewer(
-              child: CachedNetworkImage(
-                imageUrl: url,
-                memCacheWidth: 1200,
-                fit: BoxFit.contain,
-                placeholder: (_, __) => const Center(
-                  child: CircularProgressIndicator(
-                      color: AppColors.dorado),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: AppColors.dorado),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ],
+  void _verFoto(String url,
+      {String titulo = '', bool puedeDescargar = false}) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FotoFullscreenScreen(
+          url: url,
+          titulo: titulo,
+          puedeDescargar: puedeDescargar,
         ),
       ),
     );
@@ -235,7 +217,6 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                       fontSize: 18,
                                       color: AppColors.granate)),
                             ),
-                            // Nota personal
                             IconButton(
                               icon: Icon(
                                 nota.isEmpty
@@ -327,7 +308,12 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                 return Stack(
                                   children: [
                                     GestureDetector(
-                                      onTap: () => _verFoto(r.fotos[j]),
+                                      onTap: () => _verFoto(
+                                        r.fotos[j],
+                                        titulo:
+                                            '${r.titulo} (${j + 1}/${r.fotos.length})',
+                                        puedeDescargar: puedeDescargar,
+                                      ),
                                       child: ClipRRect(
                                         borderRadius:
                                             BorderRadius.circular(12),
@@ -391,7 +377,6 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                             ),
                           ),
                         ],
-                        // Nota visible
                         if (nota.isNotEmpty) ...[
                           const SizedBox(height: 12),
                           Container(

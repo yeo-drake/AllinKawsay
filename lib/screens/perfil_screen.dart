@@ -8,6 +8,7 @@ import '../services/storage_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
 import '../widgets/social_buttons.dart';
+import 'estadisticas_admin_screen.dart';
 import 'gestion_usuarios_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -181,9 +182,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       child: CircleAvatar(
                         radius: 48,
                         backgroundColor: AppColors.granate,
-                        backgroundImage: (u?.fotoUrl.isNotEmpty ?? false)
-                            ? NetworkImage(u!.fotoUrl)
-                            : null,
+                        backgroundImage:
+                            (u?.fotoUrl.isNotEmpty ?? false)
+                                ? NetworkImage(u!.fotoUrl)
+                                : null,
                         child: (u?.fotoUrl.isEmpty ?? true)
                             ? const Icon(Icons.person,
                                 size: 56, color: AppColors.dorado)
@@ -195,7 +197,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: _subiendoFoto ? null : () => _cambiarFoto(u),
+                          onTap: _subiendoFoto
+                              ? null
+                              : () => _cambiarFoto(u),
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
@@ -254,6 +258,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              // === BADGE DE ROL ===
               Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
@@ -284,9 +289,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
               const SizedBox(height: 20),
 
-              // === ESTADÍSTICAS ===
+              // === ESTADÍSTICAS PERSONALES ===
               if (u != null)
-                _estadisticas(u.uid, esAdmin)
+                _estadisticasPersonales(u.uid)
               else
                 const SizedBox.shrink(),
 
@@ -297,7 +302,25 @@ class _PerfilScreenState extends State<PerfilScreen> {
               const SocialButtons(),
               const Divider(),
 
-              // === GESTIÓN DE USUARIOS ===
+              // === ADMIN: ESTADÍSTICAS DEL GRUPO ===
+              if (esAdmin)
+                ListTile(
+                  leading: const Icon(Icons.insights,
+                      color: AppColors.granate),
+                  title: const Text('Estadísticas del grupo'),
+                  subtitle: const Text(
+                      'Totales, top canciones y usuarios por rol'),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: AppColors.dorado),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) =>
+                            const EstadisticasAdminScreen()),
+                  ),
+                ),
+
+              // === ADMIN: GESTIÓN DE USUARIOS ===
               if (esAdmin)
                 ListTile(
                   leading: const Icon(Icons.people,
@@ -389,7 +412,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  Widget _estadisticas(String uid, bool esAdmin) {
+  Widget _estadisticasPersonales(String uid) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Card(
@@ -424,8 +447,8 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: FutureBuilder<int>(
-                      future:
-                          CancionService().totalReproduccionesDeUsuario(uid),
+                      future: CancionService()
+                          .totalReproduccionesDeUsuario(uid),
                       builder: (context, snap) {
                         return _statCard(
                           Icons.play_arrow,

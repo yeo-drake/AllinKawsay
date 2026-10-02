@@ -12,16 +12,8 @@ class TarjetaCompartible extends StatelessWidget {
     return Container(
       width: 800,
       padding: const EdgeInsets.all(32),
-      decoration: const BoxDecoration(
-        color: AppColors.blanco,
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [AppColors.blanco, AppColors.grisClaro],
-        ),
-      ),
+      color: AppColors.blanco,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header
@@ -75,7 +67,6 @@ class TarjetaCompartible extends StatelessWidget {
           Container(height: 2, color: AppColors.dorado),
           const SizedBox(height: 20),
 
-          // Título
           Text(
             cancion.titulo,
             textAlign: TextAlign.center,
@@ -112,7 +103,6 @@ class TarjetaCompartible extends StatelessWidget {
             ),
           ],
 
-          // Numerofonía
           if (cancion.tieneNumerofonia) ...[
             const SizedBox(height: 24),
             VisorNumerofonia(
@@ -121,7 +111,6 @@ class TarjetaCompartible extends StatelessWidget {
             ),
           ],
 
-          // Letra
           if (cancion.letra.isNotEmpty) ...[
             const SizedBox(height: 24),
             const Text(
@@ -158,7 +147,6 @@ class TarjetaCompartible extends StatelessWidget {
           Container(height: 1, color: AppColors.dorado),
           const SizedBox(height: 8),
 
-          // Footer
           const Text(
             'Compartido desde la app oficial',
             textAlign: TextAlign.center,

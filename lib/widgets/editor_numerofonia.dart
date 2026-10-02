@@ -56,9 +56,9 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
         border: Border.all(color: AppColors.dorado, width: 1),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Título (sin recuadro)
           const Center(
             child: Text(
               'NUMEROFONÍA',
@@ -71,7 +71,6 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
             ),
           ),
           const SizedBox(height: 4),
-          // Autor / Ritmo
           Row(
             children: [
               Expanded(
@@ -97,8 +96,9 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
               ),
             ],
           ),
-          const Divider(height: 16),
-          // Lista de estrofas
+          const SizedBox(height: 8),
+          const Divider(height: 1),
+          const SizedBox(height: 8),
           for (int i = 0; i < _estrofas.length; i++)
             _EstrofaEditor(
               key: ValueKey('estrofa_$i'),
@@ -109,7 +109,6 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
               onChanged: _notificar,
             ),
           const SizedBox(height: 4),
-          // Botón añadir estrofa
           OutlinedButton.icon(
             onPressed: _agregarEstrofa,
             icon: const Icon(Icons.add),
@@ -147,6 +146,10 @@ class _EstrofaEditor extends StatefulWidget {
 }
 
 class _EstrofaEditorState extends State<_EstrofaEditor> {
+  static const double cellW = 64.0;
+  static const double cellH = 42.0;
+  static const double labelW = 26.0;
+
   void _agregarColumna() {
     setState(() => widget.estrofa.agregarColumna());
     widget.onChanged();
@@ -198,9 +201,9 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
             color: AppColors.negro.withOpacity(0.3), width: 1),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
           Row(
             children: [
               Text(
@@ -227,10 +230,44 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
             ],
           ),
           const SizedBox(height: 6),
-          // Tabla
-          _tabla(e),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.blanco,
+                border: Border.all(color: AppColors.negro, width: 1.2),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: cellH,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _label('7'),
+                        for (int i = 0; i < e.columnas; i++)
+                          _celda(e.fila7, i),
+                      ],
+                    ),
+                  ),
+                  Container(height: 1.2, color: AppColors.negro),
+                  SizedBox(
+                    height: cellH,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _label('6'),
+                        for (int i = 0; i < e.columnas; i++)
+                          _celda(e.fila6, i),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 8),
-          // Botones
           Row(
             children: [
               Expanded(
@@ -275,81 +312,16 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
     );
   }
 
-  Widget _tabla(EstrofaNumerofonia e) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const etiquetaW = 26.0;
-        final cols = e.columnas;
-        final disponible = constraints.maxWidth - etiquetaW;
-        final anchoCol = cols > 0 ? disponible / cols : 0.0;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.blanco,
-            border: Border.all(color: AppColors.negro, width: 1.2),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Etiquetas 7 y 6
-              SizedBox(
-                width: etiquetaW,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _etiqueta('7'),
-                    Container(height: 1.2, color: AppColors.negro),
-                    _etiqueta('6'),
-                  ],
-                ),
-              ),
-              // Columnas
-              for (int i = 0; i < cols; i++)
-                SizedBox(
-                  width: anchoCol,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      border: Border(
-                        left: BorderSide(color: AppColors.negro, width: 1),
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _CeldaEditable(
-                          key: ValueKey('c7_${widget.numero}_$i'),
-                          valorInicial: e.fila7[i],
-                          onChanged: (v) {
-                            e.fila7[i] = v;
-                            widget.onChanged();
-                          },
-                          onLongPress: () => _eliminarColumna(i),
-                        ),
-                        Container(height: 1.2, color: AppColors.negro),
-                        _CeldaEditable(
-                          key: ValueKey('c6_${widget.numero}_$i'),
-                          valorInicial: e.fila6[i],
-                          onChanged: (v) {
-                            e.fila6[i] = v;
-                            widget.onChanged();
-                          },
-                          onLongPress: () => _eliminarColumna(i),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _etiqueta(String t) {
+  Widget _label(String t) {
     return Container(
-      height: 44,
+      width: labelW,
+      height: cellH,
       alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        border: Border(
+          right: BorderSide(color: AppColors.negro, width: 1.2),
+        ),
+      ),
       child: Text(
         t,
         style: const TextStyle(
@@ -357,6 +329,29 @@ class _EstrofaEditorState extends State<_EstrofaEditor> {
           fontWeight: FontWeight.bold,
           fontSize: 14,
         ),
+      ),
+    );
+  }
+
+  Widget _celda(List<String> fila, int index) {
+    return Container(
+      width: cellW,
+      height: cellH,
+      decoration: const BoxDecoration(
+        border: Border(
+          right: BorderSide(color: AppColors.negro, width: 0.8),
+        ),
+      ),
+      child: _CeldaEditable(
+        key: ValueKey('celda_${widget.numero}_${fila.hashCode}_$index'),
+        valorInicial: index < fila.length ? fila[index] : '',
+        onChanged: (v) {
+          if (index < fila.length) {
+            fila[index] = v;
+            widget.onChanged();
+          }
+        },
+        onLongPress: () => _eliminarColumna(index),
       ),
     );
   }
@@ -415,30 +410,27 @@ class _CeldaEditableState extends State<_CeldaEditable> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onLongPress: widget.onLongPress,
-      child: SizedBox(
-        height: 44,
-        child: Center(
-          child: TextField(
-            controller: _ctrl,
-            textAlign: TextAlign.center,
-            maxLength: 15,
-            style: const TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-              color: AppColors.negro,
-            ),
-            decoration: const InputDecoration(
-              counterText: '',
-              isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 2),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              hintText: '',
-            ),
-            onChanged: _onChanged,
+      child: Center(
+        child: TextField(
+          controller: _ctrl,
+          textAlign: TextAlign.center,
+          maxLength: 15,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: AppColors.negro,
           ),
+          decoration: const InputDecoration(
+            counterText: '',
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 2),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            hintText: '',
+          ),
+          onChanged: _onChanged,
         ),
       ),
     );

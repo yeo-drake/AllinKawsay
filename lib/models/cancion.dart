@@ -16,6 +16,7 @@ class Cancion {
   final String videoUrl;
   final String descripcion;
   final List<String> tags;
+  final String categoriaId;
   final int reproducciones;
   final String creadoPor;
   final String creadorNombre;
@@ -36,6 +37,7 @@ class Cancion {
     this.videoUrl = '',
     required this.descripcion,
     required this.tags,
+    this.categoriaId = '',
     this.reproducciones = 0,
     required this.creadoPor,
     required this.creadorNombre,
@@ -45,6 +47,7 @@ class Cancion {
   bool get tieneNumerofonia => estrofas.any((e) => !e.vacia);
   bool get tieneNumerofoniaString => numerofonia.isNotEmpty;
   bool get tieneVideo => videoUrl.isNotEmpty;
+  bool get tieneCategoria => categoriaId.isNotEmpty;
 
   factory Cancion.fromDoc(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
@@ -69,6 +72,7 @@ class Cancion {
       videoUrl: d['videoUrl'] ?? '',
       descripcion: d['descripcion'] ?? '',
       tags: List<String>.from(d['tags'] ?? []),
+      categoriaId: d['categoriaId'] ?? '',
       reproducciones: (d['reproducciones'] ?? 0) is int
           ? d['reproducciones'] ?? 0
           : 0,
@@ -92,6 +96,7 @@ class Cancion {
         'videoUrl': videoUrl,
         'descripcion': descripcion,
         'tags': tags,
+        'categoriaId': categoriaId,
         'reproducciones': reproducciones,
         'creadoPor': creadoPor,
         'creadorNombre': creadorNombre,

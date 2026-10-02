@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'models/usuario.dart';
+import 'services/auth_service.dart';
 import 'services/screen_security_service.dart';
 import 'services/usuario_service.dart';
 import 'screens/login_screen.dart';
@@ -155,7 +156,6 @@ class SikurisApp extends StatelessWidget {
         surface: AppColors.fondoCardOscuro,
         onSurface: AppColors.textoOscuroClaro,
         onSurfaceVariant: AppColors.textoOscuroClaro,
-        // Forzamos a que los textos sobre cards sean claros
         background: AppColors.fondoOscuro,
         onBackground: AppColors.textoOscuroClaro,
         error: Color(0xFFCF6679),
@@ -238,6 +238,7 @@ class SikurisApp extends StatelessWidget {
   }
 }
 
+/// Escucha auth + rol + baneo del usuario, y decide qué mostrar
 class _AuthGate extends StatefulWidget {
   const _AuthGate();
 
@@ -275,8 +276,8 @@ class _AuthGateState extends State<_AuthGate> {
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
+      builder: (context, authSnap) {
+        if (authSnap.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             backgroundColor: AppColors.negro,
             body: Center(
@@ -284,17 +285,113 @@ class _AuthGateState extends State<_AuthGate> {
             ),
           );
         }
-        if (snap.hasData && snap.data != null) {
-          final u = snap.data!;
-          return HomeScreen(
-            nombreUsuario: u.displayName ??
-                u.email?.split('@').first ??
-                'Usuario',
+
+        if (authSnap.hasData && authSnap.data != null) {
+          // Usuario logueado → verificar si está baneado
+          return StreamBuilder<Usuario?>(
+            stream: UsuarioService().miUsuario(),
+            builder: (context, userSnap) {
+              // Mientras carga el usuario
+              if (userSnap.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  backgroundColor: AppColors.negro,
+                  body: Center(
+                    child: CircularProgressIndicator(
+                        color: AppColors.dorado),
+                  ),
+                );
+              }
+
+              final u = userSnap.data;
+              if (u != null && u.baneado) {
+                return const CuentaSuspendidaScreen();
+              }
+
+              final authUser = authSnap.data!;
+              return HomeScreen(
+                nombreUsuario: authUser.displayName ??
+                    authUser.email?.split('@').first ??
+                    'Usuario',
+              );
+            },
           );
         }
+
         ScreenSecurityService.disable();
         return const LoginScreen();
       },
+    );
+  }
+}
+
+class CuentaSuspendidaScreen extends StatelessWidget {
+  const CuentaSuspendidaScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.negro,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withOpacity(0.15),
+                    border: Border.all(color: Colors.red, width: 3),
+                  ),
+                  child: const Icon(Icons.block,
+                      size: 60, color: Colors.red),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Cuenta suspendida',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.dorado,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Tu acceso a la app fue suspendido por un '
+                  'administrador del grupo.\n\n'
+                  'Si crees que es un error, contactate con '
+                  'la directiva.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.dorado.withOpacity(0.7),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.logout),
+                    label: const Text('CERRAR SESIÓN'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.dorado,
+                      side: const BorderSide(color: AppColors.dorado),
+                    ),
+                    onPressed: () async {
+                      await AuthService().logout();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

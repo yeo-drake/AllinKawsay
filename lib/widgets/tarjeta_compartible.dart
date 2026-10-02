@@ -106,9 +106,10 @@ class TarjetaCompartible extends StatelessWidget {
           if (cancion.tieneNumerofonia) ...[
             const SizedBox(height: 24),
             VisorNumerofonia(
-              estrofas: cancion.estrofas,
-              escala: 1.2,
-            ),
+  estrofas: cancion.estrofas,
+  escala: 1.2,
+  ajustarAncho: true,
+),
           ],
 
           if (cancion.letra.isNotEmpty) ...[

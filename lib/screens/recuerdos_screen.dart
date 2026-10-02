@@ -59,6 +59,39 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
     );
   }
 
+  Future<void> _editarNota(Recuerdo r) async {
+    final ctrl = TextEditingController(
+      text: _usuario?.notaRecuerdo(r.id) ?? '',
+    );
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Nota: ${r.titulo}'),
+        content: TextField(
+          controller: ctrl,
+          maxLines: 5,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Ej: yo estoy en la tercera foto, qué lindo día...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Guardar')),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await UsuarioService().guardarNotaRecuerdo(r.id, ctrl.text);
+      await _cargarUsuario();
+    }
+  }
+
   void _verFoto(String url) {
     showDialog(
       context: context,
@@ -185,6 +218,7 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
               itemCount: lista.length,
               itemBuilder: (context, i) {
                 final r = lista[i];
+                final nota = _usuario?.notaRecuerdo(r.id) ?? '';
                 return Card(
                   margin: const EdgeInsets.only(bottom: 16),
                   child: Padding(
@@ -200,6 +234,19 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
                                       color: AppColors.granate)),
+                            ),
+                            // Nota personal
+                            IconButton(
+                              icon: Icon(
+                                nota.isEmpty
+                                    ? Icons.sticky_note_2_outlined
+                                    : Icons.sticky_note_2,
+                                color: nota.isEmpty
+                                    ? AppColors.negro.withOpacity(0.4)
+                                    : AppColors.dorado,
+                              ),
+                              tooltip: 'Mi nota personal',
+                              onPressed: () => _editarNota(r),
                             ),
                             if (esAdmin)
                               PopupMenuButton<String>(
@@ -341,6 +388,40 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                                   ],
                                 );
                               },
+                            ),
+                          ),
+                        ],
+                        // Nota visible
+                        if (nota.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.dorado.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: AppColors.dorado
+                                      .withOpacity(0.5)),
+                            ),
+                            child: Row(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                const Icon(Icons.sticky_note_2,
+                                    size: 16, color: AppColors.granate),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    nota,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontStyle: FontStyle.italic,
+                                      color: AppColors.negro,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],

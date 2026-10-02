@@ -45,7 +45,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     super.dispose();
   }
 
-  /// Reproduce/pausa usando el player global. Suma 1 reproducción la 1ra vez.
   Future<void> _togglePlay() async {
     await _player.toggle(widget.cancion);
     if (!_reproduccionContada && _player.sonando(widget.cancion.id)) {
@@ -75,17 +74,52 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     }
   }
 
+  Future<void> _abrirVideo(String url) async {
+    if (url.isEmpty) return;
+    final uri = Uri.parse(url);
+    try {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No se pudo abrir el video')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _compartir() async {
     final c = widget.cancion;
     final sb = StringBuffer();
     sb.writeln('🎵 *${c.titulo}*');
     if (c.autor.isNotEmpty) sb.writeln('✍️ Autor: ${c.autor}');
     if (c.ritmo.isNotEmpty) sb.writeln('🎶 Ritmo: ${c.ritmo}');
+
+    if (c.tieneNumerofonia) {
+      sb.writeln('');
+      sb.writeln('📊 *Numerofonía:*');
+      for (int i = 0; i < c.estrofas.length; i++) {
+        final e = c.estrofas[i];
+        if (e.vacia) continue;
+        sb.writeln('');
+        sb.writeln('Estrofa ${i + 1}${e.bis ? " (BIS)" : ""}:');
+        sb.writeln('7: ${e.fila7.join(" | ")}');
+        sb.writeln('6: ${e.fila6.join(" | ")}');
+      }
+    }
+
     if (c.letra.isNotEmpty) {
       sb.writeln('');
       sb.writeln('📝 Letra:');
       sb.writeln(c.letra);
     }
+
     sb.writeln('');
     sb.writeln('— Enviado desde Allin Kawsay');
 
@@ -147,6 +181,12 @@ Widget build(BuildContext context) {
             await _cargarUsuario();
           },
         ),
+        if (c.tieneVideo)
+          IconButton(
+            icon: const Icon(Icons.video_library),
+            tooltip: 'Ver video',
+            onPressed: () => _abrirVideo(c.videoUrl),
+          ),
         IconButton(
           icon: const Icon(Icons.slideshow),
           tooltip: 'Modo presentación',
@@ -373,6 +413,11 @@ Widget build(BuildContext context) {
                 ),
             ],
           ),
+
+          // === 8. NOTA PERSONAL ===
+          const Divider(),
+          _notaPersonal(),
+
           const SizedBox(height: 24),
         ],
       ),
@@ -418,7 +463,6 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
         ),
         child: Row(
           children: [
-            // Play/pause
             IconButton(
               iconSize: 36,
               padding: EdgeInsets.zero,
@@ -434,7 +478,6 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
               onPressed: _togglePlay,
             ),
             const SizedBox(width: 4),
-            // Barra de progreso
             Expanded(
               child: esEsta
                   ? StreamBuilder<Duration>(
@@ -498,7 +541,6 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
                               fontStyle: FontStyle.italic)),
                     ),
             ),
-            // Bucle
             IconButton(
               iconSize: 22,
               padding: EdgeInsets.zero,
@@ -512,7 +554,6 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
               tooltip: 'Modo bucle',
               onPressed: () => _player.toggleBucle(),
             ),
-            // Descargar
             if (puedeDescargar)
               IconButton(
                 iconSize: 22,
@@ -530,6 +571,104 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
     },
   );
 }
+
+  Widget _notaPersonal() {
+    final textoActual = _usuario?.notaDe(widget.cancion.id) ?? '';
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.sticky_note_2,
+                  color: AppColors.granate),
+              const SizedBox(width: 8),
+              const Text(
+                'Mi nota personal',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.granate,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.edit,
+                    color: AppColors.granate, size: 20),
+                onPressed: _editarNota,
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          if (textoActual.isEmpty)
+            Text(
+              'Toca el lápiz para escribir una nota privada '
+              '(solo la ves vos)',
+              style: TextStyle(
+                color: AppColors.negro.withOpacity(0.5),
+                fontStyle: FontStyle.italic,
+                fontSize: 13,
+              ),
+            )
+          else
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.dorado.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                    color: AppColors.dorado.withOpacity(0.5)),
+              ),
+              child: Text(
+                textoActual,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: AppColors.negro,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _editarNota() async {
+    final ctrl = TextEditingController(
+      text: _usuario?.notaDe(widget.cancion.id) ?? '',
+    );
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Mi nota personal'),
+        content: TextField(
+          controller: ctrl,
+          maxLines: 5,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText:
+                'Ej: esta la toco con la 6 tapada, entrada en la 3ra...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Guardar')),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await UsuarioService()
+          .guardarNota(widget.cancion.id, ctrl.text);
+      await _cargarUsuario();
+    }
+  }
 
   Widget _comentariosBody() {
     return StreamBuilder<List<Comentario>>(

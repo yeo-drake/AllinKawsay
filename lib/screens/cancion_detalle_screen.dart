@@ -14,6 +14,7 @@ import '../widgets/visor_numerofonia.dart';
 import '../widgets/watermark_overlay.dart';
 import 'presentacion_screen.dart';
 import 'compartir_imagen_screen.dart';
+import '../widgets/tarjeta_video.dart';
 
 class CancionDetalleScreen extends StatefulWidget {
   final Cancion cancion;
@@ -293,6 +294,15 @@ IconButton(
               ),
             ),
           ],
+
+// === 2.5. VIDEO ===
+if (c.tieneVideo) ...[
+  const Divider(),
+  TarjetaVideo(
+    url: c.videoUrl,
+    titulo: c.titulo,
+  ),
+],
 
           // === 3. AUDIO ===
           const Divider(),

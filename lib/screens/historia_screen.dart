@@ -30,23 +30,54 @@ class _HistoriaScreenState extends State<HistoriaScreen> {
   @override
   Widget build(BuildContext context) {
     final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('NUESTRA HISTORIA'),
         actions: [
           if (_esAdmin)
-            IconButton(
-              icon: const Icon(Icons.edit),
-              tooltip: 'Editar historia',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const EditarHistoriaScreen()),
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const EditarHistoriaScreen()),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: AppColors.dorado.withOpacity(0.4)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.edit,
+                            size: 14, color: AppColors.dorado),
+                        SizedBox(width: 6),
+                        Text('Editar',
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.dorado,
+                                letterSpacing: 0.5)),
+                      ],
+                    ),
+                  ),
+                ),
               ),
             ),
         ],
       ),
       body: WatermarkOverlay(
+        opacity: 0.05,
         child: StreamBuilder<Historia>(
           stream: HistoriaService().stream(),
           builder: (context, snap) {
@@ -72,23 +103,32 @@ class _HistoriaScreenState extends State<HistoriaScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.history_edu,
-                          size: 80,
-                          color: AppColors.granate.withOpacity(0.3)),
-                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.granate.withOpacity(0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.history_edu,
+                            size: 48,
+                            color: AppColors.granate.withOpacity(0.4)),
+                      ),
+                      const SizedBox(height: 20),
                       const Text('Historia vacía',
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.granate)),
+                              color: AppColors.granate,
+                              letterSpacing: 0.5)),
                       const SizedBox(height: 8),
                       Text(
                         _esAdmin
-                            ? 'Toca el lápiz de arriba para escribir la historia del grupo'
+                            ? 'Toca el botón "Editar" para escribir la historia del grupo'
                             : 'El admin aún no ha escrito la historia',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: onSurface.withOpacity(0.6)),
+                            color: onSurface.withOpacity(0.55),
+                            fontSize: 13),
                       ),
                     ],
                   ),
@@ -96,29 +136,101 @@ class _HistoriaScreenState extends State<HistoriaScreen> {
               );
             }
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Historia del grupo',
+                  // Header decorativo
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.granate.withOpacity(0.08),
+                          AppColors.dorado.withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: AppColors.dorado.withOpacity(0.25)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: AppColors.gradienteDorado,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.dorado
+                                    .withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.auto_stories,
+                              color: AppColors.granate, size: 22),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Text('Historia del grupo',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.granate,
+                                  letterSpacing: 0.5)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Contenido
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardColor(context),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                          color: AppColors.dorado.withOpacity(0.2)),
+                    ),
+                    child: Text(
+                      h.contenido,
                       style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.granate)),
-                  const SizedBox(height: 12),
-                  Text(h.contenido,
-                      style: TextStyle(
-                          fontSize: 16,
-                          height: 1.6,
-                          color: onSurface)),
+                          fontSize: 15,
+                          height: 1.8,
+                          color: onSurface.withOpacity(0.9),
+                          letterSpacing: 0.2),
+                    ),
+                  ),
                   if (h.actualizadoPor.isNotEmpty) ...[
-                    const SizedBox(height: 32),
-                    const Divider(),
-                    Text(
-                      'Última edición: ${h.actualizadoPor}',
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: onSurface.withOpacity(0.5)),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: AppColors.granate.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_note,
+                              size: 16,
+                              color: onSurface.withOpacity(0.5)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Última edición: ${h.actualizadoPor}',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: onSurface.withOpacity(0.55),
+                                letterSpacing: 0.3),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ],

@@ -73,39 +73,13 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Escribí los números. Usá "/" para pasar a hilera 7 y "\\" para volver a hilera 6.',
+            'Escribí los números. Usá "/" para subir a hilera 7 y "\\" para bajar a hilera 6.',
             style: TextStyle(
                 fontSize: 11,
                 color: AppColors.negro.withOpacity(0.6),
                 height: 1.4),
           ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppColors.grisClaro,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Ejemplo:',
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.granate.withOpacity(0.7))),
-                const SizedBox(height: 4),
-                const Text(
-                  '4 4 3 4 / 5 5 6 5 \\ 3 3 2 3',
-                  style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 11,
-                      color: AppColors.negro),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           for (int i = 0; i < _estrofas.length; i++)
             _BloqueEditor(
@@ -175,7 +149,8 @@ class _BloqueEditorState extends State<_BloqueEditor> {
   }
 
   void _onChanged(String v) {
-    widget.estrofa.texto = v;
+    widget.estrofa.eventos =
+        EstrofaNumerofonia._parsearTexto(v);
     widget.onChanged();
   }
 
@@ -184,8 +159,8 @@ class _BloqueEditorState extends State<_BloqueEditor> {
     widget.onChanged();
   }
 
-  /// Botón rápido para insertar "/" o "\" en la posición del cursor.
-  void _insertarDireccion(String dir) {
+  /// Inserta la dirección en la posición del cursor.
+  void _insertarDir(String dir) {
     final sel = _ctrl.selection;
     final texto = _ctrl.text;
     int inicio = sel.start >= 0 ? sel.start : texto.length;
@@ -193,7 +168,6 @@ class _BloqueEditorState extends State<_BloqueEditor> {
     if (inicio > texto.length) inicio = texto.length;
     if (fin > texto.length) fin = texto.length;
 
-    // Asegurar espacio antes
     final antes = texto.substring(0, inicio);
     final despues = texto.substring(fin);
     final prefijo = (antes.isEmpty || antes.endsWith(' ')) ? '' : ' ';
@@ -230,16 +204,16 @@ class _BloqueEditorState extends State<_BloqueEditor> {
                       letterSpacing: 0.5)),
               const Spacer(),
               // Botones de dirección
-              _botonDir('/', () => _insertarDireccion('/')),
+              _botonDir('/', () => _insertarDir('/')),
               const SizedBox(width: 6),
-              _botonDir('\\', () => _insertarDireccion('\\')),
+              _botonDir('\\', () => _insertarDir('\\')),
               if (widget.puedeEliminar) ...[
                 const SizedBox(width: 6),
                 InkWell(
                   onTap: widget.onDelete,
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(4),
                     child: Icon(Icons.close,
                         size: 16,
                         color: AppColors.granate.withOpacity(0.7)),
@@ -256,17 +230,19 @@ class _BloqueEditorState extends State<_BloqueEditor> {
             onChanged: _onChanged,
             maxLines: null,
             minLines: 2,
+            keyboardType: TextInputType.text,
             style: const TextStyle(
                 fontFamily: 'monospace',
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
+                letterSpacing: 2,
                 height: 1.6),
             decoration: InputDecoration(
               isDense: true,
               hintText: '4 4 3 4 / 5 5 6 5 \\ 3 3 2 3',
               hintStyle: TextStyle(
                   fontFamily: 'monospace',
-                  fontSize: 13,
+                  fontSize: 14,
                   color: AppColors.negro.withOpacity(0.3)),
               filled: true,
               fillColor: AppColors.blanco,
@@ -287,33 +263,36 @@ class _BloqueEditorState extends State<_BloqueEditor> {
           const SizedBox(height: 8),
 
           // BIS
-          OutlinedButton.icon(
-            onPressed: _toggleBis,
-            icon: Icon(
-              widget.estrofa.bis
-                  ? Icons.check_circle
-                  : Icons.circle_outlined,
-              size: 16,
-            ),
-            label: Text(
-              widget.estrofa.bis ? 'CON BIS' : 'SIN BIS',
-              style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1),
-            ),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              foregroundColor: widget.estrofa.bis
-                  ? AppColors.dorado
-                  : AppColors.granate,
-              backgroundColor: widget.estrofa.bis
-                  ? AppColors.granate
-                  : Colors.transparent,
-              side: BorderSide(
-                color: widget.estrofa.bis
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _toggleBis,
+              icon: Icon(
+                widget.estrofa.bis
+                    ? Icons.check_circle
+                    : Icons.circle_outlined,
+                size: 16,
+              ),
+              label: Text(
+                widget.estrofa.bis ? 'CON BIS' : 'SIN BIS',
+                style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                foregroundColor: widget.estrofa.bis
                     ? AppColors.dorado
                     : AppColors.granate,
+                backgroundColor: widget.estrofa.bis
+                    ? AppColors.granate
+                    : Colors.transparent,
+                side: BorderSide(
+                  color: widget.estrofa.bis
+                      ? AppColors.dorado
+                      : AppColors.granate,
+                ),
               ),
             ),
           ),
@@ -327,8 +306,8 @@ class _BloqueEditorState extends State<_BloqueEditor> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        width: 34,
-        height: 34,
+        width: 36,
+        height: 32,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           gradient: AppColors.gradienteGranate,

@@ -55,7 +55,6 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
       backgroundColor: AppColors.negro,
       body: Stack(
         children: [
-          // Contenido con zoom
           Positioned.fill(
             child: InteractiveViewer(
               transformationController: _transformController,
@@ -66,7 +65,6 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: 20),
-                    // Título
                     Text(
                       c.titulo.toUpperCase(),
                       textAlign: TextAlign.center,
@@ -95,16 +93,17 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
 
                     // Numerofonía
                     if (c.tieneNumerofonia)
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.blanco,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: VisorNumerofonia(
-                          estrofas: c.estrofas,
-                          escala: 1.3,
-                          mostrarBotonExpandir: false,
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppColors.blanco,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: VisorNumerofonia(
+                            estrofas: c.estrofas,
+                            escala: 1.3,
+                          ),
                         ),
                       )
                     else if (c.tieneNumerofoniaString)
@@ -168,7 +167,7 @@ class _PresentacionScreenState extends State<PresentacionScreen> {
             ),
           ),
 
-          // Barra superior flotante
+          // Barra superior
           Positioned(
             top: 0,
             left: 0,

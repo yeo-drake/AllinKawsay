@@ -59,7 +59,6 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header
           const Row(
             children: [
               Icon(Icons.grid_on, size: 14, color: AppColors.granate),
@@ -74,24 +73,40 @@ class _EditorNumerofoniaState extends State<EditorNumerofonia> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Escribí cada celda separada por espacio. Usá "_" para vacío.',
+            'Escribí los números. Usá "/" para pasar a hilera 7 y "\\" para volver a hilera 6.',
             style: TextStyle(
                 fontSize: 11,
-                color: AppColors.negro.withOpacity(0.55),
+                color: AppColors.negro.withOpacity(0.6),
                 height: 1.4),
           ),
           const SizedBox(height: 4),
-          Text(
-            'Ejemplo:  6 6 6 5 56665 6',
-            style: TextStyle(
-                fontSize: 10.5,
-                color: AppColors.negro.withOpacity(0.45),
-                fontStyle: FontStyle.italic,
-                fontFamily: 'monospace'),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.grisClaro,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Ejemplo:',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.granate.withOpacity(0.7))),
+                const SizedBox(height: 4),
+                const Text(
+                  '4 4 3 4 / 5 5 6 5 \\ 3 3 2 3',
+                  style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      color: AppColors.negro),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
 
-          // Lista de estrofas
           for (int i = 0; i < _estrofas.length; i++)
             _BloqueEditor(
               key: ValueKey('bloque_$i'),
@@ -145,38 +160,50 @@ class _BloqueEditor extends StatefulWidget {
 }
 
 class _BloqueEditorState extends State<_BloqueEditor> {
-  late TextEditingController _ctrl7;
-  late TextEditingController _ctrl6;
+  late TextEditingController _ctrl;
 
   @override
   void initState() {
     super.initState();
-    _ctrl7 = TextEditingController(
-        text: EstrofaNumerofonia.stringifyFila(widget.estrofa.fila7));
-    _ctrl6 = TextEditingController(
-        text: EstrofaNumerofonia.stringifyFila(widget.estrofa.fila6));
+    _ctrl = TextEditingController(text: widget.estrofa.texto);
   }
 
   @override
   void dispose() {
-    _ctrl7.dispose();
-    _ctrl6.dispose();
+    _ctrl.dispose();
     super.dispose();
   }
 
-  void _onFila7(String v) {
-    widget.estrofa.fila7 = EstrofaNumerofonia.parseFila(v);
-    widget.onChanged();
-  }
-
-  void _onFila6(String v) {
-    widget.estrofa.fila6 = EstrofaNumerofonia.parseFila(v);
+  void _onChanged(String v) {
+    widget.estrofa.texto = v;
     widget.onChanged();
   }
 
   void _toggleBis() {
     setState(() => widget.estrofa.bis = !widget.estrofa.bis);
     widget.onChanged();
+  }
+
+  /// Botón rápido para insertar "/" o "\" en la posición del cursor.
+  void _insertarDireccion(String dir) {
+    final sel = _ctrl.selection;
+    final texto = _ctrl.text;
+    int inicio = sel.start >= 0 ? sel.start : texto.length;
+    int fin = sel.end >= 0 ? sel.end : texto.length;
+    if (inicio > texto.length) inicio = texto.length;
+    if (fin > texto.length) fin = texto.length;
+
+    // Asegurar espacio antes
+    final antes = texto.substring(0, inicio);
+    final despues = texto.substring(fin);
+    final prefijo = (antes.isEmpty || antes.endsWith(' ')) ? '' : ' ';
+    final sufijo = (despues.isEmpty || despues.startsWith(' ')) ? ' ' : ' ';
+
+    final nuevo = antes + prefijo + dir + sufijo + despues;
+    _ctrl.text = nuevo;
+    _ctrl.selection = TextSelection.collapsed(
+        offset: (antes + prefijo + dir + sufijo).length);
+    _onChanged(nuevo);
   }
 
   @override
@@ -193,7 +220,6 @@ class _BloqueEditorState extends State<_BloqueEditor> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header del bloque
           Row(
             children: [
               Text('Estrofa ${widget.numero}',
@@ -203,7 +229,12 @@ class _BloqueEditorState extends State<_BloqueEditor> {
                       color: AppColors.granate,
                       letterSpacing: 0.5)),
               const Spacer(),
-              if (widget.puedeEliminar)
+              // Botones de dirección
+              _botonDir('/', () => _insertarDireccion('/')),
+              const SizedBox(width: 6),
+              _botonDir('\\', () => _insertarDireccion('\\')),
+              if (widget.puedeEliminar) ...[
+                const SizedBox(width: 6),
                 InkWell(
                   onTap: widget.onDelete,
                   borderRadius: BorderRadius.circular(8),
@@ -214,278 +245,104 @@ class _BloqueEditorState extends State<_BloqueEditor> {
                         color: AppColors.granate.withOpacity(0.7)),
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 8),
 
-          // Fila 7
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: AppColors.gradienteGranate,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text('7',
-                    style: TextStyle(
-                        color: AppColors.dorado,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15)),
+          // Campo de texto
+          TextField(
+            controller: _ctrl,
+            onChanged: _onChanged,
+            maxLines: null,
+            minLines: 2,
+            style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                height: 1.6),
+            decoration: InputDecoration(
+              isDense: true,
+              hintText: '4 4 3 4 / 5 5 6 5 \\ 3 3 2 3',
+              hintStyle: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 13,
+                  color: AppColors.negro.withOpacity(0.3)),
+              filled: true,
+              fillColor: AppColors.blanco,
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 12),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide:
+                    BorderSide(color: AppColors.negro.withOpacity(0.2)),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _ctrl7,
-                  onChanged: _onFila7,
-                  style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: '6 6 6 5 56665 6',
-                    hintStyle: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 13,
-                        color: AppColors.negro.withOpacity(0.3)),
-                    filled: true,
-                    fillColor: AppColors.blanco,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                          color:
-                              AppColors.negro.withOpacity(0.2)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                          color: AppColors.dorado, width: 2),
-                    ),
-                  ),
-                ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                    color: AppColors.dorado, width: 2),
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Fila 6
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: AppColors.gradienteGranate,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text('6',
-                    style: TextStyle(
-                        color: AppColors.dorado,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15)),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _ctrl6,
-                  onChanged: _onFila6,
-                  style: const TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: '6 5 6 5 4434 _ 5 6',
-                    hintStyle: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 13,
-                        color: AppColors.negro.withOpacity(0.3)),
-                    filled: true,
-                    fillColor: AppColors.blanco,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 12),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                          color:
-                              AppColors.negro.withOpacity(0.2)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(
-                          color: AppColors.dorado, width: 2),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // BIS toggle
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _toggleBis,
-                  icon: Icon(
-                    widget.estrofa.bis
-                        ? Icons.check_circle
-                        : Icons.circle_outlined,
-                    size: 16,
-                  ),
-                  label: Text(
-                    widget.estrofa.bis
-                        ? 'CON BIS'
-                        : 'SIN BIS',
-                    style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 10),
-                    foregroundColor: widget.estrofa.bis
-                        ? AppColors.dorado
-                        : AppColors.granate,
-                    backgroundColor: widget.estrofa.bis
-                        ? AppColors.granate
-                        : Colors.transparent,
-                    side: BorderSide(
-                      color: widget.estrofa.bis
-                          ? AppColors.dorado
-                          : AppColors.granate,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Preview
-          if (!widget.estrofa.vacia) ...[
-            const SizedBox(height: 10),
-            const Text('Vista previa:',
-                style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.granate,
-                    letterSpacing: 1)),
-            const SizedBox(height: 6),
-            _preview(widget.estrofa),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _preview(EstrofaNumerofonia e) {
-    final numCols = e.fila7.length > e.fila6.length
-        ? e.fila7.length
-        : e.fila6.length;
-    if (numCols == 0) return const SizedBox.shrink();
-
-    final anchos = <double>[];
-    for (int i = 0; i < numCols; i++) {
-      final v7 = i < e.fila7.length ? e.fila7[i] : '';
-      final v6 = i < e.fila6.length ? e.fila6[i] : '';
-      final len = v7.length > v6.length ? v7.length : v6.length;
-      final ancho = len <= 1
-          ? 22.0
-          : (len * 8.0 + 8.0).clamp(22.0, 80.0);
-      anchos.add(ancho);
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.blanco,
-        border: Border.all(color: AppColors.negro, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: 26,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (int i = 0; i < numCols; i++)
-                      _pCelda(
-                          i < e.fila7.length ? e.fila7[i] : '',
-                          anchos[i],
-                          i == numCols - 1 && !e.bis),
-                  ],
-                ),
-              ),
-              Container(height: 1, color: AppColors.negro),
-              SizedBox(
-                height: 26,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (int i = 0; i < numCols; i++)
-                      _pCelda(
-                          i < e.fila6.length ? e.fila6[i] : '',
-                          anchos[i],
-                          i == numCols - 1 && !e.bis),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          if (e.bis)
-            Container(
-              width: 40,
-              height: 53,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: AppColors.dorado,
-                border: Border(
-                    left:
-                        BorderSide(color: AppColors.negro, width: 1)),
-              ),
-              child: const Text('BIS',
-                  style: TextStyle(
-                      color: AppColors.negro,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 9,
-                      letterSpacing: 0.5)),
             ),
+          ),
+          const SizedBox(height: 8),
+
+          // BIS
+          OutlinedButton.icon(
+            onPressed: _toggleBis,
+            icon: Icon(
+              widget.estrofa.bis
+                  ? Icons.check_circle
+                  : Icons.circle_outlined,
+              size: 16,
+            ),
+            label: Text(
+              widget.estrofa.bis ? 'CON BIS' : 'SIN BIS',
+              style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              foregroundColor: widget.estrofa.bis
+                  ? AppColors.dorado
+                  : AppColors.granate,
+              backgroundColor: widget.estrofa.bis
+                  ? AppColors.granate
+                  : Colors.transparent,
+              side: BorderSide(
+                color: widget.estrofa.bis
+                    ? AppColors.dorado
+                    : AppColors.granate,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _pCelda(String contenido, double ancho, bool esUltima) {
-    return Container(
-      width: ancho,
-      height: 26,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        border: esUltima
-            ? null
-            : const Border(
-                right: BorderSide(color: AppColors.negro, width: 1),
-              ),
-      ),
-      child: Text(
-        contenido,
-        style: const TextStyle(
-            color: AppColors.negro,
-            fontWeight: FontWeight.w500,
-            fontSize: 11,
-            fontFamily: 'monospace'),
+  Widget _botonDir(String dir, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        width: 34,
+        height: 34,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          gradient: AppColors.gradienteGranate,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          dir,
+          style: const TextStyle(
+            color: AppColors.dorado,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            height: 1.0,
+          ),
+        ),
       ),
     );
   }

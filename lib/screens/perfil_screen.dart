@@ -70,10 +70,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         content: TextField(
           controller: ctrl,
           textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(
-            labelText: 'Nombre completo',
-            border: OutlineInputBorder(),
-          ),
+          decoration: const InputDecoration(labelText: 'Nombre completo'),
         ),
         actions: [
           TextButton(
@@ -132,7 +129,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
       backgroundColor: Theme.of(context).cardColor,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (_) => DraggableScrollableSheet(
         initialChildSize: 0.7,
@@ -151,13 +148,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Text('Mis subidas',
                   style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: onSurface)),
-              const SizedBox(height: 8),
+                      color: onSurface,
+                      letterSpacing: 0.5)),
+              const SizedBox(height: 12),
               const Divider(height: 1),
               Expanded(
                 child: FutureBuilder<List<Cancion>>(
@@ -200,6 +198,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                     'Todavía no subiste nada',
                                     style: TextStyle(
                                       color: onSurface.withOpacity(0.5),
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
                                 ],
@@ -215,11 +214,19 @@ class _PerfilScreenState extends State<PerfilScreen> {
                               _subtitulo(
                                   'Canciones (${misCanciones.length})'),
                               ...misCanciones.map((c) => ListTile(
-                                    leading: const CircleAvatar(
-                                      backgroundColor: AppColors.granate,
-                                      child: Icon(Icons.music_note,
+                                    leading: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        gradient:
+                                            AppColors.gradienteGranate,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                          Icons.music_note,
                                           color: AppColors.dorado,
-                                          size: 20),
+                                          size: 18),
                                     ),
                                     title: Text(c.titulo,
                                         style: TextStyle(
@@ -245,11 +252,19 @@ class _PerfilScreenState extends State<PerfilScreen> {
                               _subtitulo(
                                   'Recuerdos (${misRecuerdos.length})'),
                               ...misRecuerdos.map((r) => ListTile(
-                                    leading: const CircleAvatar(
-                                      backgroundColor: AppColors.granate,
-                                      child: Icon(Icons.photo_library,
+                                    leading: Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        gradient:
+                                            AppColors.gradienteGranate,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: const Icon(
+                                          Icons.photo_library,
                                           color: AppColors.dorado,
-                                          size: 20),
+                                          size: 18),
                                     ),
                                     title: Text(r.titulo,
                                         style: TextStyle(
@@ -276,167 +291,229 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   Widget _subtitulo(String t) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        t,
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-          color: AppColors.granate,
-        ),
-      ),
-    );
-  }
-
-  void _abrirAjustes(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          return SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.dorado,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text('Ajustes',
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                const Divider(height: 1),
-                ValueListenableBuilder<ThemeMode>(
-                  valueListenable: ThemeProvider.mode,
-                  builder: (context, modo, _) {
-                    return Column(
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('Tema de la app',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                    color: AppColors.granate)),
-                          ),
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.light,
-                          groupValue: modo,
-                          activeColor: AppColors.granate,
-                          title: const Text('Claro'),
-                          secondary: const Icon(Icons.light_mode,
-                              color: AppColors.granate),
-                          onChanged: (v) {
-                            ThemeProvider.cambiar(ThemeMode.light);
-                            setSheetState(() {});
-                          },
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.dark,
-                          groupValue: modo,
-                          activeColor: AppColors.granate,
-                          title: const Text('Oscuro'),
-                          secondary: const Icon(Icons.dark_mode,
-                              color: AppColors.granate),
-                          onChanged: (v) {
-                            ThemeProvider.cambiar(ThemeMode.dark);
-                            setSheetState(() {});
-                          },
-                        ),
-                        RadioListTile<ThemeMode>(
-                          value: ThemeMode.system,
-                          groupValue: modo,
-                          activeColor: AppColors.granate,
-                          title: const Text('Automático (sistema)'),
-                          secondary: const Icon(Icons.brightness_auto,
-                              color: AppColors.granate),
-                          onChanged: (v) {
-                            ThemeProvider.cambiar(ThemeMode.system);
-                            setSheetState(() {});
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const Divider(height: 1),
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Próximamente:',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: AppColors.granate)),
-                      SizedBox(height: 8),
-                      Text('• Notificaciones de eventos'),
-                      Text('• Modo offline'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.granate,
+              borderRadius: BorderRadius.circular(2),
             ),
-          );
-        },
+          ),
+          const SizedBox(width: 8),
+          Text(
+            t,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColors.granate,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  void _abrirAcercaDe(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Theme.of(context).cardColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
+void _abrirAjustes(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Theme.of(context).cardColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    builder: (_) => StatefulBuilder(
+      builder: (context, setSheetState) {
+        final onSurface = Theme.of(context).colorScheme.onSurface;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.dorado,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Ajustes',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: onSurface,
+                      letterSpacing: 0.5)),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              ValueListenableBuilder<ThemeMode>(
+                valueListenable: ThemeProvider.mode,
+                builder: (context, modo, _) {
+                  return Column(
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(20, 12, 20, 4),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text('TEMA DE LA APP',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  color: AppColors.granate,
+                                  letterSpacing: 2)),
+                        ),
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.light,
+                        groupValue: modo,
+                        activeColor: AppColors.granate,
+                        title: const Text('Claro'),
+                        secondary: const Icon(Icons.light_mode,
+                            color: AppColors.granate),
+                        onChanged: (v) {
+                          ThemeProvider.cambiar(ThemeMode.light);
+                          setSheetState(() {});
+                        },
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.dark,
+                        groupValue: modo,
+                        activeColor: AppColors.granate,
+                        title: const Text('Oscuro'),
+                        secondary: const Icon(Icons.dark_mode,
+                            color: AppColors.granate),
+                        onChanged: (v) {
+                          ThemeProvider.cambiar(ThemeMode.dark);
+                          setSheetState(() {});
+                        },
+                      ),
+                      RadioListTile<ThemeMode>(
+                        value: ThemeMode.system,
+                        groupValue: modo,
+                        activeColor: AppColors.granate,
+                        title: const Text('Automático (sistema)'),
+                        secondary: const Icon(Icons.brightness_auto,
+                            color: AppColors.granate),
+                        onChanged: (v) {
+                          ThemeProvider.cambiar(ThemeMode.system);
+                          setSheetState(() {});
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('PRÓXIMAMENTE',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: AppColors.granate,
+                            letterSpacing: 2)),
+                    SizedBox(height: 10),
+                    Text('• Notificaciones de eventos'),
+                    Text('• Modo offline'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+}
+
+void _abrirAcercaDe(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Theme.of(context).cardColor,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    builder: (_) => Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
               width: 40,
               height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: AppColors.dorado,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Text('Acerca de',
+          ),
+          Center(
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.dorado.withOpacity(0.2),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/logo.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppColors.granate,
+                    child: const Icon(Icons.music_note,
+                        color: AppColors.dorado, size: 40),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Center(
+            child: Text('ALLIN KAWSAY',
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.granate)),
-            const SizedBox(height: 16),
-            const Text(
-                'Allin Kawsay\nVersión 1.0.0\n\n'
+                    color: AppColors.granate,
+                    letterSpacing: 4)),
+          ),
+          const SizedBox(height: 6),
+          const Center(
+            child: Text('Versión 1.0.0',
+                style: TextStyle(
+                    fontSize: 12,
+                    letterSpacing: 1)),
+          ),
+          const SizedBox(height: 20),
+          const Center(
+            child: Text(
                 'Aplicación oficial del grupo de sikuris.\n\n'
                 'Hecha con ❤️ para el grupo.',
-                style: TextStyle(fontSize: 15, height: 1.5)),
-            const SizedBox(height: 16),
-          ],
-        ),
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, height: 1.6)),
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 
 @override
 Widget build(BuildContext context) {
@@ -452,255 +529,70 @@ Widget build(BuildContext context) {
 
         return ListView(
           children: [
-            const SizedBox(height: 24),
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border:
-                          Border.all(color: AppColors.dorado, width: 3),
-                    ),
-                    child: CircleAvatar(
-                      radius: 48,
-                      backgroundColor: AppColors.granate,
-                      backgroundImage:
-                          (u?.fotoUrl.isNotEmpty ?? false)
-                              ? NetworkImage(u!.fotoUrl)
-                              : null,
-                      child: (u?.fotoUrl.isEmpty ?? true)
-                          ? const Icon(Icons.person,
-                              size: 56, color: AppColors.dorado)
-                          : null,
-                    ),
-                  ),
-                  if (u != null)
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: GestureDetector(
-                        onTap: _subiendoFoto
-                            ? null
-                            : () => _cambiarFoto(u),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.dorado,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                                color: AppColors.granate, width: 2),
-                          ),
-                          child: _subiendoFoto
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    color: AppColors.granate,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.camera_alt,
-                                  size: 16, color: AppColors.granate),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    u?.nombre ?? widget.nombreUsuario,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate,
-                    ),
-                  ),
-                  if (u != null) ...[
-                    const SizedBox(width: 4),
-                    IconButton(
-                      icon: const Icon(Icons.edit,
-                          size: 16, color: AppColors.granate),
-                      onPressed: () => _cambiarNombre(u),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Center(
-              child: Text(
-                u?.email ?? '',
-                style:
-                    TextStyle(color: onSurface.withOpacity(0.6)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _colorRol(rol),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(_iconoRol(rol),
-                        color: AppColors.dorado, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      u?.rolNombre ?? 'PÚBLICO',
-                      style: const TextStyle(
-                        color: AppColors.dorado,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // === HEADER CON FOTO ===
+            _headerPerfil(context, u, rol, onSurface),
             const SizedBox(height: 20),
+            // Estadísticas
             if (u != null)
               _estadisticasPersonales(u.uid)
             else
               const SizedBox.shrink(),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            // Redes
             const Divider(),
             const SocialButtons(),
             const Divider(),
-            if (esAdmin)
-              ListTile(
-                leading: const Icon(Icons.insights,
-                    color: AppColors.granate),
-                title: const Text('Estadísticas del grupo'),
-                subtitle: const Text(
-                    'Totales, top canciones y usuarios por rol'),
-                trailing: const Icon(Icons.chevron_right,
-                    color: AppColors.dorado),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          const EstadisticasAdminScreen()),
-                ),
-              ),
-            if (esAdmin)
-              ListTile(
-                leading: const Icon(Icons.history,
-                    color: AppColors.granate),
-                title: const Text('Historial de actividad'),
-                subtitle: const Text(
-                    'Quién subió, editó o eliminó qué'),
-                trailing: const Icon(Icons.chevron_right,
-                    color: AppColors.dorado),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const ActividadScreen()),
-                ),
-              ),
-            if (esAdmin)
-              ListTile(
-                leading: const Icon(Icons.category,
-                    color: AppColors.granate),
-                title: const Text('Categorías'),
-                subtitle: const Text(
-                    'Agrupa las canciones (Carnaval, Religioso, etc.)'),
-                trailing: const Icon(Icons.chevron_right,
-                    color: AppColors.dorado),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          const GestionCategoriasScreen()),
-                ),
-              ),
-            if (esAdmin)
-              ListTile(
-                leading: const Icon(Icons.backup,
-                    color: AppColors.granate),
-                title: const Text('Exportar respaldo'),
-                subtitle: const Text(
-                    'Descarga todas las canciones, eventos y recuerdos'),
-                trailing: const Icon(Icons.chevron_right,
-                    color: AppColors.dorado),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) =>
-                          const ExportarRespaldoScreen()),
-                ),
-              ),
-            if (esAdmin)
-              ListTile(
-                leading: const Icon(Icons.people,
-                    color: AppColors.granate),
-                title: const Text('Gestión de usuarios'),
-                subtitle: const Text(
-                    'Asciende a miembro o admin a los integrantes'),
-                trailing: const Icon(Icons.chevron_right,
-                    color: AppColors.dorado),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const GestionUsuariosScreen()),
-                ),
-              ),
+
+            // === ADMIN ===
+            if (esAdmin) ...[
+              _seccionAdmin(),
+            ],
+
+            // === USUARIO ===
             if (u != null)
-              ListTile(
-                leading: const Icon(Icons.upload_file,
-                    color: AppColors.granate),
-                title: const Text('Mis subidas'),
-                subtitle: const Text(
-                    'Canciones y recuerdos que subiste'),
-                trailing: const Icon(Icons.chevron_right,
-                    color: AppColors.dorado),
+              _itemMenu(
+                context,
+                Icons.upload_file,
+                'Mis subidas',
+                'Canciones y recuerdos que subiste',
+                onSurface,
                 onTap: () => _abrirMisSubidas(context, u.uid),
               ),
-            ListTile(
-              leading: const Icon(Icons.settings,
-                  color: AppColors.granate),
-              title: const Text('Ajustes'),
-              subtitle:
-                  const Text('Tema, notificaciones y preferencias'),
-              trailing: const Icon(Icons.chevron_right,
-                  color: AppColors.dorado),
+
+            _itemMenu(
+              context,
+              Icons.settings,
+              'Ajustes',
+              'Tema, notificaciones y preferencias',
+              onSurface,
               onTap: () => _abrirAjustes(context),
             ),
-            ListTile(
-              leading: const Icon(Icons.info_outline,
-                  color: AppColors.granate),
-              title: const Text('Acerca de'),
-              subtitle: const Text('Versión e información'),
-              trailing: const Icon(Icons.chevron_right,
-                  color: AppColors.dorado),
+            _itemMenu(
+              context,
+              Icons.info_outline,
+              'Acerca de',
+              'Versión e información',
+              onSurface,
               onTap: () => _abrirAcercaDe(context),
             ),
-            const Divider(),
-            const SizedBox(height: 16),
+
+            const SizedBox(height: 20),
+            // Logout
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SizedBox(
-                height: 50,
+                height: 52,
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.logout),
-                  label: const Text('CERRAR SESIÓN'),
+                  label: const Text('CERRAR SESIÓN',
+                      style: TextStyle(letterSpacing: 1.5)),
                   onPressed: () async {
                     await AuthService().logout();
                   },
                 ),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
           ],
         );
       },
@@ -708,79 +600,402 @@ Widget build(BuildContext context) {
   );
 }
 
-  Widget _estadisticasPersonales(String uid) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+Widget _headerPerfil(BuildContext context, Usuario? u, String rol,
+    Color onSurface) {
+  return Container(
+    padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppColors.granate.withOpacity(0.08),
+          AppColors.dorado.withOpacity(0.05),
+        ],
+      ),
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(32),
+        bottomRight: Radius.circular(32),
+      ),
+    ),
+    child: Column(
+      children: [
+        // Foto
+        Center(
+          child: Stack(
             children: [
-              const Text(
-                'Mis estadísticas',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: AppColors.granate,
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: AppColors.gradienteDorado,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.dorado.withOpacity(0.3),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 52,
+                  backgroundColor: AppColors.granate,
+                  backgroundImage: (u?.fotoUrl.isNotEmpty ?? false)
+                      ? NetworkImage(u!.fotoUrl)
+                      : null,
+                  child: (u?.fotoUrl.isEmpty ?? true)
+                      ? const Icon(Icons.person,
+                          size: 56, color: AppColors.dorado)
+                      : null,
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FutureBuilder<int>(
-                      future: CancionService().contarPorUsuario(uid),
-                      builder: (context, snap) {
-                        return _statCard(
-                          Icons.library_music,
-                          snap.data?.toString() ?? '...',
-                          'Canciones subidas',
-                        );
-                      },
+              if (u != null)
+                Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: GestureDetector(
+                    onTap:
+                        _subiendoFoto ? null : () => _cambiarFoto(u),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.gradienteDorado,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: AppColors.granate, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                AppColors.dorado.withOpacity(0.4),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      child: _subiendoFoto
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                color: AppColors.granate,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(Icons.camera_alt,
+                              size: 16, color: AppColors.granate),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: FutureBuilder<int>(
-                      future: CancionService()
-                          .totalReproduccionesDeUsuario(uid),
-                      builder: (context, snap) {
-                        return _statCard(
-                          Icons.play_arrow,
-                          snap.data?.toString() ?? '...',
-                          'Reproducciones',
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Nombre
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              u?.nombre ?? widget.nombreUsuario,
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: onSurface,
+                  letterSpacing: 0.3),
+            ),
+            if (u != null) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                icon: const Icon(Icons.edit,
+                    size: 16, color: AppColors.granate),
+                onPressed: () => _cambiarNombre(u),
+              ),
+            ],
+          ],
+        ),
+        Text(
+          u?.email ?? '',
+          style: TextStyle(
+              color: onSurface.withOpacity(0.55), fontSize: 13),
+        ),
+        const SizedBox(height: 14),
+        // Badge rol
+        Container(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+          decoration: BoxDecoration(
+            gradient: _colorRol(rol) == AppColors.negro
+                ? LinearGradient(
+                    colors: [
+                      AppColors.negro,
+                      AppColors.negro.withOpacity(0.8)
+                    ],
+                  )
+                : AppColors.gradienteGranate,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: _colorRol(rol).withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(_iconoRol(rol),
+                  color: AppColors.dorado, size: 16),
+              const SizedBox(width: 6),
+              Text(
+                u?.rolNombre ?? 'PÚBLICO',
+                style: const TextStyle(
+                  color: AppColors.dorado,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _seccionAdmin() {
+  return Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 14,
+              decoration: BoxDecoration(
+                color: AppColors.granate,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text('ADMINISTRACIÓN',
+                style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate,
+                    letterSpacing: 2)),
+          ],
+        ),
+      ),
+      _itemMenu(
+          context,
+          Icons.insights,
+          'Estadísticas del grupo',
+          'Totales, top canciones y usuarios',
+          Theme.of(context).colorScheme.onSurface,
+          onTap: (c) => Navigator.push(
+              c,
+              MaterialPageRoute(
+                  builder: (_) =>
+                      const EstadisticasAdminScreen()))),
+      _itemMenu(
+          context,
+          Icons.history,
+          'Historial de actividad',
+          'Quién subió, editó o eliminó qué',
+          Theme.of(context).colorScheme.onSurface,
+          onTap: (c) => Navigator.push(c,
+              MaterialPageRoute(builder: (_) => const ActividadScreen()))),
+      _itemMenu(
+          context,
+          Icons.category,
+          'Categorías',
+          'Carnaval, Religioso, etc.',
+          Theme.of(context).colorScheme.onSurface,
+          onTap: (c) => Navigator.push(
+              c,
+              MaterialPageRoute(
+                  builder: (_) => const GestionCategoriasScreen()))),
+      _itemMenu(
+          context,
+          Icons.backup,
+          'Exportar respaldo',
+          'Descarga todos los datos',
+          Theme.of(context).colorScheme.onSurface,
+          onTap: (c) => Navigator.push(
+              c,
+              MaterialPageRoute(
+                  builder: (_) => const ExportarRespaldoScreen()))),
+      _itemMenu(
+          context,
+          Icons.people,
+          'Gestión de usuarios',
+          'Roles y suspensiones',
+          Theme.of(context).colorScheme.onSurface,
+          onTap: (c) => Navigator.push(
+              c,
+              MaterialPageRoute(
+                  builder: (_) => const GestionUsuariosScreen()))),
+      const SizedBox(height: 12),
+    ],
+  );
+}
+
+Widget _itemMenu(
+  BuildContext context,
+  IconData icono,
+  String titulo,
+  String subtitulo,
+  Color onSurface, {
+  required Function(BuildContext) onTap,
+}) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => onTap(context),
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.granate.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icono,
+                    color: AppColors.granate, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(titulo,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: onSurface,
+                            fontSize: 14,
+                            letterSpacing: 0.2)),
+                    const SizedBox(height: 2),
+                    Text(subtitulo,
+                        style: TextStyle(
+                            fontSize: 11,
+                            color: onSurface.withOpacity(0.55))),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right,
+                  color: AppColors.dorado.withOpacity(0.7), size: 20),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+  Widget _estadisticasPersonales(String uid) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.cardColor(context),
+          borderRadius: BorderRadius.circular(20),
+          border:
+              Border.all(color: AppColors.dorado.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.granate.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.bar_chart,
+                      color: AppColors.granate, size: 14),
+                ),
+                const SizedBox(width: 10),
+                const Text('MIS ESTADÍSTICAS',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        color: AppColors.granate,
+                        letterSpacing: 2)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: FutureBuilder<int>(
+                    future: CancionService().contarPorUsuario(uid),
+                    builder: (context, snap) {
+                      return _statCard(
+                        Icons.library_music,
+                        snap.data?.toString() ?? '...',
+                        'Canciones',
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FutureBuilder<int>(
+                    future:
+                        CancionService().totalReproduccionesDeUsuario(uid),
+                    builder: (context, snap) {
+                      return _statCard(
+                        Icons.play_arrow,
+                        snap.data?.toString() ?? '...',
+                        'Reproducciones',
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _statCard(IconData icono, String valor, String label) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.granate.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          colors: [
+            AppColors.granate.withOpacity(0.12),
+            AppColors.granate.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border:
+            Border.all(color: AppColors.granate.withOpacity(0.15)),
       ),
       child: Column(
         children: [
-          Icon(icono, color: AppColors.granate, size: 24),
-          const SizedBox(height: 4),
+          Icon(icono, color: AppColors.granate, size: 22),
+          const SizedBox(height: 6),
           Text(
             valor,
             style: const TextStyle(
-              fontSize: 20,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: AppColors.granate,
+              letterSpacing: 0.5,
             ),
           ),
           const SizedBox(height: 2),
@@ -789,7 +1004,11 @@ Widget build(BuildContext context) {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 10,
-              color: onSurface.withOpacity(0.6),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withOpacity(0.55),
+              letterSpacing: 0.5,
             ),
           ),
         ],

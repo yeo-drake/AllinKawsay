@@ -119,26 +119,6 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     }
   }
 
-  Future<void> _abrirVideo(String url) async {
-    if (url.isEmpty) return;
-    final uri = Uri.parse(url);
-    try {
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No se pudo abrir el video')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    }
-  }
-
   Future<void> _compartir() async {
     final c = widget.cancion;
     final sb = StringBuffer();
@@ -261,11 +241,8 @@ Widget build(BuildContext context) {
       opacity: 0.04,
       child: ListView(
         children: [
-          // === HERO HEADER ===
           _heroTitulo(c, onSurface),
           const SizedBox(height: 20),
-
-          // === NUMEROFONÍA ===
           if (c.tieneNumerofonia) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -292,8 +269,6 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
-
-          // === VIDEO ===
           if (c.tieneVideo) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -304,15 +279,11 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
-
-          // === AUDIO ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _audioPlayerCompacto(puedeDescargar),
           ),
           const SizedBox(height: 16),
-
-          // === LETRA ===
           if (c.letra.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -334,8 +305,6 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
-
-          // === DESCRIPCIÓN ===
           if (c.descripcion.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -352,8 +321,6 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
-
-          // === INFO EXPANDIBLE ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -433,8 +400,6 @@ Widget build(BuildContext context) {
             ),
           ),
           const SizedBox(height: 16),
-
-          // === COMENTARIOS EXPANDIBLE ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
@@ -481,13 +446,10 @@ Widget build(BuildContext context) {
             ),
           ),
           const SizedBox(height: 16),
-
-          // === NOTA PERSONAL ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _notaPersonal(context, onSurface),
           ),
-
           const SizedBox(height: 32),
         ],
       ),
@@ -577,390 +539,383 @@ Widget _heroTitulo(Cancion c, Color onSurface) {
   );
 }
 
-  Widget _seccionCard(BuildContext context,
-      {required IconData icono,
-      required String titulo,
-      required Widget child}) {
+Widget _seccionCard(BuildContext context,
+    {required IconData icono,
+    required String titulo,
+    required Widget child}) {
+  return Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: AppColors.cardColor(context),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: AppColors.dorado.withOpacity(0.2)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.granate.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icono,
+                  color: AppColors.granate, size: 14),
+            ),
+            const SizedBox(width: 10),
+            Text(titulo,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate,
+                    fontSize: 13,
+                    letterSpacing: 1)),
+          ],
+        ),
+        const SizedBox(height: 14),
+        child,
+      ],
+    ),
+  );
+}
+
+Widget _audioPlayerCompacto(bool puedeDescargar) {
+  final onSurface = Theme.of(context).colorScheme.onSurface;
+
+  if (widget.cancion.audioUrl.isEmpty) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.cardColor(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.dorado.withOpacity(0.2)),
+        border: Border.all(color: AppColors.dorado.withOpacity(0.15)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.granate.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icono,
-                    color: AppColors.granate, size: 14),
-              ),
-              const SizedBox(width: 10),
-              Text(titulo,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate,
-                      fontSize: 13,
-                      letterSpacing: 1)),
-            ],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.granate.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.music_off,
+                color: AppColors.granate.withOpacity(0.5), size: 20),
           ),
-          const SizedBox(height: 14),
-          child,
+          const SizedBox(width: 12),
+          Text('Sin audio subido',
+              style: TextStyle(
+                  color: onSurface.withOpacity(0.5),
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic)),
         ],
       ),
     );
   }
 
-  Widget _audioPlayerCompacto(bool puedeDescargar) {
-    if (widget.cancion.audioUrl.isEmpty) {
+  return ValueListenableBuilder<EstadoPlayer>(
+    valueListenable: _player.estado,
+    builder: (context, estado, _) {
+      final esEsta = estado.cancionId == widget.cancion.id;
+      final playing = esEsta && estado.playing;
+      final cargando = esEsta && estado.cargando;
+      final bucle = estado.modoBucle;
+
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.cardColor(context),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.dorado.withOpacity(0.15)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.granate.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.music_off,
-                  color: AppColors.granate.withOpacity(0.5), size: 20),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.negro, Color(0xFF2A2A2A)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-            const SizedBox(width: 12),
-            Text('Sin audio subido',
-                style: TextStyle(
-                    color:
-                        Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.5),
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic)),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: _togglePlay,
+                  child: Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.gradienteDorado,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.dorado.withOpacity(0.4),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: cargando
+                        ? const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator(
+                              color: AppColors.granate,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : Icon(
+                            playing
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            color: AppColors.granate,
+                            size: 32,
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: esEsta
+                      ? StreamBuilder<Duration>(
+                          stream: _player.player.positionStream,
+                          builder: (context, snap) {
+                            final pos = snap.data ?? Duration.zero;
+                            final dur =
+                                _player.player.duration ?? Duration.zero;
+                            return Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                SliderTheme(
+                                  data: SliderTheme.of(context)
+                                      .copyWith(
+                                    activeTrackColor:
+                                        AppColors.dorado,
+                                    thumbColor: AppColors.dorado,
+                                    thumbShape:
+                                        const RoundSliderThumbShape(
+                                            enabledThumbRadius: 6),
+                                    overlayShape:
+                                        const RoundSliderOverlayShape(
+                                            overlayRadius: 14),
+                                    inactiveTrackColor: AppColors
+                                        .dorado
+                                        .withOpacity(0.2),
+                                    trackHeight: 3,
+                                  ),
+                                  child: Slider(
+                                    value: pos.inSeconds
+                                        .toDouble()
+                                        .clamp(
+                                            0,
+                                            dur.inSeconds
+                                                .toDouble()
+                                                .clamp(1,
+                                                    double.infinity)),
+                                    max: dur.inSeconds
+                                        .toDouble()
+                                        .clamp(1, double.infinity),
+                                    onChanged: (v) =>
+                                        _player.player.seek(Duration(
+                                            seconds: v.toInt())),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8),
+                                  child: Text(
+                                    '${_fmt(pos)} / ${_fmt(dur)}',
+                                    style: TextStyle(
+                                        color: AppColors.dorado
+                                            .withOpacity(0.8),
+                                        fontSize: 11,
+                                        letterSpacing: 0.5),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Text(
+                            'Toca para escuchar',
+                            style: TextStyle(
+                                color: AppColors.dorado
+                                    .withOpacity(0.6),
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _botonControl(
+                  icono:
+                      bucle ? Icons.repeat_one : Icons.repeat,
+                  label: 'Bucle',
+                  activo: bucle,
+                  onTap: () => _player.toggleBucle(),
+                ),
+                if (puedeDescargar)
+                  _botonControl(
+                    icono: Icons.download_outlined,
+                    label: 'Descargar',
+                    onTap: () => _descargar(
+                      widget.cancion.audioUrl,
+                      nombre: DescargaService.nombreConTimestamp(
+                          widget.cancion.titulo, 'mp3'),
+                      mime: 'audio/mpeg',
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       );
-    }
+    },
+  );
+}
 
-    return ValueListenableBuilder<EstadoPlayer>(
-      valueListenable: _player.estado,
-      builder: (context, estado, _) {
-        final esEsta = estado.cancionId == widget.cancion.id;
-        final playing = esEsta && estado.playing;
-        final cargando = esEsta && estado.cargando;
-        final bucle = estado.modoBucle;
-
-        return Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.negro, Color(0xFF2A2A2A)],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  // Play
-                  GestureDetector(
-                    onTap: _togglePlay,
-                    child: Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        gradient: AppColors.gradienteDorado,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.dorado.withOpacity(0.4),
-                            blurRadius: 12,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: cargando
-                          ? const Padding(
-                              padding: EdgeInsets.all(16),
-                              child: CircularProgressIndicator(
-                                color: AppColors.granate,
-                                strokeWidth: 2.5,
-                              ),
-                            )
-                          : Icon(
-                              playing
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              color: AppColors.granate,
-                              size: 32,
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Barra
-                  Expanded(
-                    child: esEsta
-                        ? StreamBuilder<Duration>(
-                            stream: _player.player.positionStream,
-                            builder: (context, snap) {
-                              final pos = snap.data ?? Duration.zero;
-                              final dur =
-                                  _player.player.duration ?? Duration.zero;
-                              return Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-                                  SliderTheme(
-                                    data: SliderTheme.of(context)
-                                        .copyWith(
-                                      activeTrackColor:
-                                          AppColors.dorado,
-                                      thumbColor: AppColors.dorado,
-                                      thumbShape:
-                                          const RoundSliderThumbShape(
-                                              enabledThumbRadius: 6),
-                                      overlayShape:
-                                          const RoundSliderOverlayShape(
-                                              overlayRadius: 14),
-                                      inactiveTrackColor: AppColors
-                                          .dorado
-                                          .withOpacity(0.2),
-                                      trackHeight: 3,
-                                    ),
-                                    child: Slider(
-                                      value: pos.inSeconds
-                                          .toDouble()
-                                          .clamp(
-                                              0,
-                                              dur.inSeconds
-                                                  .toDouble()
-                                                  .clamp(1,
-                                                      double.infinity)),
-                                      max: dur.inSeconds
-                                          .toDouble()
-                                          .clamp(1, double.infinity),
-                                      onChanged: (v) =>
-                                          _player.player.seek(Duration(
-                                              seconds: v.toInt())),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
-                                    child: Text(
-                                      '${_fmt(pos)} / ${_fmt(dur)}',
-                                      style: TextStyle(
-                                          color: AppColors.dorado
-                                              .withOpacity(0.8),
-                                          fontSize: 11,
-                                          letterSpacing: 0.5),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          )
-                        : Center(
-                            child: Text(
-                              'Toca para escuchar',
-                              style: TextStyle(
-                                  color: AppColors.dorado
-                                      .withOpacity(0.6),
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic),
-                            ),
-                          ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              // Controles secundarios
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Bucle
-                  _botonControl(
-                    icono:
-                        bucle ? Icons.repeat_one : Icons.repeat,
-                    label: 'Bucle',
-                    activo: bucle,
-                    onTap: () => _player.toggleBucle(),
-                  ),
-                  // Descargar
-                  if (puedeDescargar)
-                    _botonControl(
-                      icono: Icons.download_outlined,
-                      label: 'Descargar',
-                      onTap: () => _descargar(
-                        widget.cancion.audioUrl,
-                        nombre: DescargaService.nombreConTimestamp(
-                            widget.cancion.titulo, 'mp3'),
-                        mime: 'audio/mpeg',
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _botonControl({
-    required IconData icono,
-    required String label,
-    bool activo = false,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: activo
-              ? AppColors.dorado.withOpacity(0.2)
-              : Colors.white.withOpacity(0.05),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: activo
-                ? AppColors.dorado.withOpacity(0.5)
-                : AppColors.dorado.withOpacity(0.15),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icono,
-                color: activo
-                    ? AppColors.dorado
-                    : AppColors.dorado.withOpacity(0.7),
-                size: 16),
-            const SizedBox(width: 6),
-            Text(label,
-                style: TextStyle(
-                    color: activo
-                        ? AppColors.dorado
-                        : AppColors.dorado.withOpacity(0.7),
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _filaInfo(BuildContext context, IconData icono, String label,
-      String valor) {
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icono, size: 18, color: AppColors.granate),
-          const SizedBox(width: 12),
-          Text('$label: ',
-              style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: onSurface.withOpacity(0.7),
-                  fontSize: 13)),
-          Expanded(
-              child: Text(valor,
-                  style: TextStyle(color: onSurface, fontSize: 13))),
-        ],
-      ),
-    );
-  }
-
-  Widget _notaPersonal(BuildContext context, Color onSurface) {
-    final textoActual = _usuario?.notaDe(widget.cancion.id) ?? '';
-    return Container(
-      padding: const EdgeInsets.all(18),
+Widget _botonControl({
+  required IconData icono,
+  required String label,
+  bool activo = false,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.dorado.withOpacity(0.1),
-            AppColors.dorado.withOpacity(0.05),
-          ],
+        color: activo
+            ? AppColors.dorado.withOpacity(0.2)
+            : Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: activo
+              ? AppColors.dorado.withOpacity(0.5)
+              : AppColors.dorado.withOpacity(0.15),
         ),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.dorado.withOpacity(0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.dorado.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.sticky_note_2,
-                    color: AppColors.granate, size: 14),
-              ),
-              const SizedBox(width: 10),
-              const Text('Mi nota personal',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate,
-                      fontSize: 13,
-                      letterSpacing: 1)),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.edit,
-                    color: AppColors.granate, size: 18),
-                onPressed: _editarNota,
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          if (textoActual.isEmpty)
-            Text(
-              'Toca el lápiz para escribir una nota privada '
-              '(solo la ves vos)',
+          Icon(icono,
+              color: activo
+                  ? AppColors.dorado
+                  : AppColors.dorado.withOpacity(0.7),
+              size: 16),
+          const SizedBox(width: 6),
+          Text(label,
               style: TextStyle(
-                color: onSurface.withOpacity(0.5),
-                fontStyle: FontStyle.italic,
-                fontSize: 12,
-              ),
-            )
-          else
-            Text(
-              textoActual,
-              style: TextStyle(
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-                color: onSurface,
-                height: 1.5,
-              ),
-            ),
+                  color: activo
+                      ? AppColors.dorado
+                      : AppColors.dorado.withOpacity(0.7),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5)),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+Widget _filaInfo(BuildContext context, IconData icono, String label,
+    String valor) {
+  final onSurface = Theme.of(context).colorScheme.onSurface;
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        Icon(icono, size: 18, color: AppColors.granate),
+        const SizedBox(width: 12),
+        Text('$label: ',
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: onSurface.withOpacity(0.7),
+                fontSize: 13)),
+        Expanded(
+            child: Text(valor,
+                style: TextStyle(color: onSurface, fontSize: 13))),
+      ],
+    ),
+  );
+}
+
+Widget _notaPersonal(BuildContext context, Color onSurface) {
+  final textoActual = _usuario?.notaDe(widget.cancion.id) ?? '';
+  return Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          AppColors.dorado.withOpacity(0.1),
+          AppColors.dorado.withOpacity(0.05),
+        ],
+      ),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: AppColors.dorado.withOpacity(0.3)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: AppColors.dorado.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.sticky_note_2,
+                  color: AppColors.granate, size: 14),
+            ),
+            const SizedBox(width: 10),
+            const Text('Mi nota personal',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate,
+                    fontSize: 13,
+                    letterSpacing: 1)),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.edit,
+                  color: AppColors.granate, size: 18),
+              onPressed: _editarNota,
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (textoActual.isEmpty)
+          Text(
+            'Toca el lápiz para escribir una nota privada '
+            '(solo la ves vos)',
+            style: TextStyle(
+              color: onSurface.withOpacity(0.5),
+              fontStyle: FontStyle.italic,
+              fontSize: 12,
+            ),
+          )
+        else
+          Text(
+            textoActual,
+            style: TextStyle(
+              fontSize: 14,
+              fontStyle: FontStyle.italic,
+              color: onSurface,
+              height: 1.5,
+            ),
+          ),
+      ],
+    ),
+  );
+}
 
   Future<void> _editarNota() async {
     final ctrl = TextEditingController(
@@ -1128,4 +1083,5 @@ Widget _heroTitulo(Cancion c, Color onSurface) {
     final m = d.inMinutes.toString().padLeft(2, '0');
     final s = (d.inSeconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
-  
+  }
+}

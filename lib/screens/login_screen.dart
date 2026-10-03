@@ -84,7 +84,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // === LOGO ===
                   Container(
                     width: 130,
                     height: 130,
@@ -101,7 +100,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const SikuriLogo(size: 130),
                   ),
                   const SizedBox(height: 28),
-                  // === TÍTULO ===
                   const Text(
                     'SIKURIS',
                     style: TextStyle(
@@ -123,16 +121,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 48),
 
-                  // === CARD DE LOGIN ===
+                  // Card de login
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.06),
+                      color: AppColors.blanco,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: AppColors.dorado.withOpacity(0.25),
-                        width: 1,
+                        color: AppColors.dorado.withOpacity(0.4),
+                        width: 1.5,
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 24,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
                     child: Column(
                       children: [
@@ -140,50 +145,97 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextField(
                           controller: _email,
                           keyboardType: TextInputType.emailAddress,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(
+                            color: AppColors.negro,
+                            fontSize: 15,
+                          ),
                           decoration: InputDecoration(
                             labelText: 'Email',
-                            labelStyle: TextStyle(
-                                color: AppColors.dorado.withOpacity(0.8)),
+                            labelStyle: const TextStyle(
+                                color: AppColors.granate,
+                                fontWeight: FontWeight.w600),
+                            floatingLabelStyle: const TextStyle(
+                                color: AppColors.granate,
+                                fontWeight: FontWeight.bold),
                             prefixIcon: const Icon(Icons.email_outlined,
-                                color: AppColors.dorado),
+                                color: AppColors.granate),
                             hintText: 'tu@email.com',
                             hintStyle: TextStyle(
                                 color:
-                                    Colors.white.withOpacity(0.3)),
+                                    AppColors.negro.withOpacity(0.35)),
+                            filled: true,
+                            fillColor: AppColors.grisClaro,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                  color: AppColors.dorado, width: 2),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                  color:
+                                      AppColors.dorado.withOpacity(0.5)),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Password
+                        // Contraseña
                         TextField(
                           controller: _pass,
                           obscureText: !_verPassword,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(
+                            color: AppColors.negro,
+                            fontSize: 15,
+                          ),
                           decoration: InputDecoration(
                             labelText: 'Contraseña',
-                            labelStyle: TextStyle(
-                                color: AppColors.dorado.withOpacity(0.8)),
+                            labelStyle: const TextStyle(
+                                color: AppColors.granate,
+                                fontWeight: FontWeight.w600),
+                            floatingLabelStyle: const TextStyle(
+                                color: AppColors.granate,
+                                fontWeight: FontWeight.bold),
                             prefixIcon: const Icon(Icons.lock_outline,
-                                color: AppColors.dorado),
+                                color: AppColors.granate),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _verPassword
                                     ? Icons.visibility_outlined
                                     : Icons.visibility_off_outlined,
-                                color: AppColors.dorado.withOpacity(0.6),
+                                color: AppColors.granate.withOpacity(0.6),
                               ),
                               onPressed: () => setState(
                                   () => _verPassword = !_verPassword),
                             ),
+                            filled: true,
+                            fillColor: AppColors.grisClaro,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                  color: AppColors.dorado, width: 2),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                  color:
+                                      AppColors.dorado.withOpacity(0.5)),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 28),
-                        // Botón login
+                        // Botón
                         SizedBox(
                           width: double.infinity,
                           height: 54,
                           child: FilledButton(
                             onPressed: _loading ? null : _login,
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.granate,
+                              foregroundColor: AppColors.dorado,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
                             child: _loading
                                 ? const SizedBox(
                                     width: 22,
@@ -203,8 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        // Link registro
+                        const SizedBox(height: 12),
                         TextButton(
                           onPressed: _loading
                               ? null
@@ -215,11 +266,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                           const RegistroScreen(),
                                     ),
                                   ),
-                          child: Text(
+                          child: const Text(
                             '¿No tienes cuenta? Regístrate',
                             style: TextStyle(
-                              color: AppColors.dorado.withOpacity(0.85),
-                              fontWeight: FontWeight.w500,
+                              color: AppColors.granate,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -227,7 +278,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  // === FOOTER ===
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

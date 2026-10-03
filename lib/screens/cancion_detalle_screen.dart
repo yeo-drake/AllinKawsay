@@ -211,6 +211,7 @@ Widget build(BuildContext context) {
   final puedeDescargar = _usuario?.puedeDescargar ?? false;
   final puedeComentar = _usuario?.puedeComentar ?? false;
   final esFavorito = _usuario?.esFavorito(c.id) ?? false;
+  final onSurface = Theme.of(context).colorScheme.onSurface;
 
   return Scaffold(
     appBar: AppBar(
@@ -226,12 +227,6 @@ Widget build(BuildContext context) {
             await _cargarUsuario();
           },
         ),
-        if (c.tieneVideo)
-          IconButton(
-            icon: const Icon(Icons.video_library),
-            tooltip: 'Ver video',
-            onPressed: () => _abrirVideo(c.videoUrl),
-          ),
         IconButton(
           icon: const Icon(Icons.slideshow),
           tooltip: 'Modo presentación',
@@ -263,442 +258,703 @@ Widget build(BuildContext context) {
       ],
     ),
     body: WatermarkOverlay(
-      opacity: 0.05,
+      opacity: 0.04,
       child: ListView(
         children: [
-          // === 1. TÍTULO ===
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  c.titulo,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.granate,
-                  ),
-                ),
-                if (c.autor.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    c.autor,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontStyle: FontStyle.italic,
-                      color: AppColors.negro.withOpacity(0.6),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
+          // === HERO HEADER ===
+          _heroTitulo(c, onSurface),
+          const SizedBox(height: 20),
 
-          // === 2. NUMEROFONÍA ===
+          // === NUMEROFONÍA ===
           if (c.tieneNumerofonia) ...[
-            const Divider(),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: VisorNumerofonia(estrofas: c.estrofas),
             ),
+            const SizedBox(height: 20),
           ] else if (c.tieneNumerofoniaString) ...[
-            const Divider(),
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Numerofonía',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.granate)),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.blanco,
-                      border:
-                          Border.all(color: AppColors.negro, width: 1),
-                    ),
-                    child: Text(
-                      c.numerofonia,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _seccionCard(
+                context,
+                icono: Icons.grid_on,
+                titulo: 'Numerofonía',
+                child: Text(
+                  c.numerofonia,
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                    color: onSurface,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // === VIDEO ===
+          if (c.tieneVideo) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TarjetaVideo(
+                url: c.videoUrl,
+                titulo: c.titulo,
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // === AUDIO ===
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _audioPlayerCompacto(puedeDescargar),
+          ),
+          const SizedBox(height: 16),
+
+          // === LETRA ===
+          if (c.letra.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _seccionCard(
+                context,
+                icono: Icons.text_fields,
+                titulo: 'Letra',
+                child: Text(
+                  c.letra,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.9,
+                    fontStyle: FontStyle.italic,
+                    color: onSurface,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // === DESCRIPCIÓN ===
+          if (c.descripcion.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _seccionCard(
+                context,
+                icono: Icons.notes,
+                titulo: 'Descripción',
+                child: Text(c.descripcion,
+                    style: TextStyle(
                         fontSize: 14,
+                        height: 1.5,
+                        color: onSurface.withOpacity(0.85))),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // === INFO EXPANDIBLE ===
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.cardColor(context),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                    color: AppColors.dorado.withOpacity(0.2)),
+              ),
+              child: ExpansionTile(
+                shape: const Border(),
+                collapsedShape: const Border(),
+                leading: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.granate.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.info_outline,
+                      color: AppColors.granate, size: 18),
+                ),
+                title: const Text('Información',
+                    style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: AppColors.negro,
-                      ),
+                        color: AppColors.granate,
+                        letterSpacing: 0.5)),
+                children: [
+                  Padding(
+                    padding:
+                        const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: Column(
+                      children: [
+                        _filaInfo(context, Icons.person, 'Autor',
+                            c.autor.isEmpty ? '—' : c.autor),
+                        _filaInfo(
+                            context,
+                            Icons.category,
+                            'Tipo',
+                            c.tipo == 'original'
+                                ? 'Original'
+                                : 'Adaptación'),
+                        _filaInfo(context, Icons.graphic_eq, 'Ritmo',
+                            c.ritmo.isEmpty ? '—' : c.ritmo),
+                        _filaInfo(context, Icons.play_arrow,
+                            'Reproducciones', '${c.reproducciones}'),
+                        if (c.tags.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8),
+                            child: Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: c.tags
+                                  .map((t) => Chip(
+                                        label: Text(t,
+                                            style: const TextStyle(
+                                                fontSize: 11)),
+                                        backgroundColor: AppColors
+                                            .dorado
+                                            .withOpacity(0.15),
+                                        padding: EdgeInsets.zero,
+                                        materialTapTargetSize:
+                                            MaterialTapTargetSize
+                                                .shrinkWrap,
+                                      ))
+                                  .toList(),
+                            ),
+                          ),
+                        if (c.creadorNombre.isNotEmpty)
+                          _filaInfo(context, Icons.upload,
+                              'Subido por', c.creadorNombre),
+                      ],
                     ),
                   ),
                 ],
               ),
             ),
-          ],
+          ),
+          const SizedBox(height: 16),
 
-          // === 2.5. VIDEO ===
-          if (c.tieneVideo) ...[
-            const Divider(),
-            TarjetaVideo(
-              url: c.videoUrl,
-              titulo: c.titulo,
-            ),
-          ],
-
-          // === 3. AUDIO ===
-          const Divider(),
+          // === COMENTARIOS EXPANDIBLE ===
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-            child: _audioPlayerCompacto(puedeDescargar),
-          ),
-
-          // === 4. LETRA ===
-          if (c.letra.isNotEmpty) ...[
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Text('Letra',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-              child: Text(
-                c.letra,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.8,
-                    fontStyle: FontStyle.italic),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.cardColor(context),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                    color: AppColors.dorado.withOpacity(0.2)),
               ),
-            ),
-          ],
-
-          // === 5. DESCRIPCIÓN ===
-          if (c.descripcion.isNotEmpty) ...[
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Text('Descripción',
-                  style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.granate)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Text(c.descripcion,
-                  style: const TextStyle(fontSize: 15, height: 1.5)),
-            ),
-          ],
-
-          const Divider(),
-
-          // === 6. INFORMACIÓN ===
-          ExpansionTile(
-            leading: const Icon(Icons.info_outline,
-                color: AppColors.granate),
-            title: const Text('Información',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.granate)),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: Column(
-                  children: [
-                    _fila(Icons.person, 'Autor',
-                        c.autor.isEmpty ? '—' : c.autor),
-                    _fila(
-                        Icons.category,
-                        'Tipo',
-                        c.tipo == 'original'
-                            ? 'Original'
-                            : 'Adaptación'),
-                    _fila(Icons.graphic_eq, 'Ritmo',
-                        c.ritmo.isEmpty ? '—' : c.ritmo),
-                    _fila(Icons.play_arrow, 'Reproducciones',
-                        '${c.reproducciones}'),
-                    if (c.tags.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 8),
-                        child: Wrap(
-                          spacing: 6,
-                          runSpacing: 6,
-                          children: c.tags
-                              .map((t) => Chip(
-                                    label: Text(t,
-                                        style: const TextStyle(
-                                            fontSize: 12)),
-                                    backgroundColor:
-                                        AppColors.dorado
-                                            .withOpacity(0.2),
-                                    padding: EdgeInsets.zero,
-                                    materialTapTargetSize:
-                                        MaterialTapTargetSize
-                                            .shrinkWrap,
-                                  ))
-                              .toList(),
-                        ),
-                      ),
-                    if (c.creadorNombre.isNotEmpty)
-                      _fila(
-                          Icons.upload, 'Subido por', c.creadorNombre),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // === 7. COMENTARIOS ===
-          ExpansionTile(
-            leading:
-                const Icon(Icons.comment, color: AppColors.granate),
-            title: const Text('Comentarios',
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.granate)),
-            children: [
-              SizedBox(height: 300, child: _comentariosBody()),
-              if (puedeComentar)
-                _comentarioInput()
-              else
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Solo los miembros del grupo pueden comentar.',
-                    style: TextStyle(
-                        color: AppColors.negro.withOpacity(0.5),
-                        fontStyle: FontStyle.italic),
+              child: ExpansionTile(
+                shape: const Border(),
+                collapsedShape: const Border(),
+                leading: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.granate.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                  child: const Icon(Icons.comment,
+                      color: AppColors.granate, size: 18),
                 ),
-            ],
+                title: const Text('Comentarios',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.granate,
+                        letterSpacing: 0.5)),
+                children: [
+                  SizedBox(height: 300, child: _comentariosBody()),
+                  if (puedeComentar)
+                    _comentarioInput()
+                  else
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'Solo los miembros del grupo pueden comentar.',
+                        style: TextStyle(
+                            color: onSurface.withOpacity(0.5),
+                            fontStyle: FontStyle.italic,
+                            fontSize: 12),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // === NOTA PERSONAL ===
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _notaPersonal(context, onSurface),
           ),
 
-          // === 8. NOTA PERSONAL ===
-          const Divider(),
-          _notaPersonal(),
-
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
         ],
       ),
     ),
   );
 }
 
-Widget _audioPlayerCompacto(bool puedeDescargar) {
-  if (widget.cancion.audioUrl.isEmpty) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.grisClaro,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.music_off,
-              color: AppColors.granate.withOpacity(0.4), size: 22),
-          const SizedBox(width: 12),
-          Text('Sin audio subido',
-              style: TextStyle(
-                  color: AppColors.negro.withOpacity(0.5),
-                  fontSize: 13)),
+Widget _heroTitulo(Cancion c, Color onSurface) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          AppColors.granate.withOpacity(0.08),
+          AppColors.dorado.withOpacity(0.05),
         ],
       ),
-    );
-  }
-
-  return ValueListenableBuilder<EstadoPlayer>(
-    valueListenable: _player.estado,
-    builder: (context, estado, _) {
-      final esEsta = estado.cancionId == widget.cancion.id;
-      final playing = esEsta && estado.playing;
-      final cargando = esEsta && estado.cargando;
-      final bucle = estado.modoBucle;
-
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppColors.negro,
-          borderRadius: BorderRadius.circular(30),
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(28),
+        bottomRight: Radius.circular(28),
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          c.titulo,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: AppColors.granate,
+            letterSpacing: 0.3,
+            height: 1.2,
+          ),
         ),
-        child: Row(
-          children: [
-            IconButton(
-              iconSize: 36,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: Icon(
-                cargando
-                    ? Icons.hourglass_top
-                    : playing
-                        ? Icons.pause_circle_filled
-                        : Icons.play_circle_filled,
-                color: AppColors.dorado,
-              ),
-              onPressed: _togglePlay,
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: esEsta
-                  ? StreamBuilder<Duration>(
-                      stream: _player.player.positionStream,
-                      builder: (context, snap) {
-                        final pos = snap.data ?? Duration.zero;
-                        final dur =
-                            _player.player.duration ?? Duration.zero;
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: SliderTheme(
-                                data:
-                                    SliderTheme.of(context).copyWith(
-                                  activeTrackColor: AppColors.dorado,
-                                  thumbColor: AppColors.dorado,
-                                  thumbShape:
-                                      const RoundSliderThumbShape(
-                                          enabledThumbRadius: 6),
-                                  overlayShape:
-                                      const RoundSliderOverlayShape(
-                                          overlayRadius: 12),
-                                  inactiveTrackColor:
-                                      AppColors.dorado
-                                          .withOpacity(0.2),
-                                  trackHeight: 3,
-                                ),
-                                child: Slider(
-                                  value: pos.inSeconds
-                                      .toDouble()
-                                      .clamp(
-                                          0,
-                                          dur.inSeconds
-                                              .toDouble()
-                                              .clamp(
-                                                  1, double.infinity)),
-                                  max: dur.inSeconds
-                                      .toDouble()
-                                      .clamp(1, double.infinity),
-                                  onChanged: (v) => _player.player
-                                      .seek(Duration(
-                                          seconds: v.toInt())),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '${_fmt(pos)} / ${_fmt(dur)}',
-                              style: const TextStyle(
-                                  color: AppColors.dorado,
-                                  fontSize: 11),
-                            ),
-                          ],
-                        );
-                      },
-                    )
-                  : const Center(
-                      child: Text('Toca play para escuchar',
-                          style: TextStyle(
-                              color: AppColors.dorado,
-                              fontSize: 11,
-                              fontStyle: FontStyle.italic)),
-                    ),
-            ),
-            IconButton(
-              iconSize: 22,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              icon: Icon(
-                bucle ? Icons.repeat_one : Icons.repeat,
-                color: bucle
-                    ? AppColors.dorado
-                    : AppColors.dorado.withOpacity(0.5),
-              ),
-              tooltip: 'Modo bucle',
-              onPressed: () => _player.toggleBucle(),
-            ),
-            if (puedeDescargar)
-              IconButton(
-                iconSize: 22,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon:
-                    const Icon(Icons.download, color: AppColors.dorado),
-                tooltip: 'Descargar audio',
-                onPressed: () => _descargar(
-                  widget.cancion.audioUrl,
-                  nombre: DescargaService.nombreConTimestamp(
-                      widget.cancion.titulo, 'mp3'),
-                  mime: 'audio/mpeg',
+        if (c.autor.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(Icons.person_outline,
+                  size: 14, color: onSurface.withOpacity(0.5)),
+              const SizedBox(width: 4),
+              Text(
+                c.autor,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                  color: onSurface.withOpacity(0.6),
                 ),
               ),
-            const SizedBox(width: 4),
-          ],
-        ),
-      );
-    },
+            ],
+          ),
+        ],
+        if (c.ritmo.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.granate.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.graphic_eq,
+                    size: 12, color: AppColors.granate),
+                const SizedBox(width: 4),
+                Text(
+                  c.ritmo,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.granate,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    ),
   );
 }
 
-  Widget _notaPersonal() {
-    final textoActual = _usuario?.notaDe(widget.cancion.id) ?? '';
-    return Padding(
-      padding: const EdgeInsets.all(16),
+  Widget _seccionCard(BuildContext context,
+      {required IconData icono,
+      required String titulo,
+      required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.cardColor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.dorado.withOpacity(0.2)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.sticky_note_2,
-                  color: AppColors.granate),
-              const SizedBox(width: 8),
-              const Text(
-                'Mi nota personal',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.granate,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.granate.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
+                child: Icon(icono,
+                    color: AppColors.granate, size: 14),
               ),
+              const SizedBox(width: 10),
+              Text(titulo,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate,
+                      fontSize: 13,
+                      letterSpacing: 1)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _audioPlayerCompacto(bool puedeDescargar) {
+    if (widget.cancion.audioUrl.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.cardColor(context),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.dorado.withOpacity(0.15)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.granate.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.music_off,
+                  color: AppColors.granate.withOpacity(0.5), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Text('Sin audio subido',
+                style: TextStyle(
+                    color:
+                        Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.5),
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic)),
+          ],
+        ),
+      );
+    }
+
+    return ValueListenableBuilder<EstadoPlayer>(
+      valueListenable: _player.estado,
+      builder: (context, estado, _) {
+        final esEsta = estado.cancionId == widget.cancion.id;
+        final playing = esEsta && estado.playing;
+        final cargando = esEsta && estado.cargando;
+        final bucle = estado.modoBucle;
+
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.negro, Color(0xFF2A2A2A)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  // Play
+                  GestureDetector(
+                    onTap: _togglePlay,
+                    child: Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.gradienteDorado,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.dorado.withOpacity(0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: cargando
+                          ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: CircularProgressIndicator(
+                                color: AppColors.granate,
+                                strokeWidth: 2.5,
+                              ),
+                            )
+                          : Icon(
+                              playing
+                                  ? Icons.pause_rounded
+                                  : Icons.play_arrow_rounded,
+                              color: AppColors.granate,
+                              size: 32,
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Barra
+                  Expanded(
+                    child: esEsta
+                        ? StreamBuilder<Duration>(
+                            stream: _player.player.positionStream,
+                            builder: (context, snap) {
+                              final pos = snap.data ?? Duration.zero;
+                              final dur =
+                                  _player.player.duration ?? Duration.zero;
+                              return Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  SliderTheme(
+                                    data: SliderTheme.of(context)
+                                        .copyWith(
+                                      activeTrackColor:
+                                          AppColors.dorado,
+                                      thumbColor: AppColors.dorado,
+                                      thumbShape:
+                                          const RoundSliderThumbShape(
+                                              enabledThumbRadius: 6),
+                                      overlayShape:
+                                          const RoundSliderOverlayShape(
+                                              overlayRadius: 14),
+                                      inactiveTrackColor: AppColors
+                                          .dorado
+                                          .withOpacity(0.2),
+                                      trackHeight: 3,
+                                    ),
+                                    child: Slider(
+                                      value: pos.inSeconds
+                                          .toDouble()
+                                          .clamp(
+                                              0,
+                                              dur.inSeconds
+                                                  .toDouble()
+                                                  .clamp(1,
+                                                      double.infinity)),
+                                      max: dur.inSeconds
+                                          .toDouble()
+                                          .clamp(1, double.infinity),
+                                      onChanged: (v) =>
+                                          _player.player.seek(Duration(
+                                              seconds: v.toInt())),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8),
+                                    child: Text(
+                                      '${_fmt(pos)} / ${_fmt(dur)}',
+                                      style: TextStyle(
+                                          color: AppColors.dorado
+                                              .withOpacity(0.8),
+                                          fontSize: 11,
+                                          letterSpacing: 0.5),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          )
+                        : Center(
+                            child: Text(
+                              'Toca para escuchar',
+                              style: TextStyle(
+                                  color: AppColors.dorado
+                                      .withOpacity(0.6),
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Controles secundarios
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Bucle
+                  _botonControl(
+                    icono:
+                        bucle ? Icons.repeat_one : Icons.repeat,
+                    label: 'Bucle',
+                    activo: bucle,
+                    onTap: () => _player.toggleBucle(),
+                  ),
+                  // Descargar
+                  if (puedeDescargar)
+                    _botonControl(
+                      icono: Icons.download_outlined,
+                      label: 'Descargar',
+                      onTap: () => _descargar(
+                        widget.cancion.audioUrl,
+                        nombre: DescargaService.nombreConTimestamp(
+                            widget.cancion.titulo, 'mp3'),
+                        mime: 'audio/mpeg',
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _botonControl({
+    required IconData icono,
+    required String label,
+    bool activo = false,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: activo
+              ? AppColors.dorado.withOpacity(0.2)
+              : Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: activo
+                ? AppColors.dorado.withOpacity(0.5)
+                : AppColors.dorado.withOpacity(0.15),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icono,
+                color: activo
+                    ? AppColors.dorado
+                    : AppColors.dorado.withOpacity(0.7),
+                size: 16),
+            const SizedBox(width: 6),
+            Text(label,
+                style: TextStyle(
+                    color: activo
+                        ? AppColors.dorado
+                        : AppColors.dorado.withOpacity(0.7),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _filaInfo(BuildContext context, IconData icono, String label,
+      String valor) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Icon(icono, size: 18, color: AppColors.granate),
+          const SizedBox(width: 12),
+          Text('$label: ',
+              style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: onSurface.withOpacity(0.7),
+                  fontSize: 13)),
+          Expanded(
+              child: Text(valor,
+                  style: TextStyle(color: onSurface, fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
+  Widget _notaPersonal(BuildContext context, Color onSurface) {
+    final textoActual = _usuario?.notaDe(widget.cancion.id) ?? '';
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.dorado.withOpacity(0.1),
+            AppColors.dorado.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.dorado.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.dorado.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.sticky_note_2,
+                    color: AppColors.granate, size: 14),
+              ),
+              const SizedBox(width: 10),
+              const Text('Mi nota personal',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate,
+                      fontSize: 13,
+                      letterSpacing: 1)),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.edit,
-                    color: AppColors.granate, size: 20),
+                    color: AppColors.granate, size: 18),
                 onPressed: _editarNota,
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           if (textoActual.isEmpty)
             Text(
               'Toca el lápiz para escribir una nota privada '
               '(solo la ves vos)',
               style: TextStyle(
-                color: AppColors.negro.withOpacity(0.5),
+                color: onSurface.withOpacity(0.5),
                 fontStyle: FontStyle.italic,
-                fontSize: 13,
+                fontSize: 12,
               ),
             )
           else
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.dorado.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: AppColors.dorado.withOpacity(0.5)),
-              ),
-              child: Text(
-                textoActual,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontStyle: FontStyle.italic,
-                  color: AppColors.negro,
-                ),
+            Text(
+              textoActual,
+              style: TextStyle(
+                fontSize: 14,
+                fontStyle: FontStyle.italic,
+                color: onSurface,
+                height: 1.5,
               ),
             ),
         ],
@@ -721,7 +977,6 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
           decoration: const InputDecoration(
             hintText:
                 'Ej: esta la toco con la 6 tapada, entrada en la 3ra...',
-            border: OutlineInputBorder(),
           ),
         ),
         actions: [
@@ -742,6 +997,7 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
   }
 
   Widget _comentariosBody() {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     return StreamBuilder<List<Comentario>>(
       stream: ComentarioService().listar(widget.cancion.id),
       builder: (context, snap) {
@@ -754,8 +1010,9 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
         if (lista.isEmpty) {
           return Center(
             child: Text('Sin comentarios aún',
-                style:
-                    TextStyle(color: AppColors.negro.withOpacity(0.5))),
+                style: TextStyle(
+                    color: onSurface.withOpacity(0.5),
+                    fontStyle: FontStyle.italic)),
           );
         }
         return ListView.builder(
@@ -768,29 +1025,42 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
             return Card(
               margin: const EdgeInsets.only(bottom: 8),
               child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: AppColors.granate,
+                leading: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.gradienteGranate,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
                   child: Text(
                     c.autorNombre.isNotEmpty
                         ? c.autorNombre[0].toUpperCase()
                         : '?',
-                    style: const TextStyle(color: AppColors.dorado),
+                    style: const TextStyle(
+                        color: AppColors.dorado,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
                 title: Text(c.autorNombre,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14)),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: onSurface)),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4),
-                    Text(c.texto),
+                    Text(c.texto,
+                        style: TextStyle(
+                            color: onSurface.withOpacity(0.8),
+                            fontSize: 13)),
                     const SizedBox(height: 4),
                     Text(
                       _fmtFecha(c.fecha),
                       style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.negro.withOpacity(0.5)),
+                          fontSize: 10,
+                          color: onSurface.withOpacity(0.4)),
                     ),
                   ],
                 ),
@@ -815,7 +1085,8 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         border: Border(
-            top: BorderSide(color: AppColors.dorado.withOpacity(0.5))),
+            top: BorderSide(
+                color: AppColors.dorado.withOpacity(0.3))),
       ),
       child: SafeArea(
         top: false,
@@ -826,15 +1097,21 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
                 controller: _comentarioCtrl,
                 decoration: const InputDecoration(
                   hintText: 'Escribe un comentario...',
-                  border: OutlineInputBorder(),
                   isDense: true,
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.send, color: AppColors.granate),
-              onPressed: _enviarComentario,
+            Container(
+              decoration: BoxDecoration(
+                gradient: AppColors.gradienteGranate,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.send,
+                    color: AppColors.dorado, size: 20),
+                onPressed: _enviarComentario,
+              ),
             ),
           ],
         ),
@@ -851,22 +1128,4 @@ Widget _audioPlayerCompacto(bool puedeDescargar) {
     final m = d.inMinutes.toString().padLeft(2, '0');
     final s = (d.inSeconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
-  }
-
-  Widget _fila(IconData icono, String label, String valor) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Icon(icono, size: 20, color: AppColors.granate),
-          const SizedBox(width: 12),
-          Text('$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w600)),
-          Expanded(
-              child: Text(valor,
-                  style: const TextStyle(color: AppColors.negro))),
-        ],
-      ),
-    );
-  }
-}
+  

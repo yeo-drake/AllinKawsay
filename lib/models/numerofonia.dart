@@ -1,3 +1,7 @@
+/// Una "estrofa" es UNA tabla chica (2 filas: 7 y 6).
+/// Ejemplo real:
+///   Fila 7: 6 6 6 5 56665 6
+///   Fila 6: 6 5 6 5 4434 _ 5 6
 class EstrofaNumerofonia {
   List<String> fila7;
   List<String> fila6;
@@ -7,29 +11,10 @@ class EstrofaNumerofonia {
     List<String>? fila7,
     List<String>? fila6,
     this.bis = false,
-  })  : fila7 = (fila7 == null || fila7.isEmpty) ? [''] : fila7,
-        fila6 = (fila6 == null || fila6.isEmpty) ? [''] : fila6 {
-    final max = this.fila7.length > this.fila6.length
-        ? this.fila7.length
-        : this.fila6.length;
-    while (this.fila7.length < max) this.fila7.add('');
-    while (this.fila6.length < max) this.fila6.add('');
-  }
+  })  : fila7 = fila7 ?? [],
+        fila6 = fila6 ?? [];
 
-  int get columnas => fila7.length;
-  bool get vacia => fila7.every((c) => c.isEmpty);
-
-  void agregarColumna() {
-    fila7.add('');
-    fila6.add('');
-  }
-
-  void eliminarColumna(int index) {
-    if (fila7.length <= 1) return;
-    if (index < 0 || index >= fila7.length) return;
-    fila7.removeAt(index);
-    fila6.removeAt(index);
-  }
+  bool get vacia => fila7.isEmpty && fila6.isEmpty;
 
   EstrofaNumerofonia copy() => EstrofaNumerofonia(
         fila7: List.from(fila7),
@@ -49,5 +34,26 @@ class EstrofaNumerofonia {
       fila6: List<String>.from(m['fila6'] ?? []),
       bis: m['bis'] ?? false,
     );
+  }
+
+  /// Parsea "6 6 6 5 56665 6" → ["6","6","6","5","56665","6"]
+  /// Acepta `_` o `.` como celda vacía.
+  static List<String> parseFila(String input) {
+    final partes = input.trim().split(RegExp(r'\s+'));
+    final out = <String>[];
+    for (final p in partes) {
+      if (p.isEmpty) continue;
+      if (p == '_' || p == '.' || p == '·') {
+        out.add('');
+      } else {
+        out.add(p);
+      }
+    }
+    return out;
+  }
+
+  /// ["6","6","6"] → "6 6 6"
+  static String stringifyFila(List<String> fila) {
+    return fila.map((c) => c.isEmpty ? '_' : c).join(' ');
   }
 }

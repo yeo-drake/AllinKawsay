@@ -10,8 +10,8 @@ class AppVersion {
   // El cuarto número (build) se genera automático desde GitHub Actions.
 
   static const String major = '1';
-  static const String minor = '0';
-  static const String patch = '0';
+  static const String minor = '1';
+  static const String patch = '2';
 
   static const int build = VersionBuild.build;
 

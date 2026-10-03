@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../services/respaldo_service.dart';
 import '../theme/colors.dart';
+import '../widgets/watermark_overlay.dart';
 
 class ExportarRespaldoScreen extends StatefulWidget {
   const ExportarRespaldoScreen({super.key});
@@ -67,146 +68,213 @@ class _ExportarRespaldoScreenState extends State<ExportarRespaldoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
       appBar: AppBar(title: const Text('EXPORTAR RESPALDO')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Info
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
+      body: WatermarkOverlay(
+        opacity: 0.04,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          children: [
+            // Info card
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.granate.withOpacity(0.08),
+                    AppColors.dorado.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: AppColors.dorado.withOpacity(0.25)),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.info_outline,
-                          color: AppColors.granate),
-                      const SizedBox(width: 8),
-                      const Text(
-                        '¿Para qué sirve?',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.granate,
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.granate.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
                         ),
+                        child: const Icon(Icons.help_outline,
+                            color: AppColors.granate, size: 14),
                       ),
+                      const SizedBox(width: 10),
+                      const Text('¿PARA QUÉ SIRVE?',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                              color: AppColors.granate,
+                              letterSpacing: 2)),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     'Genera un archivo JSON con TODAS las canciones, '
                     'eventos, recuerdos, historia y usuarios del grupo. '
                     'Guardalo como backup o para migrar a otro proyecto.',
                     style: TextStyle(
                       fontSize: 13,
-                      color: AppColors.negro.withOpacity(0.7),
-                      height: 1.4,
+                      color: onSurface.withOpacity(0.75),
+                      height: 1.5,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-          // Conteo
-          if (_conteo != null)
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Contenido actual',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: AppColors.granate,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _fila('Canciones', _conteo!['canciones'] ?? 0),
-                    _fila('Eventos', _conteo!['eventos'] ?? 0),
-                    _fila('Recuerdos', _conteo!['recuerdos'] ?? 0),
-                    _fila('Usuarios', _conteo!['usuarios'] ?? 0),
-                  ],
+            // Conteo
+            if (_conteo != null)
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor(context),
+                  borderRadius: BorderRadius.circular(20),
+                  border:
+                      Border.all(color: AppColors.dorado.withOpacity(0.2)),
                 ),
-              ),
-            ),
-
-          const SizedBox(height: 20),
-
-          // Botón generar
-          if (_jsonGenerado == null)
-            SizedBox(
-              height: 52,
-              child: FilledButton.icon(
-                onPressed: _generando ? null : _generar,
-                icon: _generando
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: AppColors.dorado,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : const Icon(Icons.download),
-                label: Text(
-                  _generando ? 'GENERANDO...' : 'GENERAR RESPALDO',
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-
-          // Preview + copiar
-          if (_jsonGenerado != null) ...[
-            Card(
-              color: AppColors.negro,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.check_circle,
-                            color: AppColors.dorado, size: 20),
-                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.granate.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(Icons.inventory_2_outlined,
+                              color: AppColors.granate, size: 14),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text('CONTENIDO ACTUAL',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                color: AppColors.granate,
+                                letterSpacing: 2)),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    _fila(onSurface, Icons.library_music, 'Canciones',
+                        _conteo!['canciones'] ?? 0),
+                    _fila(onSurface, Icons.event, 'Eventos',
+                        _conteo!['eventos'] ?? 0),
+                    _fila(onSurface, Icons.photo_library, 'Recuerdos',
+                        _conteo!['recuerdos'] ?? 0),
+                    _fila(onSurface, Icons.people, 'Usuarios',
+                        _conteo!['usuarios'] ?? 0),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 24),
+
+            // Botón generar
+            if (_jsonGenerado == null)
+              SizedBox(
+                height: 54,
+                child: FilledButton.icon(
+                  onPressed: _generando ? null : _generar,
+                  icon: _generando
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: AppColors.dorado,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Icon(Icons.download),
+                  label: Text(
+                    _generando ? 'GENERANDO...' : 'GENERAR RESPALDO',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2),
+                  ),
+                ),
+              ),
+
+            // Preview + copiar
+            if (_jsonGenerado != null) ...[
+              Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [AppColors.negro, Color(0xFF2A2A2A)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                      color: AppColors.dorado.withOpacity(0.4)),
+                ),
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppColors.dorado.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.check_circle,
+                              color: AppColors.dorado, size: 16),
+                        ),
+                        const SizedBox(width: 10),
                         const Text(
                           'Respaldo generado',
                           style: TextStyle(
                             color: AppColors.dorado,
                             fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            letterSpacing: 0.5,
                           ),
                         ),
                         const Spacer(),
-                        Text(
-                          '${(_jsonGenerado!.length / 1024).toStringAsFixed(1)} KB',
-                          style: TextStyle(
-                            color: AppColors.dorado.withOpacity(0.7),
-                            fontSize: 12,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color:
+                                AppColors.dorado.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '${(_jsonGenerado!.length / 1024).toStringAsFixed(1)} KB',
+                            style: TextStyle(
+                              color: AppColors.dorado.withOpacity(0.9),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     Text(
                       'Vista previa (primeras 300 letras):',
                       style: TextStyle(
-                        color: AppColors.dorado.withOpacity(0.7),
-                        fontSize: 11,
+                        color: AppColors.dorado.withOpacity(0.6),
+                        fontSize: 10,
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         _jsonGenerado!.length > 300
@@ -215,66 +283,95 @@ class _ExportarRespaldoScreenState extends State<ExportarRespaldoScreen> {
                         style: const TextStyle(
                           color: AppColors.dorado,
                           fontFamily: 'monospace',
-                          fontSize: 10,
-                          height: 1.3,
+                          fontSize: 9.5,
+                          height: 1.4,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 52,
-              child: FilledButton.icon(
-                onPressed: _copiado ? null : _copiar,
-                icon: Icon(_copiado ? Icons.check : Icons.copy),
-                label: Text(
-                  _copiado
-                      ? '¡COPIADO!'
-                      : 'COPIAR AL PORTAPAPELES',
-                  style: const TextStyle(
-                      fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  '💡 Después de copiar, pegá el contenido en:\n'
-                  '• Un chat tuyo de WhatsApp (queda guardado)\n'
-                  '• Google Drive → nuevo documento\n'
-                  '• Gmail → borrador\n\n'
-                  'Ese texto es tu respaldo. Guardalo bien.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.negro.withOpacity(0.7),
-                    height: 1.5,
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 54,
+                child: FilledButton.icon(
+                  onPressed: _copiado ? null : _copiar,
+                  icon: Icon(_copiado ? Icons.check : Icons.copy),
+                  label: Text(
+                    _copiado
+                        ? '¡COPIADO!'
+                        : 'COPIAR AL PORTAPAPELES',
+                    style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5),
                   ),
                 ),
               ),
-            ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.dorado.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                      color: AppColors.dorado.withOpacity(0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.lightbulb_outline,
+                        color: AppColors.granate, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Después de copiar, pegá el contenido en:\n'
+                        '• Un chat tuyo de WhatsApp\n'
+                        '• Google Drive → nuevo documento\n'
+                        '• Gmail → borrador',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: onSurface.withOpacity(0.75),
+                          height: 1.6,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
-          const SizedBox(height: 24),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _fila(String label, int valor) {
+  Widget _fila(Color onSurface, IconData icono, String label, int valor) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          Expanded(child: Text(label)),
-          Text(
-            '$valor',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: AppColors.granate,
+          Icon(icono, size: 16, color: AppColors.granate),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: 13, color: onSurface.withOpacity(0.85))),
+          ),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.granate.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              '$valor',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.granate,
+                fontSize: 13,
+              ),
             ),
           ),
         ],

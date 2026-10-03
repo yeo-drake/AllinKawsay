@@ -120,54 +120,53 @@ class _CancionDetalleScreenState extends State<CancionDetalleScreen> {
     }
   }
 
-  Future<void> _compartir() async {
-    final c = widget.cancion;
-    final sb = StringBuffer();
-    sb.writeln('🎵 *${c.titulo}*');
-    if (c.autor.isNotEmpty) sb.writeln('✍️ Autor: ${c.autor}');
-    if (c.ritmo.isNotEmpty) sb.writeln('🎶 Ritmo: ${c.ritmo}');
+ Future<void> _compartir() async {
+  final c = widget.cancion;
+  final sb = StringBuffer();
+  sb.writeln('🎵 *${c.titulo}*');
+  if (c.autor.isNotEmpty) sb.writeln('✍️ Autor: ${c.autor}');
+  if (c.ritmo.isNotEmpty) sb.writeln('🎶 Ritmo: ${c.ritmo}');
 
-    if (c.tieneNumerofonia) {
-      sb.writeln('');
-      sb.writeln('📊 *Numerofonía:*');
-      for (int i = 0; i < c.estrofas.length; i++) {
-        final e = c.estrofas[i];
-        if (e.vacia) continue;
-        sb.writeln('');
-        sb.writeln('Estrofa ${i + 1}${e.bis ? " (BIS)" : ""}:');
-        sb.writeln('7: ${e.fila7.join(" | ")}');
-        sb.writeln('6: ${e.fila6.join(" | ")}');
-      }
-    }
-
-    if (c.letra.isNotEmpty) {
-      sb.writeln('');
-      sb.writeln('📝 Letra:');
-      sb.writeln(c.letra);
-    }
-
+  if (c.tieneNumerofonia) {
     sb.writeln('');
-    sb.writeln('— Enviado desde Allin Kawsay');
+    sb.writeln('📊 *Numerofonía:*');
+    for (int i = 0; i < c.estrofas.length; i++) {
+      final e = c.estrofas[i];
+      if (e.vacia) continue;
+      sb.writeln('');
+      sb.writeln('Estrofa ${i + 1}${e.bis ? " (BIS)" : ""}:');
+      sb.writeln(e.texto);
+    }
+  }
 
-    final texto = Uri.encodeComponent(sb.toString());
-    final url = Uri.parse('https://wa.me/?text=$texto');
+  if (c.letra.isNotEmpty) {
+    sb.writeln('');
+    sb.writeln('📝 Letra:');
+    sb.writeln(c.letra);
+  }
 
-    try {
-      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No se pudo abrir WhatsApp')),
-          );
-        }
-      }
-    } catch (e) {
+  sb.writeln('');
+  sb.writeln('— Enviado desde Allin Kawsay');
+
+  final texto = Uri.encodeComponent(sb.toString());
+  final url = Uri.parse('https://wa.me/?text=$texto');
+
+  try {
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          const SnackBar(content: Text('No se pudo abrir WhatsApp')),
         );
       }
     }
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
+}
 
   void _enviarComentario() async {
     final texto = _comentarioCtrl.text.trim();

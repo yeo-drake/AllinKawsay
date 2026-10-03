@@ -176,11 +176,10 @@ Widget build(BuildContext context) {
     body: ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       children: [
-        // Header
         _header(onSurface, _esEdicion),
         const SizedBox(height: 20),
 
-        // === SECCIÓN: INFO BÁSICA ===
+        // === INFO BÁSICA ===
         _seccion(Icons.info_outline, 'INFORMACIÓN BÁSICA'),
         const SizedBox(height: 10),
 
@@ -209,7 +208,8 @@ Widget build(BuildContext context) {
           decoration: BoxDecoration(
             color: AppColors.cardColor(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.dorado.withOpacity(0.5)),
+            border:
+                Border.all(color: AppColors.dorado.withOpacity(0.5)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,7 +296,7 @@ Widget build(BuildContext context) {
         ),
         const SizedBox(height: 24),
 
-        // === SECCIÓN: TAGS ===
+        // === TAGS ===
         _seccion(Icons.tag, 'TAGS PARA BÚSQUEDA'),
         const SizedBox(height: 10),
 
@@ -358,7 +358,7 @@ Widget build(BuildContext context) {
         ],
         const SizedBox(height: 24),
 
-          // === SECCIÓN: NUMEROFONÍA ===
+          // === NUMEROFONÍA ===
           _seccion(Icons.grid_on, 'NUMEROFONÍA'),
           const SizedBox(height: 10),
 
@@ -370,7 +370,7 @@ Widget build(BuildContext context) {
           ),
           const SizedBox(height: 24),
 
-          // === SECCIÓN: LETRA ===
+          // === LETRA Y DESCRIPCIÓN ===
           _seccion(Icons.text_fields, 'LETRA Y DESCRIPCIÓN'),
           const SizedBox(height: 10),
 
@@ -397,7 +397,7 @@ Widget build(BuildContext context) {
           ),
           const SizedBox(height: 24),
 
-          // === SECCIÓN: AUDIO ===
+          // === AUDIO ===
           _seccion(Icons.audiotrack, 'AUDIO'),
           const SizedBox(height: 10),
 
@@ -462,7 +462,7 @@ Widget build(BuildContext context) {
             ),
           const SizedBox(height: 24),
 
-          // === SECCIÓN: VIDEO ===
+          // === VIDEO ===
           _seccion(Icons.video_library_outlined, 'VIDEO (OPCIONAL)'),
           const SizedBox(height: 10),
 

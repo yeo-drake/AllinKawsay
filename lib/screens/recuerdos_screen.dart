@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/recuerdo.dart';
 import '../models/usuario.dart';
+import '../services/descarga_service.dart';
 import '../services/recuerdo_service.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
@@ -74,7 +75,6 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
           autofocus: true,
           decoration: const InputDecoration(
             hintText: 'Ej: yo estoy en la tercera foto, qué lindo día...',
-            border: OutlineInputBorder(),
           ),
         ),
         actions: [
@@ -107,21 +107,59 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
     );
   }
 
-  Future<void> _descargarFoto(String url) async {
-    final uri = Uri.parse(url);
-    try {
-      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('No se pudo abrir la imagen')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
+  Future<void> _descargarFoto(String url, {String titulo = ''}) async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.dorado,
+                  strokeWidth: 2.5,
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('Descargando...'),
+            ],
+          ),
+          duration: Duration(seconds: 30),
+        ),
+      );
+    }
+
+    final nombre = DescargaService.nombreConTimestamp(
+        titulo.isEmpty ? 'recuerdo' : titulo, 'jpg');
+
+    final resultado =
+        await DescargaService.descargar(url, nombre, 'image/jpeg');
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      if (resultado != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle,
+                    color: AppColors.dorado),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Guardado en Descargas: $resultado'),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo descargar'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -131,22 +169,22 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
   Widget build(BuildContext context) {
     final esAdmin = _usuario?.esAdmin ?? false;
     final puedeDescargar = _usuario?.puedeDescargar ?? false;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
 
     return Scaffold(
       appBar: AppBar(title: const Text('RECUERDOS')),
       floatingActionButton: esAdmin
           ? FloatingActionButton(
-              backgroundColor: AppColors.granate,
-              foregroundColor: AppColors.dorado,
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (_) => const AgregarRecuerdoScreen()),
               ),
-              child: const Icon(Icons.add_photo_alternate),
+              child: const Icon(Icons.add_photo_alternate, size: 24),
             )
           : null,
       body: WatermarkOverlay(
+        opacity: 0.04,
         child: StreamBuilder<List<Recuerdo>>(
           stream: _service.listar(),
           builder: (context, snap) {
@@ -172,15 +210,23 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.photo_library,
-                          size: 80,
-                          color: AppColors.granate.withOpacity(0.3)),
-                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.granate.withOpacity(0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.photo_library,
+                            size: 48,
+                            color: AppColors.granate.withOpacity(0.4)),
+                      ),
+                      const SizedBox(height: 20),
                       const Text('Sin recuerdos aún',
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.granate)),
+                              color: AppColors.granate,
+                              letterSpacing: 0.5)),
                       const SizedBox(height: 8),
                       Text(
                         esAdmin
@@ -188,7 +234,8 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
                             : 'El admin aún no ha subido fotos',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: AppColors.negro.withOpacity(0.6)),
+                            color: onSurface.withOpacity(0.55),
+                            fontSize: 13),
                       ),
                     ],
                   ),
@@ -196,227 +243,267 @@ class _RecuerdosScreenState extends State<RecuerdosScreen> {
               );
             }
             return ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               itemCount: lista.length,
               itemBuilder: (context, i) {
                 final r = lista[i];
                 final nota = _usuario?.notaRecuerdo(r.id) ?? '';
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(r.titulo,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: AppColors.granate)),
-                            ),
-                            IconButton(
-                              icon: Icon(
-                                nota.isEmpty
-                                    ? Icons.sticky_note_2_outlined
-                                    : Icons.sticky_note_2,
-                                color: nota.isEmpty
-                                    ? AppColors.negro.withOpacity(0.4)
-                                    : AppColors.dorado,
-                              ),
-                              tooltip: 'Mi nota personal',
-                              onPressed: () => _editarNota(r),
-                            ),
-                            if (esAdmin)
-                              PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert,
-                                    color: AppColors.granate),
-                                onSelected: (v) {
-                                  if (v == 'editar') {
-                                    _editar(r);
-                                  } else if (v == 'eliminar') {
-                                    _eliminar(r);
-                                  }
-                                },
-                                itemBuilder: (_) => const [
-                                  PopupMenuItem(
-                                    value: 'editar',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.edit, size: 20),
-                                        SizedBox(width: 8),
-                                        Text('Editar'),
-                                      ],
-                                    ),
-                                  ),
-                                  PopupMenuItem(
-                                    value: 'eliminar',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete_outline,
-                                            size: 20),
-                                        SizedBox(width: 8),
-                                        Text('Eliminar'),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                        if (r.descripcion.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(r.descripcion,
-                              style: TextStyle(
-                                  color:
-                                      AppColors.negro.withOpacity(0.7))),
-                        ],
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                'Por ${r.creadorNombre}',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.negro
-                                        .withOpacity(0.5)),
-                              ),
-                            ),
-                            if (r.fecha != null)
-                              Text(
-                                '${r.fecha!.day}/${r.fecha!.month}/${r.fecha!.year}',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    color: AppColors.negro
-                                        .withOpacity(0.5)),
-                              ),
-                          ],
-                        ),
-                        if (r.fotos.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          SizedBox(
-                            height: 130,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: r.fotos.length,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 8),
-                              itemBuilder: (context, j) {
-                                return Stack(
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () => _verFoto(
-                                        r.fotos[j],
-                                        titulo:
-                                            '${r.titulo} (${j + 1}/${r.fotos.length})',
-                                        puedeDescargar: puedeDescargar,
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                        child: CachedNetworkImage(
-                                          imageUrl: r.fotos[j],
-                                          memCacheWidth: 300,
-                                          width: 130,
-                                          height: 130,
-                                          fit: BoxFit.cover,
-                                          placeholder: (_, __) =>
-                                              Container(
-                                            width: 130,
-                                            height: 130,
-                                            color: AppColors.grisClaro,
-                                            child: const Center(
-                                              child:
-                                                  CircularProgressIndicator(
-                                                      color: AppColors
-                                                          .granate),
-                                            ),
-                                          ),
-                                          errorWidget: (_, __, ___) =>
-                                              Container(
-                                            width: 130,
-                                            height: 130,
-                                            color: AppColors.grisClaro,
-                                            child: const Icon(
-                                                Icons.broken_image,
-                                                color:
-                                                    AppColors.granate),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    if (puedeDescargar)
-                                      Positioned(
-                                        bottom: 4,
-                                        right: 4,
-                                        child: GestureDetector(
-                                          onTap: () => _descargarFoto(
-                                              r.fotos[j]),
-                                          child: Container(
-                                            padding:
-                                                const EdgeInsets.all(6),
-                                            decoration:
-                                                const BoxDecoration(
-                                              color: Colors.black54,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(
-                                              Icons.download,
-                                              color: Colors.white,
-                                              size: 16,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                        if (nota.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.dorado.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                  color: AppColors.dorado
-                                      .withOpacity(0.5)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.sticky_note_2,
-                                    size: 16, color: AppColors.granate),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    nota,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontStyle: FontStyle.italic,
-                                      color: AppColors.negro,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
+                return _tarjetaRecuerdo(
+                    context, r, nota, esAdmin, puedeDescargar, onSurface);
               },
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _tarjetaRecuerdo(
+    BuildContext context,
+    Recuerdo r,
+    String nota,
+    bool esAdmin,
+    bool puedeDescargar,
+    Color onSurface,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppColors.cardColor(context),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.dorado.withOpacity(0.25)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 8, 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(r.titulo,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                                color: onSurface,
+                                letterSpacing: 0.2)),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.person_outline,
+                                size: 11,
+                                color: onSurface.withOpacity(0.45)),
+                            const SizedBox(width: 3),
+                            Text('Por ${r.creadorNombre}',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: onSurface.withOpacity(0.55))),
+                            if (r.fecha != null) ...[
+                              const SizedBox(width: 10),
+                              Icon(Icons.calendar_today,
+                                  size: 10,
+                                  color: onSurface.withOpacity(0.45)),
+                              const SizedBox(width: 3),
+                              Text(
+                                  '${r.fecha!.day}/${r.fecha!.month}/${r.fecha!.year}',
+                                  style: TextStyle(
+                                      fontSize: 11,
+                                      color:
+                                          onSurface.withOpacity(0.55))),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Nota
+                  IconButton(
+                    icon: Icon(
+                      nota.isEmpty
+                          ? Icons.sticky_note_2_outlined
+                          : Icons.sticky_note_2,
+                      color: nota.isEmpty
+                          ? onSurface.withOpacity(0.35)
+                          : AppColors.dorado,
+                      size: 20,
+                    ),
+                    onPressed: () => _editarNota(r),
+                  ),
+                  if (esAdmin)
+                    PopupMenuButton<String>(
+                      icon: Icon(Icons.more_vert,
+                          color: onSurface.withOpacity(0.5), size: 20),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      onSelected: (v) {
+                        if (v == 'editar') {
+                          _editar(r);
+                        } else if (v == 'eliminar') {
+                          _eliminar(r);
+                        }
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(
+                          value: 'editar',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit, size: 20),
+                              SizedBox(width: 10),
+                              Text('Editar'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'eliminar',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline,
+                                  size: 20, color: Colors.red),
+                              SizedBox(width: 10),
+                              Text('Eliminar',
+                                  style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            // Descripción
+            if (r.descripcion.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: Text(r.descripcion,
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: onSurface.withOpacity(0.7),
+                        height: 1.4)),
+              ),
+            // Fotos
+            if (r.fotos.isNotEmpty)
+              SizedBox(
+                height: 150,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: r.fotos.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(width: 10),
+                  itemBuilder: (context, j) {
+                    return Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _verFoto(
+                            r.fotos[j],
+                            titulo: '${r.titulo} (${j + 1}/${r.fotos.length})',
+                            puedeDescargar: puedeDescargar,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: CachedNetworkImage(
+                              imageUrl: r.fotos[j],
+                              memCacheWidth: 300,
+                              width: 150,
+                              height: 150,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                width: 150,
+                                height: 150,
+                                color: AppColors.grisClaro,
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                      color: AppColors.granate),
+                                ),
+                              ),
+                              errorWidget: (_, __, ___) => Container(
+                                width: 150,
+                                height: 150,
+                                color: AppColors.grisClaro,
+                                child: const Icon(Icons.broken_image,
+                                    color: AppColors.granate),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (puedeDescargar)
+                          Positioned(
+                            bottom: 6,
+                            right: 6,
+                            child: GestureDetector(
+                              onTap: () =>
+                                  _descargarFoto(r.fotos[j],
+                                      titulo: r.titulo),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.download,
+                                  color: Colors.white,
+                                  size: 15,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            // Nota personal
+            if (nota.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [
+                    AppColors.dorado.withOpacity(0.12),
+                    AppColors.dorado.withOpacity(0.05),
+                  ]),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppColors.dorado.withOpacity(0.3)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.sticky_note_2,
+                        size: 14, color: AppColors.granate),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        nota,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                          color: onSurface.withOpacity(0.85),
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              const SizedBox(height: 14),
+          ],
         ),
       ),
     );

@@ -15,6 +15,7 @@ import '../widgets/tarjeta_video.dart';
 import '../widgets/visor_numerofonia.dart';
 import '../widgets/watermark_overlay.dart';
 import 'compartir_imagen_screen.dart';
+import 'numerofonia_fullscreen_screen.dart';
 import 'presentacion_screen.dart';
 
 class CancionDetalleScreen extends StatefulWidget {
@@ -243,10 +244,20 @@ Widget build(BuildContext context) {
         children: [
           _heroTitulo(c, onSurface),
           const SizedBox(height: 20),
+
+          // === NUMEROFONÍA ===
           if (c.tieneNumerofonia) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: VisorNumerofonia(estrofas: c.estrofas),
+              child: _headerNumerofonia(c, onSurface),
+            ),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: VisorNumerofonia(estrofas: c.estrofas),
+              ),
             ),
             const SizedBox(height: 20),
           ] else if (c.tieneNumerofoniaString) ...[
@@ -269,6 +280,8 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
+
+          // === VIDEO ===
           if (c.tieneVideo) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -279,11 +292,15 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
+
+          // === AUDIO ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _audioPlayerCompacto(puedeDescargar),
           ),
           const SizedBox(height: 16),
+
+          // === LETRA ===
           if (c.letra.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -305,6 +322,8 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
+
+          // === DESCRIPCIÓN ===
           if (c.descripcion.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -321,139 +340,159 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
           ],
+
+          // === INFORMACIÓN EXPANDIBLE ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.cardColor(context),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                    color: AppColors.dorado.withOpacity(0.2)),
-              ),
-              child: ExpansionTile(
-                shape: const Border(),
-                collapsedShape: const Border(),
-                leading: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.granate.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.info_outline,
-                      color: AppColors.granate, size: 18),
-                ),
-                title: const Text('Información',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.granate,
-                        letterSpacing: 0.5)),
-                children: [
+            child: _expansionCard(
+              context,
+              icono: Icons.info_outline,
+              titulo: 'Información',
+              children: [
+                _filaInfo(context, Icons.person, 'Autor',
+                    c.autor.isEmpty ? '—' : c.autor),
+                _filaInfo(
+                    context,
+                    Icons.category,
+                    'Tipo',
+                    c.tipo == 'original'
+                        ? 'Original'
+                        : 'Adaptación'),
+                _filaInfo(context, Icons.graphic_eq, 'Ritmo',
+                    c.ritmo.isEmpty ? '—' : c.ritmo),
+                _filaInfo(context, Icons.play_arrow,
+                    'Reproducciones', '${c.reproducciones}'),
+                if (c.tags.isNotEmpty)
                   Padding(
-                    padding:
-                        const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                    child: Column(
-                      children: [
-                        _filaInfo(context, Icons.person, 'Autor',
-                            c.autor.isEmpty ? '—' : c.autor),
-                        _filaInfo(
-                            context,
-                            Icons.category,
-                            'Tipo',
-                            c.tipo == 'original'
-                                ? 'Original'
-                                : 'Adaptación'),
-                        _filaInfo(context, Icons.graphic_eq, 'Ritmo',
-                            c.ritmo.isEmpty ? '—' : c.ritmo),
-                        _filaInfo(context, Icons.play_arrow,
-                            'Reproducciones', '${c.reproducciones}'),
-                        if (c.tags.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 8),
-                            child: Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
-                              children: c.tags
-                                  .map((t) => Chip(
-                                        label: Text(t,
-                                            style: const TextStyle(
-                                                fontSize: 11)),
-                                        backgroundColor: AppColors
-                                            .dorado
-                                            .withOpacity(0.15),
-                                        padding: EdgeInsets.zero,
-                                        materialTapTargetSize:
-                                            MaterialTapTargetSize
-                                                .shrinkWrap,
-                                      ))
-                                  .toList(),
-                            ),
-                          ),
-                        if (c.creadorNombre.isNotEmpty)
-                          _filaInfo(context, Icons.upload,
-                              'Subido por', c.creadorNombre),
-                      ],
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: c.tags
+                          .map((t) => Chip(
+                                label: Text(t,
+                                    style: const TextStyle(
+                                        fontSize: 11)),
+                                backgroundColor:
+                                    AppColors.dorado.withOpacity(0.15),
+                                padding: EdgeInsets.zero,
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                              ))
+                          .toList(),
                     ),
                   ),
-                ],
-              ),
+                if (c.creadorNombre.isNotEmpty)
+                  _filaInfo(context, Icons.upload, 'Subido por',
+                      c.creadorNombre),
+              ],
             ),
           ),
           const SizedBox(height: 16),
+
+          // === COMENTARIOS EXPANDIBLE ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.cardColor(context),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                    color: AppColors.dorado.withOpacity(0.2)),
-              ),
-              child: ExpansionTile(
-                shape: const Border(),
-                collapsedShape: const Border(),
-                leading: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.granate.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.comment,
-                      color: AppColors.granate, size: 18),
-                ),
-                title: const Text('Comentarios',
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.granate,
-                        letterSpacing: 0.5)),
-                children: [
-                  SizedBox(height: 300, child: _comentariosBody()),
-                  if (puedeComentar)
-                    _comentarioInput()
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Solo los miembros del grupo pueden comentar.',
-                        style: TextStyle(
-                            color: onSurface.withOpacity(0.5),
-                            fontStyle: FontStyle.italic,
-                            fontSize: 12),
-                      ),
+            child: _expansionCard(
+              context,
+              icono: Icons.comment,
+              titulo: 'Comentarios',
+              children: [
+                SizedBox(height: 300, child: _comentariosBody()),
+                if (puedeComentar)
+                  _comentarioInput()
+                else
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Solo los miembros del grupo pueden comentar.',
+                      style: TextStyle(
+                          color: onSurface.withOpacity(0.5),
+                          fontStyle: FontStyle.italic,
+                          fontSize: 12),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
           const SizedBox(height: 16),
+
+          // === NOTA PERSONAL ===
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: _notaPersonal(context, onSurface),
           ),
+
           const SizedBox(height: 32),
         ],
       ),
     ),
+  );
+}
+
+Widget _headerNumerofonia(Cancion c, Color onSurface) {
+  return Row(
+    children: [
+      Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: AppColors.granate.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Icon(Icons.grid_on,
+            color: AppColors.granate, size: 14),
+      ),
+      const SizedBox(width: 10),
+      const Expanded(
+        child: Text('Numerofonía',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: AppColors.granate,
+                fontSize: 13,
+                letterSpacing: 1)),
+      ),
+      // Botón pantalla completa
+      Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => NumerofoniaFullscreenScreen(
+                estrofas: c.estrofas,
+              ),
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.granate.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                  color: AppColors.granate.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.zoom_out_map,
+                    size: 13, color: AppColors.granate),
+                const SizedBox(width: 5),
+                Text(
+                  'Pantalla completa',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate.withOpacity(0.9),
+                      letterSpacing: 0.3),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ],
   );
 }
 
@@ -575,6 +614,46 @@ Widget _seccionCard(BuildContext context,
         ),
         const SizedBox(height: 14),
         child,
+      ],
+    ),
+  );
+}
+
+Widget _expansionCard(BuildContext context,
+    {required IconData icono,
+    required String titulo,
+    required List<Widget> children}) {
+  return Container(
+    decoration: BoxDecoration(
+      color: AppColors.cardColor(context),
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: AppColors.dorado.withOpacity(0.2)),
+    ),
+    child: ExpansionTile(
+      shape: const Border(),
+      collapsedShape: const Border(),
+      leading: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: AppColors.granate.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child:
+            Icon(icono, color: AppColors.granate, size: 18),
+      ),
+      title: Text(titulo,
+          style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: AppColors.granate,
+              letterSpacing: 0.5)),
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
       ],
     ),
   );

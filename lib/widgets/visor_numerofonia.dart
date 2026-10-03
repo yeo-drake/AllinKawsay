@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../models/numerofonia.dart';
 import '../theme/colors.dart';
+import '../screens/numerofonia_fullscreen_screen.dart';
 
 class VisorNumerofonia extends StatelessWidget {
   final List<EstrofaNumerofonia> estrofas;
   final double escala;
+  final bool mostrarBotonExpandir;
   const VisorNumerofonia({
     super.key,
     required this.estrofas,
     this.escala = 1.0,
+    this.mostrarBotonExpandir = true,
   });
 
   @override
@@ -16,163 +19,231 @@ class VisorNumerofonia extends StatelessWidget {
     final validas = estrofas.where((e) => !e.vacia).toList();
     if (validas.isEmpty) return const SizedBox.shrink();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final anchoPantalla = constraints.maxWidth.isFinite
-            ? constraints.maxWidth
-            : MediaQuery.of(context).size.width;
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (int i = 0; i < validas.length; i++) ...[
-              _TablaEstrofa(
-                estrofa: validas[i],
-                anchoMaximo: anchoPantalla,
-                escala: escala,
-              ),
-              if (i < validas.length - 1) const SizedBox(height: 10),
-            ],
-          ],
-        );
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Header con botón expandir
+        if (mostrarBotonExpandir)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.grid_on,
+                    size: 14, color: AppColors.dorado),
+                const SizedBox(width: 6),
+                const Expanded(
+                  child: Text(
+                    'Numerofonía',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => NumerofoniaFullscreenScreen(
+                          estrofas: estrofas,
+                        ),
+                      ),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.granate.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: AppColors.granate.withOpacity(0.3)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.zoom_out_map,
+                              size: 14, color: AppColors.granate),
+                          SizedBox(width: 4),
+                          Text(
+                            'Pantalla completa',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.granate,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        // Tablas
+        for (int i = 0; i < validas.length; i++) ...[
+          _TablaEstrofa(estrofa: validas[i], escala: escala),
+          if (i < validas.length - 1) const SizedBox(height: 8),
+        ],
+      ],
     );
   }
 }
 
 class _TablaEstrofa extends StatelessWidget {
   final EstrofaNumerofonia estrofa;
-  final double anchoMaximo;
   final double escala;
-  const _TablaEstrofa({
-    required this.estrofa,
-    required this.anchoMaximo,
-    required this.escala,
-  });
+  const _TablaEstrofa({required this.estrofa, required this.escala});
 
   static const double _altoFila = 32.0;
   static const double _anchoEtiqueta = 24.0;
   static const double _anchoBis = 40.0;
-  static const double _anchoMinimoCol = 26.0;
+  static const double _paddingCelda = 6.0;
+  static const double _anchoCaracter = 8.5;
 
   @override
   Widget build(BuildContext context) {
-    // Número total de columnas = máximo entre fila7 y fila6
     final numCols = estrofa.fila7.length > estrofa.fila6.length
         ? estrofa.fila7.length
         : estrofa.fila6.length;
-
     if (numCols == 0) return const SizedBox.shrink();
 
-    final tieneBis = estrofa.bis;
-
-    // Calcular ancho de cada columna = el máximo entre fila7[i] y fila6[i]
+    // Calcular ancho de cada columna = max(fila7[i], fila6[i])
     final anchos = <double>[];
     for (int i = 0; i < numCols; i++) {
       final len7 = i < estrofa.fila7.length ? estrofa.fila7[i].length : 0;
       final len6 = i < estrofa.fila6.length ? estrofa.fila6[i].length : 0;
       final maxLen = len7 > len6 ? len7 : len6;
-      // Ancho en píxeles: mínimo 26 + 9 por carácter
-      final ancho = maxLen <= 1
-          ? _anchoMinimoCol
-          : _anchoMinimoCol + (maxLen - 1) * 9.0;
-      anchos.add(ancho);
+      // Ancho mínimo para un número + padding justo
+      final ancho = maxLen == 0
+          ? 20.0
+          : (maxLen * _anchoCaracter + _paddingCelda * 2)
+              .clamp(20.0, 80.0);
+      anchos.add(ancho * escala);
     }
 
-    final anchoTablaBase = _anchoEtiqueta +
+    final anchoEtiqueta = _anchoEtiqueta * escala;
+    final anchoBis = _anchoBis * escala;
+    final altoFila = _altoFila * escala;
+    final tieneBis = estrofa.bis;
+
+    final anchoNatural = anchoEtiqueta +
         anchos.fold<double>(0, (a, b) => a + b) +
-        (tieneBis ? _anchoBis : 0);
+        (tieneBis ? anchoBis : 0);
 
-    // Factor de escala si la tabla es más ancha que la pantalla
-    final factor =
-        anchoTablaBase > anchoMaximo ? anchoMaximo / anchoTablaBase : 1.0;
+    // Auto-fit suave (mínimo 0.85 para que no se vea mal)
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final anchoDisponible = constraints.maxWidth;
+        final factor = anchoNatural > anchoDisponible
+            ? (anchoDisponible / anchoNatural).clamp(0.7, 1.0)
+            : 1.0;
 
-    final altoTotal = _altoFila * 2 + 1.5;
-
-    return SizedBox(
-      width: anchoTablaBase * factor,
-      height: altoTotal * factor,
-      child: FittedBox(
-        fit: BoxFit.contain,
-        alignment: Alignment.topLeft,
-        child: SizedBox(
-          width: anchoTablaBase,
-          height: altoTotal,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.blanco,
-              border: Border.all(color: AppColors.negro, width: 1.5),
+        return SizedBox(
+          width: anchoNatural * factor,
+          child: Transform.scale(
+            scale: factor,
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: anchoNatural,
+              height: altoFila * 2 + 1.5,
+              child: _tabla(
+                anchos: anchos,
+                anchoEtiqueta: anchoEtiqueta,
+                anchoBis: anchoBis,
+                altoFila: altoFila,
+                numCols: numCols,
+                tieneBis: tieneBis,
+              ),
             ),
-            child: Column(
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _tabla({
+    required List<double> anchos,
+    required double anchoEtiqueta,
+    required double anchoBis,
+    required double altoFila,
+    required int numCols,
+    required bool tieneBis,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.blanco,
+        border: Border.all(color: AppColors.negro, width: 1.2),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: altoFila,
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // === Fila 7 ===
-                SizedBox(
-                  height: _altoFila,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _celdaEtiqueta('7'),
-                      for (int i = 0; i < numCols; i++)
-                        _celda(
-                          contenido: i < estrofa.fila7.length
-                              ? estrofa.fila7[i]
-                              : '',
-                          ancho: anchos[i],
-                          esUltima: i == numCols - 1 && !tieneBis,
-                        ),
-                      if (tieneBis)
-                        _celdaBis(alto: _altoFila * 2 + 1.5),
-                    ],
+                _etiqueta('7', anchoEtiqueta, altoFila),
+                for (int i = 0; i < numCols; i++)
+                  _celda(
+                    contenido:
+                        i < estrofa.fila7.length ? estrofa.fila7[i] : '',
+                    ancho: anchos[i],
+                    alto: altoFila,
+                    esUltima: i == numCols - 1 && !tieneBis,
                   ),
-                ),
-                // === Divisor ===
-                Container(height: 1.5, color: AppColors.negro),
-                // === Fila 6 ===
-                SizedBox(
-                  height: _altoFila,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _celdaEtiqueta('6'),
-                      for (int i = 0; i < numCols; i++)
-                        _celda(
-                          contenido: i < estrofa.fila6.length
-                              ? estrofa.fila6[i]
-                              : '',
-                          ancho: anchos[i],
-                          esUltima: i == numCols - 1 && !tieneBis,
-                        ),
-                      if (tieneBis)
-                        SizedBox(width: _anchoBis, height: _altoFila),
-                    ],
-                  ),
-                ),
+                if (tieneBis)
+                  _celdaBis(anchoBis, altoFila * 2 + 1.2),
               ],
             ),
           ),
-        ),
+          Container(height: 1.2, color: AppColors.negro),
+          SizedBox(
+            height: altoFila,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _etiqueta('6', anchoEtiqueta, altoFila),
+                for (int i = 0; i < numCols; i++)
+                  _celda(
+                    contenido:
+                        i < estrofa.fila6.length ? estrofa.fila6[i] : '',
+                    ancho: anchos[i],
+                    alto: altoFila,
+                    esUltima: i == numCols - 1 && !tieneBis,
+                  ),
+                if (tieneBis)
+                  SizedBox(width: anchoBis, height: altoFila),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _celdaEtiqueta(String t) {
+  Widget _etiqueta(String t, double ancho, double alto) {
     return Container(
-      width: _anchoEtiqueta,
-      height: _altoFila,
+      width: ancho,
+      height: alto,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         border: Border(
-          right: BorderSide(color: AppColors.negro, width: 1.5),
+          right: BorderSide(color: AppColors.negro, width: 1.2),
         ),
       ),
       child: Text(
         t,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 14,
+          fontSize: 13 * escala,
         ),
       ),
     );
@@ -181,11 +252,12 @@ class _TablaEstrofa extends StatelessWidget {
   Widget _celda({
     required String contenido,
     required double ancho,
+    required double alto,
     required bool esUltima,
   }) {
     return Container(
       width: ancho,
-      height: _altoFila,
+      height: alto,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         border: esUltima
@@ -194,39 +266,36 @@ class _TablaEstrofa extends StatelessWidget {
                 right: BorderSide(color: AppColors.negro, width: 1),
               ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2),
-        child: Text(
-          contenido,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.negro,
-            fontWeight: FontWeight.bold,
-            fontSize: 13,
-            fontFamily: 'monospace',
-          ),
+      child: Text(
+        contenido,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: AppColors.negro,
+          fontWeight: FontWeight.bold,
+          fontSize: 13 * escala,
+          fontFamily: 'monospace',
         ),
       ),
     );
   }
 
-  Widget _celdaBis({required double alto}) {
+  Widget _celdaBis(double ancho, double alto) {
     return Container(
-      width: _anchoBis,
+      width: ancho,
       height: alto,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         color: AppColors.dorado,
         border: Border(
-          left: BorderSide(color: AppColors.negro, width: 1.5),
+          left: BorderSide(color: AppColors.negro, width: 1.2),
         ),
       ),
-      child: const Text(
+      child: Text(
         'BIS',
         style: TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 11,
+          fontSize: 10 * escala,
           letterSpacing: 0.5,
         ),
       ),

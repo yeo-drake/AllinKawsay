@@ -21,155 +21,169 @@ class VisorNumerofonia extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < validas.length; i++) ...[
-          _TablaEstrofa(estrofa: validas[i], escala: escala),
-          if (i < validas.length - 1) const SizedBox(height: 10),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: _EstrofaVisor(
+              estrofa: validas[i],
+              escala: escala,
+            ),
+          ),
+          if (i < validas.length - 1) SizedBox(height: 14 * escala),
         ],
       ],
     );
   }
 }
 
-class _TablaEstrofa extends StatelessWidget {
+/// Un "segmento" = conjunto de números entre 2 direcciones.
+class _Segmento {
+  final List<String> numeros;
+  final int hilera; // 6 o 7
+  _Segmento({required this.numeros, required this.hilera});
+}
+
+class _EstrofaVisor extends StatelessWidget {
   final EstrofaNumerofonia estrofa;
   final double escala;
-  const _TablaEstrofa({required this.estrofa, required this.escala});
+  const _EstrofaVisor({required this.estrofa, required this.escala});
 
-  // Medidas base
-  static const double _altoFila = 30.0;
-  static const double _anchoChar = 9.0;
-  static const double _paddingCelda = 8.0;
-  static const double _anchoMinCelda = 24.0;
-  static const double _anchoBis = 44.0;
+  /// Parsea el texto en segmentos + guarda las direcciones entre ellos.
+  /// Devuelve una lista donde cada item es Segmento o String ("/", "\").
+  List<dynamic> _parsear(String texto) {
+    final tokens = texto.trim().split(RegExp(r'\s+'));
+    final items = <dynamic>[];
+    List<String> bufferNumeros = [];
+    int hileraActual = 6;
+
+    void cerrarSegmento() {
+      if (bufferNumeros.isNotEmpty) {
+        items.add(_Segmento(
+          numeros: List.from(bufferNumeros),
+          hilera: hileraActual,
+        ));
+        bufferNumeros.clear();
+      }
+    }
+
+    for (final t in tokens) {
+      if (t == '/' || t == '\\') {
+        cerrarSegmento();
+        items.add(t);
+        hileraActual = (t == '/') ? 7 : 6;
+      } else {
+        bufferNumeros.add(t);
+      }
+    }
+    cerrarSegmento();
+    return items;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final numCols = estrofa.fila7.length > estrofa.fila6.length
-        ? estrofa.fila7.length
-        : estrofa.fila6.length;
-    if (numCols == 0) return const SizedBox.shrink();
+    final items = _parsear(estrofa.texto);
+    if (items.isEmpty) return const SizedBox.shrink();
 
-    // Ancho de cada columna = basado en el contenido más largo entre las 2 filas
-    final anchos = <double>[];
-    for (int i = 0; i < numCols; i++) {
-      final v7 = i < estrofa.fila7.length ? estrofa.fila7[i] : '';
-      final v6 = i < estrofa.fila6.length ? estrofa.fila6[i] : '';
-      final len = v7.length > v6.length ? v7.length : v6.length;
-      final ancho = len <= 1
-          ? _anchoMinCelda
-          : (len * _anchoChar + _paddingCelda).clamp(
-              _anchoMinCelda, 90.0);
-      anchos.add(ancho * escala);
+    final altoFila = 34.0 * escala;
+    final altoTotal = altoFila * 2 + 8 * escala; // 2 filas + separador
+
+    final children = <Widget>[];
+    for (final item in items) {
+      if (item is _Segmento) {
+        children.add(_cajitasSegmento(item, altoFila, altoTotal));
+      } else if (item is String) {
+        children.add(_diagonal(item, altoFila, altoTotal));
+      }
     }
 
-    final altoFila = _altoFila * escala;
-    final anchoBis = _anchoBis * escala;
-    final tieneBis = estrofa.bis;
+    // BIS al final
+    if (estrofa.bis) {
+      children.add(_bis(altoTotal));
+    }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.blanco,
-        border: Border.all(color: AppColors.negro, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Columnas de datos (2 filas apiladas)
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Fila 7
-              SizedBox(
-                height: altoFila,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (int i = 0; i < numCols; i++)
-                      _celda(
-                        contenido: i < estrofa.fila7.length
-                            ? estrofa.fila7[i]
-                            : '',
-                        ancho: anchos[i],
-                        alto: altoFila,
-                        esUltima:
-                            i == numCols - 1 && !tieneBis,
-                      ),
-                  ],
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: children,
+    );
+  }
+
+  Widget _cajitasSegmento(_Segmento seg, double altoFila, double altoTotal) {
+    return SizedBox(
+      height: altoTotal,
+      child: Align(
+        alignment: seg.hilera == 7
+            ? Alignment.topCenter
+            : Alignment.bottomCenter,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final n in seg.numeros)
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 2 * escala),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 8 * escala, vertical: 6 * escala),
+                constraints: BoxConstraints(
+                  minWidth: 26 * escala,
+                  minHeight: altoFila,
+                ),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.blanco,
+                  borderRadius: BorderRadius.circular(6 * escala),
+                  border: Border.all(
+                      color: AppColors.negro, width: 1.2),
+                ),
+                child: Text(
+                  n,
+                  style: TextStyle(
+                    color: AppColors.negro,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14 * escala,
+                    fontFamily: 'monospace',
+                  ),
                 ),
               ),
-              Container(height: 1, color: AppColors.negro),
-              // Fila 6
-              SizedBox(
-                height: altoFila,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (int i = 0; i < numCols; i++)
-                      _celda(
-                        contenido: i < estrofa.fila6.length
-                            ? estrofa.fila6[i]
-                            : '',
-                        ancho: anchos[i],
-                        alto: altoFila,
-                        esUltima:
-                            i == numCols - 1 && !tieneBis,
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          // BIS
-          if (tieneBis)
-            Container(
-              width: anchoBis,
-              height: altoFila * 2 + 1,
-              alignment: Alignment.center,
-              decoration: const BoxDecoration(
-                color: AppColors.dorado,
-                border: Border(
-                  left: BorderSide(color: AppColors.negro, width: 1),
-                ),
-              ),
-              child: Text(
-                'BIS',
-                style: TextStyle(
-                  color: AppColors.negro,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 10 * escala,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _celda({
-    required String contenido,
-    required double ancho,
-    required double alto,
-    required bool esUltima,
-  }) {
+  Widget _diagonal(String dir, double altoFila, double altoTotal) {
+    return SizedBox(
+      width: 26 * escala,
+      height: altoTotal,
+      child: Center(
+        child: Text(
+          dir == '/' ? '/' : '\\',
+          style: TextStyle(
+            color: AppColors.granate,
+            fontWeight: FontWeight.bold,
+            fontSize: 32 * escala,
+            height: 1.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _bis(double altoTotal) {
     return Container(
-      width: ancho,
-      height: alto,
-      alignment: Alignment.center,
+      margin: EdgeInsets.only(left: 10 * escala),
+      padding: EdgeInsets.symmetric(
+          horizontal: 10 * escala, vertical: 8 * escala),
       decoration: BoxDecoration(
-        border: esUltima
-            ? null
-            : const Border(
-                right: BorderSide(color: AppColors.negro, width: 1),
-              ),
+        color: AppColors.dorado,
+        borderRadius: BorderRadius.circular(6 * escala),
+        border: Border.all(color: AppColors.negro, width: 1.2),
       ),
       child: Text(
-        contenido,
+        'BIS',
         style: TextStyle(
           color: AppColors.negro,
-          fontWeight: FontWeight.w500,
-          fontSize: 13 * escala,
-          fontFamily: 'monospace',
+          fontWeight: FontWeight.bold,
+          fontSize: 11 * escala,
+          letterSpacing: 0.5,
         ),
       ),
     );

@@ -132,6 +132,7 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
+          // Foto
           Positioned.fill(
             child: GestureDetector(
               onDoubleTapDown: _toggleZoom,
@@ -174,13 +175,13 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
             child: SafeArea(
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 4),
+                    horizontal: 4, vertical: 4),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withOpacity(0.75),
                       Colors.transparent,
                     ],
                   ),
@@ -199,7 +200,8 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
                           style: const TextStyle(
                             color: AppColors.dorado,
                             fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                            fontSize: 14,
+                            letterSpacing: 0.5,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -208,11 +210,21 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
                     else
                       const Spacer(),
                     if (widget.puedeDescargar)
-                      IconButton(
-                        icon: const Icon(Icons.download,
-                            color: AppColors.dorado),
-                        tooltip: 'Descargar',
-                        onPressed: _descargar,
+                      Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: AppColors.dorado
+                                  .withOpacity(0.4)),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.download,
+                              color: AppColors.dorado, size: 20),
+                          tooltip: 'Descargar',
+                          onPressed: _descargar,
+                        ),
                       ),
                   ],
                 ),
@@ -220,24 +232,37 @@ class _FotoFullscreenScreenState extends State<FotoFullscreenScreen> {
             ),
           ),
 
-          // Hint para hacer zoom
+          // Hint
           if (!_zoomActivo)
             Positioned(
-              bottom: 32,
+              bottom: 24,
               left: 0,
               right: 0,
               child: Center(
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 6),
+                      horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: AppColors.dorado.withOpacity(0.3)),
                   ),
-                  child: const Text(
-                    'Doble tap para zoom • Pellizcá para ampliar',
-                    style: TextStyle(
-                        color: AppColors.dorado, fontSize: 11),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.touch_app,
+                          size: 13,
+                          color: AppColors.dorado.withOpacity(0.7)),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Doble tap o pellizcá para zoom',
+                        style: TextStyle(
+                            color: AppColors.dorado.withOpacity(0.85),
+                            fontSize: 11,
+                            letterSpacing: 0.3),
+                      ),
+                    ],
                   ),
                 ),
               ),

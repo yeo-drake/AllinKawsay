@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/usuario.dart';
 import '../services/usuario_service.dart';
 import '../theme/colors.dart';
+import '../widgets/watermark_overlay.dart';
 
 class GestionUsuariosScreen extends StatefulWidget {
   const GestionUsuariosScreen({super.key});
@@ -34,21 +35,22 @@ class _GestionUsuariosScreenState extends State<GestionUsuariosScreen>
         title: const Text('GESTIÓN DE USUARIOS'),
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.dorado,
-          unselectedLabelColor: AppColors.dorado.withOpacity(0.5),
-          indicatorColor: AppColors.dorado,
+          indicatorSize: TabBarIndicatorSize.tab,
           tabs: const [
             Tab(text: 'ACTIVOS', icon: Icon(Icons.people, size: 18)),
             Tab(text: 'BANEADOS', icon: Icon(Icons.block, size: 18)),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _ListaUsuarios(baneados: false),
-          _ListaUsuarios(baneados: true),
-        ],
+      body: WatermarkOverlay(
+        opacity: 0.04,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _ListaUsuarios(baneados: false),
+            _ListaUsuarios(baneados: true),
+          ],
+        ),
       ),
     );
   }
@@ -122,8 +124,7 @@ class _ListaUsuarios extends StatelessWidget {
               child: const Text('Cancelar')),
           FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              style: FilledButton.styleFrom(
-                  backgroundColor: Colors.red),
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
               child: const Text('Suspender')),
         ],
       ),
@@ -192,8 +193,8 @@ class _ListaUsuarios extends StatelessWidget {
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(
-              child:
-                  CircularProgressIndicator(color: AppColors.granate));
+              child: CircularProgressIndicator(
+                  color: AppColors.granate));
         }
         if (snap.hasError) {
           return Center(
@@ -212,17 +213,28 @@ class _ListaUsuarios extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    baneados ? Icons.check_circle : Icons.people,
-                    size: 60,
-                    color: AppColors.granate.withOpacity(0.3),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: AppColors.granate.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      baneados ? Icons.check_circle_outline : Icons.people_outline,
+                      size: 48,
+                      color: AppColors.granate.withOpacity(0.4),
+                    ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
                   Text(
                     baneados
                         ? 'No hay usuarios suspendidos'
                         : 'No hay usuarios activos',
-                    style: TextStyle(color: onSurface.withOpacity(0.6)),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.granate,
+                        letterSpacing: 0.5),
                   ),
                 ],
               ),
@@ -230,73 +242,134 @@ class _ListaUsuarios extends StatelessWidget {
           );
         }
         return ListView.builder(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           itemCount: lista.length,
           itemBuilder: (context, i) {
             final u = lista[i];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor:
-                      baneados ? Colors.grey : _colorRol(u.rol),
-                  backgroundImage: u.fotoUrl.isNotEmpty
-                      ? NetworkImage(u.fotoUrl)
-                      : null,
-                  child: u.fotoUrl.isEmpty
-                      ? Text(
-                          u.nombre.isNotEmpty
-                              ? u.nombre[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                              color: AppColors.dorado),
-                        )
-                      : null,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor(context),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: baneados
+                        ? Colors.red.withOpacity(0.3)
+                        : AppColors.dorado.withOpacity(0.2),
+                  ),
                 ),
-                title: Text(u.nombre,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: baneados ? onSurface.withOpacity(0.5) : onSurface,
-                        decoration: baneados
-                            ? TextDecoration.lineThrough
-                            : null)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(u.email,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: onSurface.withOpacity(0.6))),
-                    const SizedBox(height: 4),
+                    // Avatar
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.all(2.5),
                       decoration: BoxDecoration(
-                        color: baneados ? Colors.red : _colorRol(u.rol),
-                        borderRadius: BorderRadius.circular(10),
+                        shape: BoxShape.circle,
+                        gradient: baneados
+                            ? LinearGradient(colors: [
+                                Colors.grey,
+                                Colors.grey.shade700,
+                              ])
+                            : AppColors.gradienteGranate,
                       ),
-                      child: Text(
-                        u.rolNombre,
-                        style: const TextStyle(
-                          color: AppColors.dorado,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
+                      child: CircleAvatar(
+                        radius: 24,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.surface,
+                        backgroundImage: u.fotoUrl.isNotEmpty
+                            ? NetworkImage(u.fotoUrl)
+                            : null,
+                        child: u.fotoUrl.isEmpty
+                            ? Text(
+                                u.nombre.isNotEmpty
+                                    ? u.nombre[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  color: AppColors.dorado,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
-                  ],
-                ),
-                trailing: baneados
-                    ? IconButton(
-                        icon: const Icon(Icons.restore,
-                            color: Colors.green),
+                    const SizedBox(width: 12),
+                    // Info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            u.nombre,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: baneados
+                                  ? onSurface.withOpacity(0.5)
+                                  : onSurface,
+                              decoration: baneados
+                                  ? TextDecoration.lineThrough
+                                  : null,
+                              fontSize: 14,
+                              letterSpacing: 0.2,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(u.email,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: onSurface.withOpacity(0.55)),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                          const SizedBox(height: 6),
+                          // Badge rol
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: baneados
+                                  ? Colors.red
+                                  : _colorRol(u.rol),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              u.rolNombre,
+                              style: const TextStyle(
+                                color: AppColors.dorado,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Acciones
+                    if (baneados)
+                      IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.15),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                                color: Colors.green.withOpacity(0.4)),
+                          ),
+                          child: const Icon(Icons.restore,
+                              color: Colors.green, size: 18),
+                        ),
                         tooltip: 'Reactivar',
                         onPressed: () => _desbanear(context, u),
                       )
-                    : PopupMenuButton<String>(
+                    else
+                      PopupMenuButton<String>(
                         icon: Icon(Icons.more_vert,
-                            color: onSurface.withOpacity(0.6)),
+                            color: onSurface.withOpacity(0.5), size: 20),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         onSelected: (v) {
                           if (v == 'publico' ||
                               v == 'miembro' ||
@@ -306,46 +379,46 @@ class _ListaUsuarios extends StatelessWidget {
                             _banear(context, u);
                           }
                         },
-                        itemBuilder: (_) => [
-                          const PopupMenuItem(
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
                             value: 'publico',
                             child: Row(
                               children: [
                                 Icon(Icons.person_outline, size: 20),
-                                SizedBox(width: 8),
+                                SizedBox(width: 10),
                                 Text('Público'),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'miembro',
                             child: Row(
                               children: [
                                 Icon(Icons.verified_user, size: 20),
-                                SizedBox(width: 8),
+                                SizedBox(width: 10),
                                 Text('Miembro oficial'),
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'admin',
                             child: Row(
                               children: [
                                 Icon(Icons.admin_panel_settings,
                                     size: 20),
-                                SizedBox(width: 8),
+                                SizedBox(width: 10),
                                 Text('Administrador'),
                               ],
                             ),
                           ),
-                          const PopupMenuDivider(),
-                          const PopupMenuItem(
+                          PopupMenuDivider(),
+                          PopupMenuItem(
                             value: 'banear',
                             child: Row(
                               children: [
                                 Icon(Icons.block,
                                     size: 20, color: Colors.red),
-                                SizedBox(width: 8),
+                                SizedBox(width: 10),
                                 Text('Suspender',
                                     style:
                                         TextStyle(color: Colors.red)),
@@ -354,6 +427,8 @@ class _ListaUsuarios extends StatelessWidget {
                           ),
                         ],
                       ),
+                  ],
+                ),
               ),
             );
           },

@@ -31,7 +31,6 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
         throw Exception('No se pudo capturar la imagen');
       }
 
-      // Verificar que el boundary tenga tamaño válido
       final size = boundary.size;
       if (size.width.isInfinite ||
           size.height.isInfinite ||
@@ -72,12 +71,45 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.grisClaro,
-      appBar: AppBar(
-        title: const Text('COMPARTIR IMAGEN'),
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text('COMPARTIR IMAGEN')),
       body: Column(
         children: [
+          // Info
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.granate.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                    color: AppColors.granate.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.tips_and_updates_outlined,
+                      size: 16, color: AppColors.granate),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Se generará una imagen con el logo, título, '
+                      'numerofonía y letra para compartir.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.75),
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Preview
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -85,8 +117,6 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
                 minScale: 0.5,
                 maxScale: 2.0,
                 child: Center(
-                  // Envolver con SizedBox de tamaño fijo para que
-                  // RenderRepaintBoundary no tenga dimensiones infinitas
                   child: RepaintBoundary(
                     key: _repaintKey,
                     child: SizedBox(
@@ -102,15 +132,18 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
               ),
             ),
           ),
+          // Botón
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
+              borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, -2),
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 12,
+                  offset: const Offset(0, -4),
                 ),
               ],
             ),
@@ -118,7 +151,7 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
               top: false,
               child: SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 54,
                 child: FilledButton.icon(
                   onPressed: _compartiendo ? null : _compartir,
                   icon: _compartiendo
@@ -136,7 +169,9 @@ class _CompartirImagenScreenState extends State<CompartirImagenScreen> {
                         ? 'GENERANDO...'
                         : 'COMPARTIR IMAGEN',
                     style: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.bold),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2),
                   ),
                 ),
               ),

@@ -42,7 +42,6 @@ jobs:
           cp android_config/AndroidManifest.xml android/app/src/main/AndroidManifest.xml
           cp firebase/google-services.json android/app/google-services.json
 
-          # Copiar file_paths.xml para FileProvider
           mkdir -p android/app/src/main/res/xml
           cp android_config/file_paths.xml android/app/src/main/res/xml/file_paths.xml
 
@@ -92,17 +91,36 @@ jobs:
               android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           fi
 
+      - name: Generar archivo de versión
+        run: |
+          RUN=${{ github.run_number }}
+          echo "🔢 Build number: $RUN"
+          cat > lib/version_build.dart << EOF
+          // ⚠️ Este archivo es generado automáticamente por GitHub Actions.
+          // NO EDITAR MANUALMENTE.
+
+          class VersionBuild {
+            static const int build = $RUN;
+          }
+          EOF
+          echo "✅ version_build.dart generado:"
+          cat lib/version_build.dart
+
       - name: Get dependencies
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release
+        run: |
+          RUN=${{ github.run_number }}
+          flutter build apk --release \
+            --build-name=1.0.0.$RUN \
+            --build-number=$RUN
 
       - name: Verificar APK
         run: |
           ls -la build/app/outputs/flutter-apk/
           APK_SIZE=$(stat -c%s build/app/outputs/flutter-apk/app-release.apk)
-          echo "Tamaño del APK: $APK_SIZE bytes"
+          echo "📱 Tamaño del APK: $APK_SIZE bytes"
           if [ "$APK_SIZE" -lt 5000000 ]; then
             echo "⚠️ APK muy pequeño"
             exit 1
@@ -111,5 +129,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: sikuris-apk
+          name: sikuris-apk-v1.0.0.${{ github.run_number }}
           path: build/app/outputs/flutter-apk/app-release.apk

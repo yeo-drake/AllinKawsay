@@ -18,6 +18,7 @@ import 'estadisticas_admin_screen.dart';
 import 'exportar_respaldo_screen.dart';
 import 'gestion_categorias_screen.dart';
 import 'gestion_usuarios_screen.dart';
+import '../version.dart';
 
 class PerfilScreen extends StatefulWidget {
   final String nombreUsuario;
@@ -434,6 +435,7 @@ void _abrirAjustes(BuildContext context) {
 }
 
 void _abrirAcercaDe(BuildContext context) {
+  final onSurface = Theme.of(context).colorScheme.onSurface;
   showModalBottomSheet(
     context: context,
     backgroundColor: Theme.of(context).cardColor,
@@ -494,19 +496,47 @@ void _abrirAcercaDe(BuildContext context) {
                     letterSpacing: 4)),
           ),
           const SizedBox(height: 6),
-          const Center(
-            child: Text('Versión 1.0.0',
-                style: TextStyle(
-                    fontSize: 12,
-                    letterSpacing: 1)),
+          // === VERSIÓN ===
+          Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.granate.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                    color: AppColors.granate.withOpacity(0.2)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.tag,
+                      size: 12, color: AppColors.granate),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Versión ${AppVersion.full}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.granate,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 20),
-          const Center(
+          Center(
             child: Text(
-                'Aplicación oficial del grupo de sikuris.\n\n'
-                'Hecha con ❤️ para el grupo.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, height: 1.6)),
+              'Aplicación oficial del grupo de sikuris.\n\n'
+              'Hecha con ❤️ para el grupo.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                  fontSize: 14,
+                  height: 1.6,
+                  color: onSurface.withOpacity(0.75)),
+            ),
           ),
           const SizedBox(height: 16),
         ],

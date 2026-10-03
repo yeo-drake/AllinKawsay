@@ -103,23 +103,32 @@ class _BusquedaGlobalScreenState extends State<BusquedaGlobalScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
       appBar: AppBar(
         title: TextField(
           controller: _ctrl,
           focusNode: _focus,
           onChanged: _onChanged,
-          style: const TextStyle(color: AppColors.dorado, fontSize: 16),
+          style: const TextStyle(
+              color: AppColors.dorado,
+              fontSize: 15,
+              letterSpacing: 0.3),
           cursorColor: AppColors.dorado,
           decoration: InputDecoration(
-            hintText: 'Buscar en canciones, eventos, recuerdos...',
-            hintStyle:
-                TextStyle(color: AppColors.dorado.withOpacity(0.5)),
+            filled: false,
+            hintText: 'Canciones, eventos, recuerdos...',
+            hintStyle: TextStyle(
+                color: AppColors.dorado.withOpacity(0.45),
+                fontSize: 13),
             border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
             suffixIcon: _query.isNotEmpty
                 ? IconButton(
                     icon: const Icon(Icons.clear,
-                        color: AppColors.dorado),
+                        color: AppColors.dorado, size: 20),
                     onPressed: () {
                       _ctrl.clear();
                       setState(() => _query = '');
@@ -131,12 +140,15 @@ class _BusquedaGlobalScreenState extends State<BusquedaGlobalScreen> {
       ),
       body: _cargando
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.granate))
-          : WatermarkOverlay(child: _resultados()),
+              child:
+                  CircularProgressIndicator(color: AppColors.granate))
+          : WatermarkOverlay(
+              opacity: 0.04,
+              child: _resultados(onSurface)),
     );
   }
 
-  Widget _resultados() {
+  Widget _resultados(Color onSurface) {
     if (_query.isEmpty) {
       return Center(
         child: Padding(
@@ -144,14 +156,29 @@ class _BusquedaGlobalScreenState extends State<BusquedaGlobalScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search,
-                  size: 80,
-                  color: AppColors.granate.withOpacity(0.3)),
-              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.granate.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.search,
+                    size: 48, color: AppColors.granate.withOpacity(0.4)),
+              ),
+              const SizedBox(height: 20),
               Text(
                 'Escribe algo para buscar',
-                style:
-                    TextStyle(color: AppColors.negro.withOpacity(0.5)),
+                style: TextStyle(
+                    color: onSurface.withOpacity(0.5),
+                    fontSize: 14,
+                    letterSpacing: 0.3),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Busca en canciones, eventos y recuerdos',
+                style: TextStyle(
+                    color: onSurface.withOpacity(0.35),
+                    fontSize: 12),
               ),
             ],
           ),
@@ -171,14 +198,23 @@ class _BusquedaGlobalScreenState extends State<BusquedaGlobalScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_off,
-                  size: 80,
-                  color: AppColors.granate.withOpacity(0.3)),
-              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.granate.withOpacity(0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.search_off,
+                    size: 48, color: AppColors.granate.withOpacity(0.4)),
+              ),
+              const SizedBox(height: 20),
               Text(
                 'Sin resultados para "$_query"',
-                style:
-                    TextStyle(color: AppColors.negro.withOpacity(0.5)),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: onSurface.withOpacity(0.5),
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic),
               ),
             ],
           ),
@@ -187,85 +223,235 @@ class _BusquedaGlobalScreenState extends State<BusquedaGlobalScreen> {
     }
 
     return ListView(
+      padding: const EdgeInsets.all(16),
       children: [
         if (canciones.isNotEmpty) ...[
-          _titulo('Canciones (${canciones.length})'),
-          ...canciones.map(_itemCancion),
+          _tituloSeccion('Canciones', canciones.length),
+          ...canciones.map((c) => _itemCancion(c, onSurface)),
+          const SizedBox(height: 12),
         ],
         if (eventos.isNotEmpty) ...[
-          _titulo('Eventos (${eventos.length})'),
-          ...eventos.map(_itemEvento),
+          _tituloSeccion('Eventos', eventos.length),
+          ...eventos.map((e) => _itemEvento(e, onSurface)),
+          const SizedBox(height: 12),
         ],
         if (recuerdos.isNotEmpty) ...[
-          _titulo('Recuerdos (${recuerdos.length})'),
-          ...recuerdos.map(_itemRecuerdo),
+          _tituloSeccion('Recuerdos', recuerdos.length),
+          ...recuerdos.map((r) => _itemRecuerdo(r, onSurface)),
         ],
         const SizedBox(height: 24),
       ],
     );
   }
 
-  Widget _titulo(String t) {
+  Widget _tituloSeccion(String texto, int cantidad) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        t,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: AppColors.granate,
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.granate,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            texto.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: AppColors.granate,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 8, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.granate.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text('$cantidad',
+                style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.granate)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _itemCancion(Cancion c, Color onSurface) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => CancionDetalleScreen(cancion: c)),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.cardColor(context),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: AppColors.dorado.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    gradient: AppColors.gradienteGranate,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.music_note,
+                      color: AppColors.dorado, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(c.titulo,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: onSurface,
+                              fontSize: 14),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${c.ritmo}${c.autor.isNotEmpty ? ' · ${c.autor}' : ''}',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: onSurface.withOpacity(0.55)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right,
+                    color: AppColors.dorado.withOpacity(0.6),
+                    size: 20),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _itemCancion(Cancion c) {
-    return ListTile(
-      leading: const CircleAvatar(
-        backgroundColor: AppColors.granate,
-        child: Icon(Icons.library_music,
-            color: AppColors.dorado, size: 20),
-      ),
-      title: Text(c.titulo,
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, color: AppColors.negro)),
-      subtitle: Text(
-          '${c.ritmo}${c.autor.isNotEmpty ? ' · ${c.autor}' : ''}'),
-      trailing:
-          const Icon(Icons.chevron_right, color: AppColors.dorado),
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => CancionDetalleScreen(cancion: c)),
+  Widget _itemEvento(Evento e, Color onSurface) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.cardColor(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.dorado.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: AppColors.gradienteGranate,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.event,
+                  color: AppColors.dorado, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(e.titulo,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: onSurface,
+                          fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${e.fecha.day}/${e.fecha.month}/${e.fecha.year} · ${e.lugar}',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: onSurface.withOpacity(0.55)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _itemEvento(Evento e) {
-    return ListTile(
-      leading: const CircleAvatar(
-        backgroundColor: AppColors.granate,
-        child: Icon(Icons.event, color: AppColors.dorado, size: 20),
+  Widget _itemRecuerdo(Recuerdo r, Color onSurface) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.cardColor(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.dorado.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: AppColors.gradienteGranate,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.photo_library,
+                  color: AppColors.dorado, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(r.titulo,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: onSurface,
+                          fontSize: 14),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${r.fotos.length} foto(s)',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: onSurface.withOpacity(0.55)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      title: Text(e.titulo,
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, color: AppColors.negro)),
-      subtitle: Text(
-          '${e.fecha.day}/${e.fecha.month}/${e.fecha.year} · ${e.lugar}'),
-    );
-  }
-
-  Widget _itemRecuerdo(Recuerdo r) {
-    return ListTile(
-      leading: const CircleAvatar(
-        backgroundColor: AppColors.granate,
-        child:
-            Icon(Icons.photo_library, color: AppColors.dorado, size: 20),
-      ),
-      title: Text(r.titulo,
-          style: const TextStyle(
-              fontWeight: FontWeight.bold, color: AppColors.negro)),
-      subtitle: Text('${r.fotos.length} foto(s)'),
     );
   }
 }

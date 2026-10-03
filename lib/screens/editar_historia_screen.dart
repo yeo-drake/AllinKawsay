@@ -63,40 +63,96 @@ class _EditarHistoriaScreenState extends State<EditarHistoriaScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
       appBar: AppBar(title: const Text('EDITAR HISTORIA')),
       body: _cargando
           ? const Center(
-              child: CircularProgressIndicator(color: AppColors.granate))
+              child: CircularProgressIndicator(
+                  color: AppColors.granate))
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               children: [
-                const Text(
-                  'Escribe la historia del grupo. Puedes usar saltos de línea '
-                  'para separar secciones.',
-                  style: TextStyle(color: AppColors.negro),
+                // Info
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [
+                      AppColors.dorado.withOpacity(0.12),
+                      AppColors.granate.withOpacity(0.06),
+                    ]),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                        color: AppColors.dorado.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.dorado.withOpacity(0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.tips_and_updates_outlined,
+                            color: AppColors.granate, size: 16),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Escribí la historia del grupo. Podés usar '
+                          'saltos de línea para separar secciones.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: onSurface.withOpacity(0.75),
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
+                // Editor
                 TextField(
                   controller: _ctrl,
                   maxLines: 20,
                   minLines: 15,
                   textCapitalization: TextCapitalization.sentences,
+                  style: TextStyle(
+                      fontSize: 15,
+                      height: 1.6,
+                      color: onSurface),
                   decoration: const InputDecoration(
                     labelText: 'Historia del grupo',
                     alignLabelWithHint: true,
+                    hintText:
+                        'Fundación del grupo, primeros integrantes, '
+                        'logros, viajes...',
                   ),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
-                  height: 52,
+                  height: 54,
                   child: FilledButton.icon(
                     onPressed: _guardando ? null : _guardar,
-                    icon: const Icon(Icons.save),
-                    label: const Text('GUARDAR HISTORIA',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold)),
+                    icon: _guardando
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: AppColors.dorado,
+                              strokeWidth: 2.5,
+                            ),
+                          )
+                        : const Icon(Icons.save),
+                    label: Text(
+                      _guardando ? 'GUARDANDO...' : 'GUARDAR HISTORIA',
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 2),
+                    ),
                   ),
                 ),
               ],

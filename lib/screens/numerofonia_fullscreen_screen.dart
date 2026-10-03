@@ -89,7 +89,6 @@ class _NumerofoniaFullscreenScreenState
                   child: VisorNumerofonia(
                     estrofas: widget.estrofas,
                     escala: 1.3,
-                    mostrarBotonExpandir: false,
                   ),
                 ),
               ),
@@ -134,7 +133,6 @@ class _NumerofoniaFullscreenScreenState
                       ),
                     ),
                     const Spacer(),
-                    // Zoom reset
                     if (_zoomActivo)
                       IconButton(
                         icon: const Icon(Icons.center_focus_strong,
@@ -142,7 +140,6 @@ class _NumerofoniaFullscreenScreenState
                         tooltip: 'Centrar',
                         onPressed: _resetZoom,
                       ),
-                    // Bloquear rotación
                     IconButton(
                       icon: Icon(
                         _bloquearRotacion
@@ -161,7 +158,7 @@ class _NumerofoniaFullscreenScreenState
             ),
           ),
 
-          // Hint de zoom
+          // Hint
           if (!_zoomActivo)
             Positioned(
               bottom: 16,

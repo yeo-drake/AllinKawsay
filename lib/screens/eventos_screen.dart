@@ -78,7 +78,6 @@ class _EventosScreenState extends State<EventosScreen> {
           autofocus: true,
           decoration: const InputDecoration(
             hintText: 'Ej: llevar tal instrumento, ir a tal hora...',
-            border: OutlineInputBorder(),
           ),
         ),
         actions: [
@@ -99,21 +98,22 @@ class _EventosScreenState extends State<EventosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
     return Scaffold(
       appBar: AppBar(title: const Text('PRÓXIMOS EVENTOS')),
       floatingActionButton: _esAdmin
           ? FloatingActionButton(
-              backgroundColor: AppColors.granate,
-              foregroundColor: AppColors.dorado,
               onPressed: () => Navigator.push(
                 context,
                 MaterialPageRoute(
                     builder: (_) => const AgregarEventoScreen()),
               ),
-              child: const Icon(Icons.add),
+              child: const Icon(Icons.add, size: 26),
             )
           : null,
       body: WatermarkOverlay(
+        opacity: 0.04,
         child: StreamBuilder<List<Evento>>(
           stream: _service.listar(),
           builder: (context, snap) {
@@ -139,15 +139,23 @@ class _EventosScreenState extends State<EventosScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.event,
-                          size: 80,
-                          color: AppColors.granate.withOpacity(0.3)),
-                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.granate.withOpacity(0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.event_busy,
+                            size: 48,
+                            color: AppColors.granate.withOpacity(0.4)),
+                      ),
+                      const SizedBox(height: 20),
                       const Text('Sin eventos',
                           style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.granate)),
+                              color: AppColors.granate,
+                              letterSpacing: 0.5)),
                       const SizedBox(height: 8),
                       Text(
                         _esAdmin
@@ -155,7 +163,8 @@ class _EventosScreenState extends State<EventosScreen> {
                             : 'El admin aún no ha publicado eventos',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            color: AppColors.negro.withOpacity(0.6)),
+                            color: onSurface.withOpacity(0.55),
+                            fontSize: 13),
                       ),
                     ],
                   ),
@@ -163,163 +172,268 @@ class _EventosScreenState extends State<EventosScreen> {
               );
             }
             return ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
               itemCount: lista.length,
               itemBuilder: (context, i) {
                 final e = lista[i];
                 final pasado = e.fecha.isBefore(DateTime.now());
                 final nota = _usuario?.notaEvento(e.id) ?? '';
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: Opacity(
-                    opacity: pasado ? 0.55 : 1,
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: pasado
-                                  ? AppColors.negro
-                                  : AppColors.granate,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${e.fecha.day}',
-                                  style: const TextStyle(
-                                      color: AppColors.dorado,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  _mes(e.fecha.month),
-                                  style: const TextStyle(
-                                      color: AppColors.dorado,
-                                      fontSize: 11),
-                                ),
-                              ],
-                            ),
-                          ),
-                          title: Text(e.titulo,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.negro)),
-                          subtitle: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 4),
-                              Text('${_hora(e.fecha)} · ${e.lugar}'),
-                              if (e.descripcion.isNotEmpty) ...[
-                                const SizedBox(height: 4),
-                                Text(e.descripcion,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                        color: AppColors.negro
-                                            .withOpacity(0.7))),
-                              ],
-                            ],
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Nota personal
-                              IconButton(
-                                icon: Icon(
-                                  nota.isEmpty
-                                      ? Icons.sticky_note_2_outlined
-                                      : Icons.sticky_note_2,
-                                  color: nota.isEmpty
-                                      ? AppColors.negro.withOpacity(0.4)
-                                      : AppColors.dorado,
-                                ),
-                                tooltip: 'Mi nota personal',
-                                onPressed: () => _editarNota(e),
-                              ),
-                              if (_esAdmin)
-                                PopupMenuButton<String>(
-                                  icon: const Icon(Icons.more_vert,
-                                      color: AppColors.granate),
-                                  onSelected: (v) {
-                                    if (v == 'editar') {
-                                      _editar(e);
-                                    } else if (v == 'eliminar') {
-                                      _eliminar(e);
-                                    }
-                                  },
-                                  itemBuilder: (_) => const [
-                                    PopupMenuItem(
-                                      value: 'editar',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.edit, size: 20),
-                                          SizedBox(width: 8),
-                                          Text('Editar'),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'eliminar',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete_outline,
-                                              size: 20),
-                                          SizedBox(width: 8),
-                                          Text('Eliminar'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
-                        ),
-                        // Nota visible
-                        if (nota.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.fromLTRB(
-                                12, 0, 12, 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.dorado.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                  color: AppColors.dorado
-                                      .withOpacity(0.5)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                const Icon(Icons.sticky_note_2,
-                                    size: 16, color: AppColors.granate),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    nota,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontStyle: FontStyle.italic,
-                                      color: AppColors.negro,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
+                return _tarjetaEvento(
+                    context, e, pasado, nota, onSurface);
               },
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _tarjetaEvento(BuildContext context, Evento e, bool pasado,
+      String nota, Color onSurface) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Opacity(
+        opacity: pasado ? 0.6 : 1,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardColor(context),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: pasado
+                  ? onSurface.withOpacity(0.15)
+                  : AppColors.dorado.withOpacity(0.3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(pasado ? 0.02 : 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Fecha cuadrada
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        gradient: pasado
+                            ? const LinearGradient(colors: [
+                                Color(0xFF424242),
+                                Color(0xFF212121)
+                              ])
+                            : AppColors.gradienteGranate,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                (pasado ? Colors.black : AppColors.granate)
+                                    .withOpacity(0.25),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${e.fecha.day}',
+                            style: const TextStyle(
+                                color: AppColors.dorado,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                height: 1),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _mes(e.fecha.month),
+                            style: TextStyle(
+                                color: AppColors.dorado.withOpacity(0.9),
+                                fontSize: 10,
+                                letterSpacing: 2,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            e.titulo,
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: onSurface,
+                                fontSize: 16,
+                                letterSpacing: 0.2),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.access_time,
+                                  size: 12,
+                                  color: onSurface.withOpacity(0.5)),
+                              const SizedBox(width: 4),
+                              Text(_hora(e.fecha),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          onSurface.withOpacity(0.65))),
+                              if (e.lugar.isNotEmpty) ...[
+                                const SizedBox(width: 12),
+                                Icon(Icons.place,
+                                    size: 12,
+                                    color: onSurface.withOpacity(0.5)),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(e.lugar,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: onSurface
+                                              .withOpacity(0.65))),
+                                ),
+                              ],
+                            ],
+                          ),
+                          if (e.descripcion.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(e.descripcion,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: onSurface.withOpacity(0.55),
+                                    height: 1.4)),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Acciones
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                        color: AppColors.dorado.withOpacity(0.15)),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => _editarNota(e),
+                      icon: Icon(
+                        nota.isEmpty
+                            ? Icons.sticky_note_2_outlined
+                            : Icons.sticky_note_2,
+                        size: 16,
+                        color: nota.isEmpty
+                            ? onSurface.withOpacity(0.4)
+                            : AppColors.dorado,
+                      ),
+                      label: Text(
+                        nota.isEmpty ? 'Nota' : 'Mi nota',
+                        style: TextStyle(
+                            fontSize: 12,
+                            color: nota.isEmpty
+                                ? onSurface.withOpacity(0.5)
+                                : AppColors.granate,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_esAdmin)
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_vert,
+                            color: onSurface.withOpacity(0.5),
+                            size: 20),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                        onSelected: (v) {
+                          if (v == 'editar') {
+                            _editar(e);
+                          } else if (v == 'eliminar') {
+                            _eliminar(e);
+                          }
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(
+                            value: 'editar',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 20),
+                                SizedBox(width: 10),
+                                Text('Editar'),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'eliminar',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline,
+                                    size: 20, color: Colors.red),
+                                SizedBox(width: 10),
+                                Text('Eliminar',
+                                    style:
+                                        TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              // Nota
+              if (nota.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [
+                      AppColors.dorado.withOpacity(0.12),
+                      AppColors.dorado.withOpacity(0.06),
+                    ]),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: AppColors.dorado.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.sticky_note_2,
+                          size: 14, color: AppColors.granate),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          nota,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                            color: onSurface.withOpacity(0.85),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

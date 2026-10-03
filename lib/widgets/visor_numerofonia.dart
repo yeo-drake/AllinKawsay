@@ -18,122 +18,102 @@ class VisorNumerofonia extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calcular dimensiones naturales de la tabla
-        final dims = _calcularDimensiones(validas);
-
-        // Ancho disponible (si es infinito, usar el de la pantalla)
-        final disponible = constraints.maxWidth.isFinite
+        final anchoPantalla = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : MediaQuery.of(context).size.width;
 
-        // Factor de escala: si la tabla es más ancha que el espacio,
-        // se achica proporcionalmente. Si cabe, queda al tamaño natural.
-        final factor =
-            dims.ancho > disponible ? disponible / dims.ancho : 1.0;
+        // Altura total de todas las estrofas + separaciones
+        const altoFila = 36.0; // alto de cada fila 7 y 6
+        const separacion = 12.0;
+        final altoTotal = validas.length * (altoFila * 2 + separacion) -
+            separacion;
 
-        return SizedBox(
-          width: dims.ancho * factor,
-          height: dims.alto * factor,
-          child: Transform.scale(
-            scale: factor,
-            alignment: Alignment.topLeft,
-            child: SizedBox(
-              width: dims.ancho,
-              height: dims.alto,
-              child: _construirTablas(validas),
-            ),
-          ),
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (int i = 0; i < validas.length; i++) ...[
+              _TablaAjustada(
+                estrofa: validas[i],
+                anchoDisponible: anchoPantalla,
+                altoFila: altoFila * escala,
+              ),
+              if (i < validas.length - 1)
+                SizedBox(height: separacion * escala),
+            ],
+          ],
         );
       },
     );
   }
-
-  Widget _construirTablas(List<EstrofaNumerofonia> validas) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < validas.length; i++) ...[
-          _EstrofaTabla(estrofa: validas[i], escala: escala),
-          if (i < validas.length - 1) const SizedBox(height: 8),
-        ],
-      ],
-    );
-  }
-
-  _Dimensiones _calcularDimensiones(List<EstrofaNumerofonia> validas) {
-    double anchoMax = 0;
-    double altoTotal = 0;
-
-    for (final e in validas) {
-      // Ancho: etiqueta + celdas + BIS
-      double ancho = 22 * escala;
-      for (int i = 0; i < e.columnas; i++) {
-        final len7 = e.fila7[i].length;
-        final len6 = e.fila6[i].length;
-        final maxLen = len7 > len6 ? len7 : len6;
-        final anchoCol = maxLen == 0
-            ? 34 * escala
-            : ((maxLen * 8.5) + 14.0).clamp(34.0, 130.0) * escala;
-        ancho += anchoCol;
-      }
-      if (e.bis) ancho += 44 * escala;
-      if (ancho > anchoMax) anchoMax = ancho;
-
-      // Alto: 2 filas de 26 + borde divisorio 1.2
-      altoTotal += (26 * 2 + 1.2) * escala + 8;
-    }
-    // Quitar el último separador
-    if (altoTotal > 0) altoTotal -= 8;
-
-    return _Dimensiones(ancho: anchoMax, alto: altoTotal);
-  }
 }
 
-class _Dimensiones {
-  final double ancho;
-  final double alto;
-  _Dimensiones({required this.ancho, required this.alto});
-}
-
-class _EstrofaTabla extends StatelessWidget {
+class _TablaAjustada extends StatelessWidget {
   final EstrofaNumerofonia estrofa;
-  final double escala;
-  const _EstrofaTabla({required this.estrofa, required this.escala});
+  final double anchoDisponible;
+  final double altoFila;
+  const _TablaAjustada({
+    required this.estrofa,
+    required this.anchoDisponible,
+    required this.altoFila,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // Ancho de la columna de etiquetas (7 y 6)
+    final anchoEtiqueta = 28.0;
+
+    // Ancho del bloque BIS al final
+    final anchoBis = estrofa.bis ? 48.0 : 0.0;
+
+    // Espacio restante para las columnas de números
+    final espacioColumnas = anchoDisponible - anchoEtiqueta - anchoBis;
+
+    // Ancho por columna (todas iguales)
+    final numColumnas = estrofa.columnas;
+    final anchoColumna =
+        numColumnas > 0 ? espacioColumnas / numColumnas : 0.0;
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.blanco,
-        border: Border.all(color: AppColors.negro, width: 1.2),
+        border: Border.all(color: AppColors.negro, width: 1.5),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Fila 7
           SizedBox(
-            height: 26 * escala,
+            height: altoFila,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                _etiqueta('7'),
-                for (int i = 0; i < estrofa.columnas; i++)
-                  _celda(estrofa.fila7[i]),
-                if (estrofa.bis) _bisBadge(),
+                _etiqueta('7', anchoEtiqueta),
+                for (int i = 0; i < numColumnas; i++)
+                  _celda(
+                    contenido: estrofa.fila7[i],
+                    ancho: anchoColumna,
+                    esUltima: i == numColumnas - 1 && !estrofa.bis,
+                  ),
+                if (estrofa.bis)
+                  _badgeBis(ancho: anchoBis, alto: altoFila * 2 + 1.5),
               ],
             ),
           ),
-          Container(height: 1.2, color: AppColors.negro),
+          Container(height: 1.5, color: AppColors.negro),
+          // Fila 6
           SizedBox(
-            height: 26 * escala,
+            height: altoFila,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                _etiqueta('6'),
-                for (int i = 0; i < estrofa.columnas; i++)
-                  _celda(estrofa.fila6[i]),
+                _etiqueta('6', anchoEtiqueta),
+                for (int i = 0; i < numColumnas; i++)
+                  _celda(
+                    contenido: estrofa.fila6[i],
+                    ancho: anchoColumna,
+                    esUltima: i == numColumnas - 1 && !estrofa.bis,
+                  ),
                 if (estrofa.bis)
-                  SizedBox(width: 44 * escala, height: 26 * escala),
+                  SizedBox(width: anchoBis, height: altoFila),
               ],
             ),
           ),
@@ -142,62 +122,68 @@ class _EstrofaTabla extends StatelessWidget {
     );
   }
 
-  Widget _etiqueta(String t) {
-    return Container(
-      width: 22 * escala,
-      height: 26 * escala,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        border: Border(
-          right: BorderSide(color: AppColors.negro, width: 1.2),
-        ),
-      ),
-      child: Text(
-        t,
-        style: TextStyle(
-          color: AppColors.negro,
-          fontWeight: FontWeight.bold,
-          fontSize: 12 * escala,
-        ),
-      ),
-    );
-  }
-
-  Widget _celda(String contenido) {
-    final ancho = contenido.isEmpty
-        ? 34.0 * escala
-        : ((contenido.length * 8.5) + 14.0).clamp(34.0, 130.0) * escala;
-
+  Widget _etiqueta(String texto, double ancho) {
     return Container(
       width: ancho,
-      height: 26 * escala,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         border: Border(
-          right: BorderSide(color: AppColors.negro, width: 0.8),
+          right: BorderSide(color: AppColors.negro, width: 1.5),
         ),
       ),
       child: Text(
-        contenido,
+        texto,
         style: TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 12 * escala,
-          fontFamily: 'monospace',
+          fontSize: altoFila * 0.38,
         ),
       ),
     );
   }
 
-  Widget _bisBadge() {
+  Widget _celda({
+    required String contenido,
+    required double ancho,
+    required bool esUltima,
+  }) {
     return Container(
-      width: 44 * escala,
-      height: 52 * escala,
+      width: ancho,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        border: esUltima
+            ? null
+            : const Border(
+                right: BorderSide(color: AppColors.negro, width: 1),
+              ),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Text(
+            contenido,
+            style: TextStyle(
+              color: AppColors.negro,
+              fontWeight: FontWeight.bold,
+              fontSize: altoFila * 0.42,
+              fontFamily: 'monospace',
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _badgeBis({required double ancho, required double alto}) {
+    return Container(
+      width: ancho,
+      height: alto,
       alignment: Alignment.center,
       decoration: const BoxDecoration(
         color: AppColors.dorado,
         border: Border(
-          right: BorderSide(color: AppColors.negro, width: 1.2),
+          left: BorderSide(color: AppColors.negro, width: 1.5),
         ),
       ),
       child: Text(
@@ -205,7 +191,7 @@ class _EstrofaTabla extends StatelessWidget {
         style: TextStyle(
           color: AppColors.negro,
           fontWeight: FontWeight.bold,
-          fontSize: 10 * escala,
+          fontSize: altoFila * 0.32,
           letterSpacing: 0.5,
         ),
       ),
